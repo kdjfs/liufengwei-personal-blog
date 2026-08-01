@@ -71,21 +71,43 @@ const isActive = (href: string) =>
 </header>
 
 <script>
+  let cleanupHeader: (() => void) | undefined;
+
   const setupHeader = () => {
+    cleanupHeader?.();
+    const controller = new AbortController();
     const header = document.querySelector<HTMLElement>('[data-header]');
     const button = document.querySelector<HTMLButtonElement>('[data-menu-button]');
     const menu = document.querySelector<HTMLElement>('[data-mobile-nav]');
     if (!header || !button || !menu) return;
 
     const updateHeader = () => header.classList.toggle('scrolled', window.scrollY > 12);
-    window.addEventListener('scroll', updateHeader, { passive: true });
+    window.addEventListener('scroll', updateHeader, {
+      passive: true,
+      signal: controller.signal,
+    });
     updateHeader();
 
-    button.addEventListener('click', () => {
-      const open = button.getAttribute('aria-expanded') === 'true';
-      button.setAttribute('aria-expanded', String(!open));
-      menu.hidden = open;
-    });
+    button.addEventListener(
+      'click',
+      () => {
+        const open = button.getAttribute('aria-expanded') === 'true';
+        button.setAttribute('aria-expanded', String(!open));
+        menu.hidden = open;
+      },
+      { signal: controller.signal },
+    );
+    menu.querySelectorAll('a').forEach((link) =>
+      link.addEventListener(
+        'click',
+        () => {
+          button.setAttribute('aria-expanded', 'false');
+          menu.hidden = true;
+        },
+        { signal: controller.signal },
+      ),
+    );
+    cleanupHeader = () => controller.abort();
   };
 
   document.addEventListener('astro:page-load', setupHeader);

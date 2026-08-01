@@ -1,0 +1,162 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import { getCollection } from 'astro:content';
+import PostCard from '@/components/blog/PostCard.astro';
+import PageHeader from '@/components/common/PageHeader.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import type { BlogEntry } from '@/utils/posts';
+import { getPublishedPosts } from '@/utils/posts';
+import {
+  getCategorySummaries,
+  getSeriesSummaries,
+  getTagSummaries,
+  type CategorySummary,
+  type TagSummary,
+} from '@/utils/taxonomy';
+
+interface Props {
+  page: Page<BlogEntry>;
+  categories: CategorySummary[];
+  tags: TagSummary[];
+  seriesCount: number;
+  articleCount: number;
+  featured: BlogEntry[];
+}
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const posts = getPublishedPosts(await getCollection('blog'));
+  const categories = getCategorySummaries(posts);
+  const tags = getTagSummaries(posts);
+  const series = getSeriesSummaries(posts);
+
+  return paginate(posts, {
+    pageSize: 12,
+    props: {
+      categories,
+      tags,
+      seriesCount: series.length,
+      articleCount: posts.length,
+      featured: posts.filter((post) => post.data.featured).slice(0, 2),
+    },
+  });
+}) satisfies GetStaticPaths;
+
+const { page, categories, tags, seriesCount, articleCount, featured } = Astro.props;
+const pageTitle = page.currentPage === 1 ? '文章' : `文章 · 第 ${page.currentPage} 页`;
+---
+
+<BaseLayout title={pageTitle} description="LFW Space 的技术文章、学习笔记与长期思考。">
+  <PageHeader
+    eyebrow="WRITING"
+    title="文章"
+    description="记录技术、项目、思考与成长，让零散理解逐步连接成可检索的数字花园。"
+  />
+
+  <section class="writing-overview container-wide" aria-label="文章统计与搜索">
+    <div class="writing-stats">
+      <span><strong>{articleCount}</strong> Articles</span>
+      <span><strong>{categories.length}</strong> Categories</span>
+      <span><strong>{tags.length}</strong> Tags</span>
+      <span><strong>{seriesCount}</strong> Series</span>
+    </div>
+    <button class="writing-search" type="button" data-open-search>
+      <span>搜索文章、分类或标签</span><kbd>⌘ K</kbd>
+    </button>
+  </section>
+
+  {
+    page.currentPage === 1 && featured.length > 0 && (
+      <section
+        class="section-compact container-wide blog-featured"
+        aria-labelledby="featured-writing-title"
+      >
+        <div class="section-kicker">
+          <span>FEATURED</span>
+          <span>EDITOR'S SELECTION</span>
+        </div>
+        <h2 id="featured-writing-title">精选写作</h2>
+        <div class="post-grid featured-grid">
+          {featured.map((post, index) => (
+            <PostCard post={post} featured={index === 0} />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section-compact container-wide blog-layout">
+    <div>
+      <div class="section-kicker blog-latest-title">
+        <span
+          >{
+            page.currentPage === 1
+              ? 'LATEST WRITING'
+              : `PAGE ${String(page.currentPage).padStart(2, '0')}`
+          }</span
+        >
+        <span>{page.start + 1}–{page.end + 1} / {page.total}</span>
+      </div>
+      <div class="blog-list" data-pagefind-body>
+        {
+          page.data.map((post) => (
+            <PostCard
+              post={post}
+              transitionSuffix={featured.some((item) => item.id === post.id) ? 'list' : undefined}
+            />
+          ))
+        }
+      </div>
+
+      {
+        page.lastPage > 1 && (
+          <nav class="pagination" aria-label="文章分页">
+            {page.url.prev ? <a href={page.url.prev}>← 上一页</a> : <span />}
+            <span>
+              {String(page.currentPage).padStart(2, '0')} / {String(page.lastPage).padStart(2, '0')}
+            </span>
+            {page.url.next ? <a href={page.url.next}>下一页 →</a> : <span />}
+          </nav>
+        )
+      }
+    </div>
+    <aside>
+      <section class="filter-panel">
+        <div class="filter-heading">
+          <h2>CATEGORIES</h2>
+          <a href="/categories">ALL</a>
+        </div>
+        <div class="filter-links taxonomy-filter-links">
+          {
+            categories.map((category) => (
+              <a href={`/categories/${encodeURIComponent(category.name)}`}>
+                <>
+                  <span>{category.name}</span>
+                  <small>{category.count}</small>
+                </>
+              </a>
+            ))
+          }
+        </div>
+        <section>
+          <div class="filter-heading">
+            <h2>TAGS</h2>
+            <a href="/tags">ALL</a>
+          </div>
+          <div class="filter-links">
+            {
+              tags
+                .slice(0, 12)
+                .map((tag) => <a href={`/tags/${encodeURIComponent(tag.name)}`}>#{tag.name}</a>)
+            }
+          </div>
+        </section>
+        <section>
+          <div class="filter-heading">
+            <h2>SERIES</h2>
+            <a href="/series">EXPLORE →</a>
+          </div>
+        </section>
+      </section>
+    </aside>
+  </section>
+</BaseLayout>

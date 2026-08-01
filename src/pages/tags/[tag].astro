@@ -20,7 +20,10 @@ const { posts } = Astro.props;
 
 <BaseLayout title={`标签：${tag}`}>
   <PageHeader eyebrow="TAG" title={`#${tag}`} description={`共 ${posts.length} 篇文章`} />
-  <section class="section-compact container-wide post-grid">
+  <nav class="taxonomy-subnav container-wide" aria-label="内容标签导航">
+    <a href="/tags">← 全部标签</a><a href="/categories">浏览分类</a><a href="/series">浏览系列</a>
+  </nav>
+  <section class="section-compact container-wide post-grid" data-pagefind-body>
     {posts.map((post) => <PostCard post={post} />)}
   </section>
 </BaseLayout>

@@ -1,0 +1,46 @@
+---
+import { getCollection } from 'astro:content';
+import PageHeader from '@/components/common/PageHeader.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { formatDate, getPostSlug, getPublishedPosts } from '@/utils/posts';
+import { getSeriesSummaries } from '@/utils/taxonomy';
+
+export async function getStaticPaths() {
+  const posts = getPublishedPosts(await getCollection('blog'));
+  return getSeriesSummaries(posts).map((series) => ({
+    params: { series: series.name },
+    props: { series },
+  }));
+}
+
+const { series } = Astro.props;
+---
+
+<BaseLayout title={`系列：${series.name}`}>
+  <PageHeader
+    eyebrow="LEARNING PATH"
+    title={series.name}
+    description={`${series.count} 篇文章，按建议阅读顺序组织。`}
+  />
+  <section class="section-compact container-narrow series-detail" data-pagefind-body>
+    <nav class="taxonomy-subnav" aria-label="系列导航"><a href="/series">← 全部系列</a></nav>
+    <ol>
+      {
+        series.posts.map((post, index) => (
+          <li>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <div>
+              <p>
+                {post.data.category} · {formatDate(post.data.publishDate)}
+              </p>
+              <h2>
+                <a href={`/blog/${getPostSlug(post)}`}>{post.data.title}</a>
+              </h2>
+              <p>{post.data.description}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</BaseLayout>

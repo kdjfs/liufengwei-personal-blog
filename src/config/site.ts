@@ -7,7 +7,7 @@ export const siteConfig = {
   description: '记录技术、项目、思考与成长。一个持续生长的个人技术博客与数字花园。',
   url: 'https://lfw-space.vercel.app',
   language: 'zh-CN',
-  github: 'https://github.com/', // TODO: 替换为刘凤伟的 GitHub 主页
+  github: 'https://github.com/kdjfs',
   email: '', // TODO: 如需公开联系邮箱，在此填写
   nav: [
     { label: '首页', href: '/' },

@@ -23,6 +23,11 @@ const index = posts.findIndex((item) => item.id === post.id);
 const previous = posts[index + 1];
 const next = posts[index - 1];
 const related = getRelatedPosts(post, posts);
+const seriesPosts = post.data.series
+  ? posts
+      .filter((item) => item.data.series === post.data.series)
+      .sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0))
+  : [];
 ---
 
 <BaseLayout
@@ -37,8 +42,18 @@ const related = getRelatedPosts(post, posts);
     <header class="article-hero">
       <p class="eyebrow">
         <a href={`/categories/${encodeURIComponent(post.data.category)}`}>{post.data.category}</a>
+        {
+          post.data.series && (
+            <>
+              <span aria-hidden="true">/</span>
+              <a href={`/series/${encodeURIComponent(post.data.series)}`}>{post.data.series}</a>
+            </>
+          )
+        }
       </p>
-      <h1 data-pagefind-meta="title">{post.data.title}</h1>
+      <h1 data-pagefind-meta="title" transition:name={`article-title-${post.data.slug}`}>
+        {post.data.title}
+      </h1>
       <p class="article-lead">{post.data.description}</p>
       <div class="article-meta">
         <time datetime={post.data.publishDate.toISOString()}
@@ -63,15 +78,43 @@ const related = getRelatedPosts(post, posts);
       class={`article-cover cover-${post.data.cover ?? 'grid'}`}
       role="img"
       aria-label={`${post.data.title} 的抽象封面`}
+      transition:name={`article-cover-${post.data.slug}`}
     >
     </div>
     <div class="article-layout">
-      <TableOfContents headings={headings} />
+      {
+        post.data.toc !== false && (
+          <TableOfContents headings={headings} articleTitle={post.data.title} />
+        )
+      }
       <div class="prose"><Content /></div>
     </div>
   </article>
 
   <footer class="article-footer">
+    {
+      seriesPosts.length > 0 && (
+        <section class="article-series" aria-labelledby="article-series-title">
+          <div class="section-kicker">
+            <span>SERIES</span>
+            <span>{seriesPosts.length} POSTS</span>
+          </div>
+          <h2 id="article-series-title">{post.data.series}</h2>
+          <ol>
+            {seriesPosts.map((item, seriesIndex) => (
+              <li class:list={{ current: item.id === post.id }}>
+                <span>{String(seriesIndex + 1).padStart(2, '0')}</span>
+                {item.id === post.id ? (
+                  <strong aria-current="page">{item.data.title}</strong>
+                ) : (
+                  <a href={`/blog/${getPostSlug(item)}`}>{item.data.title}</a>
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
     <nav class="article-nav" aria-label="上一篇和下一篇">
       {
         previous ? (

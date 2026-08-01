@@ -5,11 +5,13 @@ import { formatDate, getPostSlug, getReadingStats } from '@/utils/posts';
 interface Props {
   post: BlogEntry;
   featured?: boolean;
+  transitionSuffix?: string;
 }
 
-const { post, featured = false } = Astro.props;
+const { post, featured = false, transitionSuffix } = Astro.props;
 const stats = getReadingStats(post.body ?? '');
 const slug = getPostSlug(post);
+const transitionSlug = transitionSuffix ? `${slug}-${transitionSuffix}` : slug;
 ---
 
 <article class:list={['post-card', { featured }]}>
@@ -17,6 +19,7 @@ const slug = getPostSlug(post);
     class={`post-cover cover-${post.data.cover ?? 'grid'}`}
     href={`/blog/${slug}`}
     aria-label={`阅读《${post.data.title}》`}
+    transition:name={`article-cover-${transitionSlug}`}
   >
     <span class="cover-code" aria-hidden="true"
       >{String(post.data.publishDate.getFullYear()).slice(2)}</span
@@ -29,7 +32,9 @@ const slug = getPostSlug(post);
       <span>{formatDate(post.data.publishDate)}</span>
       <span>{stats.minutes} 分钟</span>
     </div>
-    <h3><a href={`/blog/${slug}`}>{post.data.title}</a></h3>
+    <h3 transition:name={`article-title-${transitionSlug}`}>
+      <a href={`/blog/${slug}`}>{post.data.title}</a>
+    </h3>
     <p>{post.data.description}</p>
     <div class="tag-row">
       {
