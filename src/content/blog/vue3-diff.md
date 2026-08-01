@@ -1,5 +1,6 @@
 ---
 title: "Vue3 Diff 算法与最长递增子序列详解"
+slug: "vue3-diff"
 description: "从源码视角理解 Vue3 Diff 算法、双端比较以及最长递增子序列优化。"
 publishDate: 2026-08-01
 category: "Vue"

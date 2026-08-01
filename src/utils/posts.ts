@@ -4,7 +4,7 @@ import readingTime from 'reading-time';
 export type BlogEntry = CollectionEntry<'blog'>;
 
 export function getPostSlug(post: BlogEntry): string {
-  return post.id.replace(/\.(md|mdx)$/i, '');
+  return post.data.slug;
 }
 
 export function sortPosts(posts: BlogEntry[]): BlogEntry[] {
@@ -35,7 +35,8 @@ export function getRelatedPosts(current: BlogEntry, posts: BlogEntry[], limit = 
     .map((post) => {
       const sharedTags = post.data.tags.filter((tag) => current.data.tags.includes(tag)).length;
       const categoryScore = post.data.category === current.data.category ? 3 : 0;
-      return { post, score: sharedTags * 2 + categoryScore };
+      const seriesScore = current.data.series && post.data.series === current.data.series ? 8 : 0;
+      return { post, score: seriesScore + sharedTags * 2 + categoryScore };
     })
     .filter(({ score }) => score > 0)
     .sort((a, b) => b.score - a.score)

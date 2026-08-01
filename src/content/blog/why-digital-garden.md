@@ -1,5 +1,6 @@
 ---
 title: 为什么我要建立自己的数字花园
+slug: why-digital-garden
 description: 博客不是内容仓库，而是一套让零散知识逐渐建立连接、可以持续修订的个人系统。
 publishDate: 2026-07-26
 updatedDate: 2026-07-30

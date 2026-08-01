@@ -1,5 +1,6 @@
 ---
 title: 我的个人博客从这里开始
+slug: hello-lfw-space
 description: LFW Space 的第一篇文章：介绍这座数字花园的内容边界、技术选择与写作方式。
 publishDate: 2026-08-01
 category: 建站日志
@@ -10,6 +11,8 @@ tags:
 cover: aurora
 draft: false
 featured: true
+series: LFW Space 建站系列
+seriesOrder: 1
 ---
 
 欢迎来到 **LFW Space**。
