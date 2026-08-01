@@ -1,0 +1,30 @@
+---
+import { getCollection } from 'astro:content';
+import PageHeader from '@/components/common/PageHeader.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getPublishedPosts } from '@/utils/posts';
+
+const posts = getPublishedPosts(await getCollection('blog'));
+const counts = new Map<string, number>();
+posts.forEach((post) => counts.set(post.data.category, (counts.get(post.data.category) ?? 0) + 1));
+---
+
+<BaseLayout title="分类">
+  <PageHeader
+    eyebrow="CATEGORIES"
+    title="分类"
+    description="从主题入口进入文章，让内容形成稳定的知识脉络。"
+  />
+  <section class="section-compact container-wide taxonomy-grid">
+    {
+      [...counts].map(([category, count]) => (
+        <a class="taxonomy-card" href={`/categories/${encodeURIComponent(category)}`}>
+          <>
+            <strong>{category}</strong>
+            <span>{String(count).padStart(2, '0')} POSTS →</span>
+          </>
+        </a>
+      ))
+    }
+  </section>
+</BaseLayout>

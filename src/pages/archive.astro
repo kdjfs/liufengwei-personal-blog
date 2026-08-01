@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content';
+import PageHeader from '@/components/common/PageHeader.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { formatDate, getPostSlug, getPublishedPosts } from '@/utils/posts';
+
+const posts = getPublishedPosts(await getCollection('blog'));
+const years = new Map<number, typeof posts>();
+posts.forEach((post) => {
+  const year = post.data.publishDate.getFullYear();
+  years.set(year, [...(years.get(year) ?? []), post]);
+});
+---
+
+<BaseLayout title="归档">
+  <PageHeader
+    eyebrow="ARCHIVE"
+    title="归档"
+    description={`${posts.length} 篇文章，按时间保存一次次理解的变化。`}
+  />
+  <section class="section-compact container-wide">
+    {
+      [...years].map(([year, yearPosts]) => (
+        <div class="archive-year">
+          <h2>{year}</h2>
+          <div class="archive-list">
+            {yearPosts.map((post) => (
+              <a class="archive-item" href={`/blog/${getPostSlug(post)}`}>
+                <time>{formatDate(post.data.publishDate).replace(`${year}年`, '')}</time>
+                <strong>{post.data.title}</strong>
+                <span>{post.data.category}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </section>
+</BaseLayout>

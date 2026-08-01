@@ -1,0 +1,45 @@
+<button
+  class="icon-button theme-toggle"
+  type="button"
+  data-theme-toggle
+  aria-label="主题：跟随系统"
+  title="切换主题"
+>
+  <span data-theme-icon aria-hidden="true">◐</span>
+  <span class="sr-only" data-theme-label>跟随系统</span>
+</button>
+
+<script>
+  type ThemeMode = 'system' | 'dark' | 'light';
+  const labels: Record<ThemeMode, string> = { system: '跟随系统', dark: '深色', light: '浅色' };
+  const icons: Record<ThemeMode, string> = { system: '◐', dark: '☾', light: '☼' };
+  const order: ThemeMode[] = ['system', 'dark', 'light'];
+
+  /** 同一入口统一处理首次加载、点击和系统主题变化，避免切页后状态分叉。 */
+  const setupTheme = () => {
+    const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+    if (!button) return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const apply = (mode: ThemeMode) => {
+      const dark = mode === 'dark' || (mode === 'system' && media.matches);
+      document.documentElement.dataset.theme = mode;
+      document.documentElement.classList.toggle('dark', dark);
+      button.querySelector<HTMLElement>('[data-theme-icon]')!.textContent = icons[mode];
+      button.querySelector<HTMLElement>('[data-theme-label]')!.textContent = labels[mode];
+      button.setAttribute('aria-label', `主题：${labels[mode]}，点击切换`);
+    };
+
+    const saved = localStorage.getItem('lfw-theme');
+    let mode: ThemeMode = saved === 'dark' || saved === 'light' ? saved : 'system';
+    apply(mode);
+    button.addEventListener('click', () => {
+      mode = order[(order.indexOf(mode) + 1) % order.length];
+      localStorage.setItem('lfw-theme', mode);
+      apply(mode);
+    });
+    media.addEventListener('change', () => mode === 'system' && apply(mode));
+  };
+
+  document.addEventListener('astro:page-load', setupTheme);
+</script>

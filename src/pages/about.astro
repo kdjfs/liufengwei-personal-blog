@@ -1,0 +1,41 @@
+---
+import PageHeader from '@/components/common/PageHeader.astro';
+import { siteConfig } from '@/config/site';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="关于" description={`关于 ${siteConfig.author} 与 LFW Space。`}>
+  <PageHeader
+    eyebrow="ABOUT"
+    title="关于我"
+    description="这不是一份被关键词塞满的简历，而是一份持续更新的自我说明。"
+  />
+  <section class="section-compact container-narrow prose" data-pagefind-body>
+    <div class="about-preview" style="grid-template-columns: 220px 1fr; margin-bottom: 64px;">
+      <div class="avatar-frame" role="img" aria-label="刘凤伟头像占位"></div>
+      <div>
+        <h2 style="margin-top:0">你好，我是刘凤伟。</h2>
+        <p>
+          这里是我的数字花园，用来记录技术、项目、思考与成长。当前页面保留为真实资料入口，不会用虚构的公司经历、头衔或成绩填满它。
+        </p>
+      </div>
+    </div>
+
+    <h2>我正在关注</h2>
+    <ul>
+      <li>如何做出更快、更清晰、更可持续维护的 Web 产品。</li>
+      <li>前端工程、用户体验与内容表达之间的连接。</li>
+      <li>把零散学习转化为可检索、可复用的长期知识。</li>
+    </ul>
+
+    <blockquote class="callout callout-note">
+      <p><strong>TODO：</strong>请在这里补充真实的个人简介、技术方向、联系方式与头像。</p>
+    </blockquote>
+
+    <h2>关于 LFW Space</h2>
+    <p>
+      本站采用 Astro 构建。文章在构建期输出为静态 HTML，只有搜索、主题和首页 WebGL
+      视觉等交互区域加载客户端脚本。这让阅读体验保持轻量，也为未来演进保留边界。
+    </p>
+  </section>
+</BaseLayout>

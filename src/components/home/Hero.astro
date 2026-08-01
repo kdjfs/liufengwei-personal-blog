@@ -1,0 +1,33 @@
+---
+import HeroVisual from '@/components/interactive/HeroVisual';
+import { siteConfig } from '@/config/site';
+---
+
+<section class="hero">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <HeroVisual client:idle />
+  <div class="container-wide hero-content">
+    <div class="hero-copy">
+      <p class="hero-kicker"><span></span> DIGITAL GARDEN · 2026</p>
+      <h1>
+        <span>LFW</span>
+        <span class="outline">SPACE</span>
+      </h1>
+      <p class="hero-subtitle">{siteConfig.subtitle}</p>
+      <p class="hero-statement">Building things for the web.</p>
+      <p class="hero-description">记录技术、项目、思考与成长。</p>
+      <div class="hero-actions">
+        <a class="button primary" href="/blog">开始阅读 <span>↗</span></a>
+        <a class="button secondary" href="/projects">查看项目</a>
+        <a class="button text" href={siteConfig.github} target="_blank" rel="noreferrer">GitHub ↗</a
+        >
+      </div>
+    </div>
+    <aside class="hero-coordinate" aria-label="站点状态">
+      <span>31.2304° N</span>
+      <span>121.4737° E</span>
+      <span class="online"><i></i> GARDEN ONLINE</span>
+    </aside>
+  </div>
+  <div class="hero-orbit" aria-hidden="true"><span></span></div>
+</section>

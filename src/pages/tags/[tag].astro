@@ -1,0 +1,26 @@
+---
+import { getCollection } from 'astro:content';
+import PostCard from '@/components/blog/PostCard.astro';
+import PageHeader from '@/components/common/PageHeader.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getPublishedPosts } from '@/utils/posts';
+
+export async function getStaticPaths() {
+  const posts = getPublishedPosts(await getCollection('blog'));
+  const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
+  return tags.map((tag) => ({
+    params: { tag },
+    props: { posts: posts.filter((post) => post.data.tags.includes(tag)) },
+  }));
+}
+
+const tag = decodeURIComponent(Astro.params.tag ?? '');
+const { posts } = Astro.props;
+---
+
+<BaseLayout title={`标签：${tag}`}>
+  <PageHeader eyebrow="TAG" title={`#${tag}`} description={`共 ${posts.length} 篇文章`} />
+  <section class="section-compact container-wide post-grid">
+    {posts.map((post) => <PostCard post={post} />)}
+  </section>
+</BaseLayout>

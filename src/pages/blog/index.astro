@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+import PostCard from '@/components/blog/PostCard.astro';
+import PageHeader from '@/components/common/PageHeader.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getPublishedPosts } from '@/utils/posts';
+
+const posts = getPublishedPosts(await getCollection('blog'));
+const categories = [...new Set(posts.map((post) => post.data.category))].sort();
+const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort();
+---
+
+<BaseLayout title="文章" description="LFW Space 的技术文章、学习笔记与长期思考。">
+  <PageHeader
+    eyebrow="WRITING"
+    title="文章"
+    description="记录理解发生变化的时刻，而不只是把信息搬到另一个地方。"
+  />
+  <section class="section-compact container-wide blog-layout">
+    <div class="blog-list" data-pagefind-body>
+      {posts.map((post) => <PostCard post={post} />)}
+    </div>
+    <aside>
+      <section class="filter-panel">
+        <h2>CATEGORIES</h2>
+        <div class="filter-links">
+          {
+            categories.map((category) => (
+              <a href={`/categories/${encodeURIComponent(category)}`}>{category}</a>
+            ))
+          }
+        </div>
+        <section>
+          <h2>TAGS</h2>
+          <div class="filter-links">
+            {tags.map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>#{tag}</a>)}
+          </div>
+        </section>
+      </section>
+    </aside>
+  </section>
+</BaseLayout>

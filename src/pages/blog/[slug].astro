@@ -1,0 +1,112 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostCard from '@/components/blog/PostCard.astro';
+import TableOfContents from '@/components/blog/TableOfContents.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import {
+  formatDate,
+  getPostSlug,
+  getPublishedPosts,
+  getReadingStats,
+  getRelatedPosts,
+} from '@/utils/posts';
+
+export async function getStaticPaths() {
+  const posts = getPublishedPosts(await getCollection('blog'));
+  return posts.map((post) => ({ params: { slug: getPostSlug(post) }, props: { post, posts } }));
+}
+
+const { post, posts } = Astro.props;
+const { Content, headings } = await render(post);
+const stats = getReadingStats(post.body ?? '');
+const index = posts.findIndex((item) => item.id === post.id);
+const previous = posts[index + 1];
+const next = posts[index - 1];
+const related = getRelatedPosts(post, posts);
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+  publishedTime={post.data.publishDate}
+  updatedTime={post.data.updatedDate}
+>
+  <div class="reading-progress" data-reading-progress aria-hidden="true"></div>
+  <article data-article data-pagefind-body>
+    <header class="article-hero">
+      <p class="eyebrow">
+        <a href={`/categories/${encodeURIComponent(post.data.category)}`}>{post.data.category}</a>
+      </p>
+      <h1 data-pagefind-meta="title">{post.data.title}</h1>
+      <p class="article-lead">{post.data.description}</p>
+      <div class="article-meta">
+        <time datetime={post.data.publishDate.toISOString()}
+          >{formatDate(post.data.publishDate)}</time
+        >
+        <span>{stats.words} 字</span>
+        <span>预计 {stats.minutes} 分钟</span>
+        {post.data.updatedDate && <span>更新于 {formatDate(post.data.updatedDate)}</span>}
+      </div>
+      <div class="tag-row" style="justify-content:center">
+        {
+          post.data.tags.map((tag) => (
+            <a data-pagefind-meta="tag" href={`/tags/${encodeURIComponent(tag)}`}>
+              #{tag}
+            </a>
+          ))
+        }
+      </div>
+      <span class="sr-only" data-pagefind-meta="category">{post.data.category}</span>
+    </header>
+    <div
+      class={`article-cover cover-${post.data.cover ?? 'grid'}`}
+      role="img"
+      aria-label={`${post.data.title} 的抽象封面`}
+    >
+    </div>
+    <div class="article-layout">
+      <TableOfContents headings={headings} />
+      <div class="prose"><Content /></div>
+    </div>
+  </article>
+
+  <footer class="article-footer">
+    <nav class="article-nav" aria-label="上一篇和下一篇">
+      {
+        previous ? (
+          <a href={`/blog/${getPostSlug(previous)}`}>
+            <>
+              <span>← 上一篇</span>
+              <strong>{previous.data.title}</strong>
+            </>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next && (
+          <a href={`/blog/${getPostSlug(next)}`}>
+            <>
+              <span>下一篇 →</span>
+              <strong>{next.data.title}</strong>
+            </>
+          </a>
+        )
+      }
+    </nav>
+    {
+      related.length > 0 && (
+        <section class="related-posts">
+          <h2>相关文章</h2>
+          <div class="post-grid">
+            {related.map((item) => (
+              <PostCard post={item} />
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </footer>
+</BaseLayout>

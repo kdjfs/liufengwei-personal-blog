@@ -1,0 +1,42 @@
+---
+import type { BlogEntry } from '@/utils/posts';
+import { formatDate, getPostSlug, getReadingStats } from '@/utils/posts';
+
+interface Props {
+  post: BlogEntry;
+  featured?: boolean;
+}
+
+const { post, featured = false } = Astro.props;
+const stats = getReadingStats(post.body ?? '');
+const slug = getPostSlug(post);
+---
+
+<article class:list={['post-card', { featured }]}>
+  <a
+    class={`post-cover cover-${post.data.cover ?? 'grid'}`}
+    href={`/blog/${slug}`}
+    aria-label={`阅读《${post.data.title}》`}
+  >
+    <span class="cover-code" aria-hidden="true"
+      >{String(post.data.publishDate.getFullYear()).slice(2)}</span
+    >
+    <span class="cover-line" aria-hidden="true"></span>
+  </a>
+  <div class="post-card-body">
+    <div class="post-meta">
+      <a href={`/categories/${encodeURIComponent(post.data.category)}`}>{post.data.category}</a>
+      <span>{formatDate(post.data.publishDate)}</span>
+      <span>{stats.minutes} 分钟</span>
+    </div>
+    <h3><a href={`/blog/${slug}`}>{post.data.title}</a></h3>
+    <p>{post.data.description}</p>
+    <div class="tag-row">
+      {
+        post.data.tags
+          .slice(0, 3)
+          .map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>#{tag}</a>)
+      }
+    </div>
+  </div>
+</article>

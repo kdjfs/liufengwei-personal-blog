@@ -1,0 +1,92 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import { siteConfig } from '@/config/site';
+
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+const isActive = (href: string) =>
+  href === '/' ? currentPath === '/' : currentPath === href || currentPath.startsWith(`${href}/`);
+---
+
+<header class="site-header" data-header>
+  <nav class="nav-wrap container-wide" aria-label="主导航">
+    <a class="brand" href="/" aria-label="LFW Space 首页">
+      <span class="brand-mark">L</span>
+      <span>{siteConfig.shortName}</span>
+    </a>
+
+    <div class="desktop-nav">
+      {
+        siteConfig.nav.map((item) => (
+          <a href={item.href} class:list={['nav-link', { active: isActive(item.href) }]}>
+            {item.label}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="nav-actions">
+      <button
+        class="icon-button search-trigger"
+        type="button"
+        data-open-search
+        aria-label="打开搜索"
+      >
+        <span aria-hidden="true">⌕</span><kbd>⌘ K</kbd>
+      </button>
+      <ThemeToggle />
+      <a
+        class="icon-button github-link"
+        href={siteConfig.github}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="GitHub"
+      >
+        GH
+      </a>
+      <button
+        class="menu-button"
+        type="button"
+        data-menu-button
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+      >
+        <span></span><span></span><span></span><span class="sr-only">打开导航</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-nav" id="mobile-nav" data-mobile-nav hidden>
+    {
+      siteConfig.nav.map((item) => (
+        <a href={item.href} class:list={['mobile-nav-link', { active: isActive(item.href) }]}>
+          {item.label}
+        </a>
+      ))
+    }
+  </div>
+</header>
+
+<script>
+  const setupHeader = () => {
+    const header = document.querySelector<HTMLElement>('[data-header]');
+    const button = document.querySelector<HTMLButtonElement>('[data-menu-button]');
+    const menu = document.querySelector<HTMLElement>('[data-mobile-nav]');
+    if (!header || !button || !menu) return;
+
+    const updateHeader = () => header.classList.toggle('scrolled', window.scrollY > 12);
+    window.addEventListener('scroll', updateHeader, { passive: true });
+    updateHeader();
+
+    button.addEventListener('click', () => {
+      const open = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', String(!open));
+      menu.hidden = open;
+    });
+  };
+
+  document.addEventListener('astro:page-load', setupHeader);
+</script>

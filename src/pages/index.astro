@@ -1,0 +1,126 @@
+---
+import { getCollection } from 'astro:content';
+import PostCard from '@/components/blog/PostCard.astro';
+import Hero from '@/components/home/Hero.astro';
+import ProjectCard from '@/components/projects/ProjectCard.astro';
+import { projects } from '@/data/projects';
+import { timeline } from '@/data/timeline';
+import { topics } from '@/data/topics';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getPublishedPosts } from '@/utils/posts';
+
+const posts = getPublishedPosts(await getCollection('blog'));
+const featuredPosts = posts.filter((post) => post.data.featured).slice(0, 2);
+const latestPosts = posts.slice(0, 3);
+const featuredProject = projects.find((project) => project.featured) ?? projects[0];
+---
+
+<BaseLayout>
+  <Hero />
+
+  <section class="section container-wide" aria-labelledby="featured-title">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">01 · SELECTED WRITING</p>
+        <h2 id="featured-title">精选文章</h2>
+        <p>不是信息流，而是此刻最值得被重新打开的内容。</p>
+      </div>
+      <a class="section-link" href="/blog">浏览全部文章 →</a>
+    </div>
+    <div class="post-grid featured-grid">
+      {featuredPosts.map((post, index) => <PostCard post={post} featured={index === 0} />)}
+    </div>
+  </section>
+
+  <section class="home-band section">
+    <div class="container-wide">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">02 · RECENT NOTES</p>
+          <h2>最近文章</h2>
+        </div>
+        <a class="section-link" href="/archive">按时间归档 →</a>
+      </div>
+      <div class="post-grid">
+        {latestPosts.map((post) => <PostCard post={post} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section container-wide" aria-labelledby="topics-title">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">03 · FOCUS</p>
+        <h2 id="topics-title">Tech / Topics</h2>
+        <p>围绕工程、体验与长期知识积累，建立彼此连接的主题脉络。</p>
+      </div>
+      <a class="section-link" href="/tags">查看标签 →</a>
+    </div>
+    <div class="topic-grid">
+      {
+        topics.map((topic, index) => (
+          <article class="topic-card" data-tone={topic.tone}>
+            <span class="topic-index">0{index + 1}</span>
+            <h3>{topic.name}</h3>
+            <p>{topic.note}</p>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="home-band section">
+    <div class="container-wide">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">04 · BUILT & BUILDING</p>
+          <h2>Projects</h2>
+          <p>展示真实做过的事，也坦诚记录仍在生长的部分。</p>
+        </div>
+        <a class="section-link" href="/projects">完整作品集 →</a>
+      </div>
+      <div class="project-grid">
+        <ProjectCard project={featuredProject} large />
+      </div>
+    </div>
+  </section>
+
+  <section class="section container-wide">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">05 · CHANGELOG OF ME</p>
+        <h2>Timeline</h2>
+      </div>
+      <a class="section-link" href="/timeline">查看时间线 →</a>
+    </div>
+    <div class="timeline-preview">
+      {
+        timeline.slice(0, 3).map((item) => (
+          <article class="timeline-row">
+            <time>{item.date}</time>
+            <div>
+              <>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="home-band section">
+    <div class="container-wide about-preview">
+      <div class="avatar-frame" role="img" aria-label="刘凤伟头像占位"></div>
+      <div class="about-copy">
+        <p class="eyebrow">06 · ABOUT</p>
+        <h2>你好，我是刘凤伟。这里存放代码之外，仍值得长期保留的东西。</h2>
+        <p>
+          目前先从一个可靠、快速、好读的博客开始。个人简介、技能与经历将由作者按真实情况逐步补充。
+        </p>
+        <a class="button secondary" href="/about">关于我 →</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

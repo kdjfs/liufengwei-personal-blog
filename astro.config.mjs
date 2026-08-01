@@ -1,0 +1,35 @@
+import { unified } from '@astrojs/markdown-remark';
+import mdx from '@astrojs/mdx';
+import react from '@astrojs/react';
+import sitemap from '@astrojs/sitemap';
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'astro/config';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeKatex from 'rehype-katex';
+import rehypeSlug from 'rehype-slug';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import { remarkCallouts } from './src/plugins/remark-callouts.mjs';
+import { remarkMermaid } from './src/plugins/remark-mermaid.mjs';
+
+export default defineConfig({
+  site: 'https://lfw-space.vercel.app',
+  output: 'static',
+  integrations: [react(), mdx(), sitemap()],
+  vite: {
+    plugins: [tailwindcss()],
+  },
+  markdown: {
+    shikiConfig: {
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark-default',
+      },
+      wrap: true,
+    },
+    processor: unified({
+      remarkPlugins: [remarkGfm, remarkMath, remarkCallouts, remarkMermaid],
+      rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, { behavior: 'wrap' }], rehypeKatex],
+    }),
+  },
+});

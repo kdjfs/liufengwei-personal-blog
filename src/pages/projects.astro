@@ -1,0 +1,17 @@
+---
+import PageHeader from '@/components/common/PageHeader.astro';
+import ProjectCard from '@/components/projects/ProjectCard.astro';
+import { projects } from '@/data/projects';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="项目" description="刘凤伟的项目、作品与技术实验。">
+  <PageHeader
+    eyebrow="PROJECTS"
+    title="项目"
+    description="以问题、决策和结果来讲述作品。示例占位不会冒充真实项目。"
+  />
+  <section class="section-compact container-wide project-grid" data-pagefind-body>
+    {projects.map((project, index) => <ProjectCard project={project} large={index === 0} />)}
+  </section>
+</BaseLayout>

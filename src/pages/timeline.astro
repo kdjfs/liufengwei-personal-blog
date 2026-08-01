@@ -1,0 +1,28 @@
+---
+import PageHeader from '@/components/common/PageHeader.astro';
+import { timeline } from '@/data/timeline';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="时间线" description="LFW Space 的个人成长与站点演进时间线。">
+  <PageHeader
+    eyebrow="TIMELINE"
+    title="时间线"
+    description="把重要变化放回时间里看。只记录真实发生的事，待补充项保持透明。"
+  />
+  <section class="section-compact container-narrow timeline-list" data-pagefind-body>
+    {
+      timeline.map((item) => (
+        <article class="timeline-row">
+          <time>{item.date}</time>
+          <div>
+            <>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+            </>
+          </div>
+        </article>
+      ))
+    }
+  </section>
+</BaseLayout>

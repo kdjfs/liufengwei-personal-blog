@@ -1,0 +1,32 @@
+---
+import type { Project } from '@/data/projects';
+interface Props {
+  project: Project;
+  large?: boolean;
+}
+const { project, large = false } = Astro.props;
+---
+
+<article class:list={['project-card', { large, placeholder: project.placeholder }]}>
+  <div class={`project-art cover-${project.cover}`} aria-hidden="true">
+    <span>{project.name.slice(0, 2).toUpperCase()}</span>
+  </div>
+  <div class="project-body">
+    <div class="project-heading">
+      <h3>{project.name}</h3>
+      <span class="status">{project.status}</span>
+    </div>
+    <p>{project.description}</p>
+    <ul class="tech-list" aria-label="技术栈">
+      {project.techStack.map((tech) => <li>{tech}</li>)}
+    </ul>
+    {
+      (project.github || project.demo) && (
+        <div class="project-links">
+          {project.github && <a href={project.github}>源码 ↗</a>}
+          {project.demo && <a href={project.demo}>预览 ↗</a>}
+        </div>
+      )
+    }
+  </div>
+</article>
