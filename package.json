@@ -18,7 +18,13 @@
     "lint:fix": "biome check --write .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "new:post": "node scripts/new-post.mjs"
+    "test:content": "node --test scripts/content/*.test.mjs",
+    "content:new": "node scripts/content/index.mjs new",
+    "content:list": "node scripts/content/index.mjs list",
+    "content:check": "node scripts/content/index.mjs check",
+    "content:stats": "node scripts/content/index.mjs stats",
+    "content:import": "node scripts/content/index.mjs import",
+    "new:post": "pnpm content:new"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.2.2",
@@ -47,9 +53,14 @@
     "@types/node": "26.1.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
+    "gray-matter": "^4.0.3",
+    "pinyin-pro": "^3.28.2",
     "prettier": "3.9.6",
     "prettier-plugin-astro": "0.14.1",
-    "typescript": "6.0.3"
+    "remark-parse": "^11.0.0",
+    "typescript": "6.0.3",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
