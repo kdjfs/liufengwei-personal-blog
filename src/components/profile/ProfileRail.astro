@@ -1,0 +1,84 @@
+---
+import SocialIcon from './SocialIcon.astro';
+import { profile } from '@/config/profile';
+
+interface Props {
+  stats: {
+    articles: number;
+    categories: number;
+    tags: number;
+    series: number;
+  };
+}
+
+const { stats } = Astro.props;
+const statItems = [
+  { value: stats.articles, label: '文章', href: '/blog' },
+  { value: stats.categories, label: '分类', href: '/categories' },
+  { value: stats.tags, label: '标签', href: '/tags' },
+  { value: stats.series, label: '系列', href: '/series' },
+];
+---
+
+<aside class="profile-rail" aria-labelledby="profile-name">
+  <div class="profile-identity">
+    <div class="profile-avatar-wrap">
+      <img src={profile.avatar} width="640" height="640" alt={`${profile.name}的头像`} />
+      <span class="profile-status" title="正在持续学习与构建"><i></i> OPEN TO GROW</span>
+    </div>
+    <div class="profile-name-wrap">
+      <p>{profile.englishName}</p>
+      <h2 id="profile-name">{profile.name}</h2>
+      <span>{profile.role}</span>
+    </div>
+  </div>
+
+  <p class="profile-bio">{profile.bio}</p>
+
+  <nav class="profile-socials" aria-label="个人社交链接">
+    {
+      profile.socials.map((social) => (
+        <a
+          href={social.href}
+          aria-label={social.label}
+          title={social.label}
+          target={social.external ? '_blank' : undefined}
+          rel={social.external ? 'noopener noreferrer' : undefined}
+        >
+          <SocialIcon icon={social.icon} />
+          <span>{social.label}</span>
+        </a>
+      ))
+    }
+  </nav>
+
+  <div class="profile-stats" aria-label="内容统计">
+    {
+      statItems.map((stat) => (
+        <a href={stat.href}>
+          <strong>{stat.value}</strong>
+          <span>{stat.label}</span>
+        </a>
+      ))
+    }
+  </div>
+
+  <section class="profile-experience" aria-labelledby="profile-experience-title">
+    <div class="profile-section-title">
+      <span>EXPERIENCE</span>
+      <a href="/about">ALL ↗</a>
+    </div>
+    <h3 id="profile-experience-title" class="sr-only">实习与项目经历</h3>
+    <ol>
+      {
+        profile.experiences.map((experience) => (
+          <li>
+            <time>{experience.period}</time>
+            <strong>{experience.shortOrganization}</strong>
+            <span>{experience.summary}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</aside>

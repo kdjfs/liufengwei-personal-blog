@@ -1,5 +1,6 @@
 ---
 import HeroVisual from '@/components/interactive/HeroVisual';
+import { githubUrl } from '@/config/profile';
 import { siteConfig } from '@/config/site';
 ---
 
@@ -19,7 +20,8 @@ import { siteConfig } from '@/config/site';
       <div class="hero-actions">
         <a class="button primary" href="/blog">开始阅读 <span>↗</span></a>
         <a class="button secondary" href="/projects">查看项目</a>
-        <a class="button text" href={siteConfig.github} target="_blank" rel="noreferrer">GitHub ↗</a
+        <a class="button text" href={githubUrl} target="_blank" rel="noopener noreferrer"
+          >GitHub ↗</a
         >
       </div>
     </div>

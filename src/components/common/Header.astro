@@ -1,5 +1,6 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
+import { githubUrl } from '@/config/profile';
 import { siteConfig } from '@/config/site';
 
 interface Props {
@@ -40,9 +41,9 @@ const isActive = (href: string) =>
       <ThemeToggle />
       <a
         class="icon-button github-link"
-        href={siteConfig.github}
+        href={githubUrl}
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
         aria-label="GitHub"
       >
         GH

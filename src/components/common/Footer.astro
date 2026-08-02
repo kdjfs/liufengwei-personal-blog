@@ -1,5 +1,6 @@
 ---
 import { siteConfig } from '@/config/site';
+import { githubUrl } from '@/config/profile';
 const year = new Date().getFullYear();
 ---
 
@@ -14,7 +15,7 @@ const year = new Date().getFullYear();
       <a href="/archive">归档</a>
       <a href="/series">系列</a>
       <a href="/tags">标签</a>
-      <a href={siteConfig.github}>GitHub</a>
+      <a href={githubUrl} target="_blank" rel="noopener noreferrer">GitHub</a>
     </div>
     <p class="copyright">© {year} {siteConfig.author}. Built with Astro.</p>
   </div>

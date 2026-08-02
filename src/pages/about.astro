@@ -1,41 +1,127 @@
 ---
 import PageHeader from '@/components/common/PageHeader.astro';
-import { siteConfig } from '@/config/site';
+import SocialIcon from '@/components/profile/SocialIcon.astro';
+import { profile } from '@/config/profile';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="关于" description={`关于 ${siteConfig.author} 与 LFW Space。`}>
+<BaseLayout title="关于" description={`关于 ${profile.name} 的学习方向、经历与联系信息。`}>
   <PageHeader
-    eyebrow="ABOUT"
+    eyebrow="ABOUT / PROFILE"
     title="关于我"
-    description="这不是一份被关键词塞满的简历，而是一份持续更新的自我说明。"
+    description="一份持续更新的个人说明：我是谁、正在做什么，以及如何与我取得联系。"
   />
-  <section class="section-compact container-narrow prose" data-pagefind-body>
-    <div class="about-preview" style="grid-template-columns: 220px 1fr; margin-bottom: 64px;">
-      <div class="avatar-frame" role="img" aria-label="刘凤伟头像占位"></div>
-      <div>
-        <h2 style="margin-top:0">你好，我是刘凤伟。</h2>
-        <p>
-          这里是我的数字花园，用来记录技术、项目、思考与成长。当前页面保留为真实资料入口，不会用虚构的公司经历、头衔或成绩填满它。
-        </p>
+
+  <div class="about-page container-wide" data-pagefind-body>
+    <section class="about-intro" aria-labelledby="about-introduction">
+      <div class="about-portrait">
+        <img src={profile.avatar} width="640" height="640" alt={`${profile.name}的头像`} />
+        <span><i></i> LEARNING / BUILDING</span>
       </div>
-    </div>
+      <div>
+        <p class="eyebrow">01 · INTRODUCTION</p>
+        <h2 id="about-introduction">{profile.name}<small>{profile.englishName}</small></h2>
+        <p class="about-role">{profile.role}</p>
+        <p>{profile.bio}</p>
+        <dl class="about-facts">
+          <div><dt>学校</dt><dd>{profile.school}</dd></div>
+          <div><dt>专业</dt><dd>{profile.major}</dd></div>
+          <div><dt>毕业年份</dt><dd>{profile.graduation} 届</dd></div>
+        </dl>
+      </div>
+    </section>
 
-    <h2>我正在关注</h2>
-    <ul>
-      <li>如何做出更快、更清晰、更可持续维护的 Web 产品。</li>
-      <li>前端工程、用户体验与内容表达之间的连接。</li>
-      <li>把零散学习转化为可检索、可复用的长期知识。</li>
-    </ul>
+    <section class="about-section about-education" aria-labelledby="about-education">
+      <div class="about-section-heading">
+        <p class="eyebrow">02 · EDUCATION</p>
+        <h2 id="about-education">教育经历</h2>
+      </div>
+      <article class="education-card">
+        <time>{profile.educationPeriod}</time>
+        <div><h3>{profile.school}</h3><p>{profile.major} · 本科</p></div>
+        <span>{profile.graduation}</span>
+      </article>
+    </section>
 
-    <blockquote class="callout callout-note">
-      <p><strong>TODO：</strong>请在这里补充真实的个人简介、技术方向、联系方式与头像。</p>
-    </blockquote>
+    <section class="about-section" aria-labelledby="about-experience">
+      <div class="about-section-heading">
+        <p class="eyebrow">03 · EXPERIENCE</p>
+        <h2 id="about-experience">实践经历</h2>
+      </div>
+      <ol class="experience-list">
+        {
+          profile.experiences.map((experience, index) => (
+            <li>
+              <span class="experience-index">{String(index + 1).padStart(2, '0')}</span>
+              <time>{experience.period}</time>
+              <div>
+                <h3>{experience.organization}</h3>
+                <p>{experience.role}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
 
-    <h2>关于 LFW Space</h2>
-    <p>
-      本站采用 Astro 构建。文章在构建期输出为静态 HTML，只有搜索、主题和首页 WebGL
-      视觉等交互区域加载客户端脚本。这让阅读体验保持轻量，也为未来演进保留边界。
-    </p>
-  </section>
+    <section class="about-section" aria-labelledby="about-focus">
+      <div class="about-section-heading">
+        <p class="eyebrow">04 · TECH FOCUS</p>
+        <h2 id="about-focus">技术方向</h2>
+      </div>
+      <div class="focus-grid">
+        {
+          Object.entries(profile.techFocus).map(([group, skills], index) => (
+            <article>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <h3>{group}</h3>
+              <p>{skills.join(' · ')}</p>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="about-section" aria-labelledby="about-awards">
+      <div class="about-section-heading">
+        <p class="eyebrow">05 · AWARDS</p>
+        <h2 id="about-awards">奖项与成果</h2>
+      </div>
+      <ul class="award-list">
+        {
+          profile.awards.map((award, index) => (
+            <li>
+              <>
+                <span>0{index + 1}</span>
+                <strong>{award}</strong>
+              </>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="about-section about-contact" aria-labelledby="about-contact">
+      <div class="about-section-heading">
+        <p class="eyebrow">06 · CONTACT</p>
+        <h2 id="about-contact">保持联系</h2>
+      </div>
+      <div class="contact-grid">
+        {
+          profile.socials.map((social) => (
+            <a
+              href={social.href}
+              target={social.external ? '_blank' : undefined}
+              rel={social.external ? 'noopener noreferrer' : undefined}
+              aria-label={social.label}
+            >
+              <SocialIcon icon={social.icon} />
+              <span>{social.label}</span>
+              <strong>↗</strong>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </div>
 </BaseLayout>
