@@ -138,7 +138,7 @@ Git was initially clean except for the user's untracked `src/content/blog/vue3-d
 - Code blocks have copy actions but no filename presentation contract or line-highlight presentation standard.
 - Images have no production cover/body-image contract, placeholder, lightbox, or keyboard interaction.
 - Command palette search is available only after a production index exists. Development behavior is explained generically instead of clearly distinguishing the missing dev index.
-- The current GitHub links point to `https://github.com/` rather than the owner's profile.
+- The current GitHub links point to `https://github.com/kdjfs/` rather than the owner's profile.
 
 ## 7. V1 Content System Problems
 
@@ -522,7 +522,7 @@ V2 requirements:
 
 - Use one verified site URL supplied through deployment configuration; do not hard-code an unconfirmed domain.
 - `astro.config.mjs` owns the resolved `site` value. Layouts, RSS, sitemap, robots, and structured data consume `Astro.site` or the same resolved configuration.
-- Set GitHub profile to `https://github.com/kdjfs`.
+- Set GitHub profile to `https://github.com/kdjfs/kdjfs`.
 - Emit canonical links only when a valid site URL exists; per-article `canonical` overrides only for verified syndication.
 - Preserve RSS and sitemap and generate `robots.txt` from the same URL source.
 - Add article-specific Open Graph and Twitter metadata.
@@ -819,4 +819,4 @@ Primary implementation references:
 Product-completeness references only:
 
 - [YukiBloom public site](https://yuki-bloom.vercel.app/)
-- [astro-koharu public repository README and license](https://github.com/cosZone/astro-koharu)
+- [astro-koharu public repository README and license](https://github.com/kdjfs/cosZone/astro-koharu)
