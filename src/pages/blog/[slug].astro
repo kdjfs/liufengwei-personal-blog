@@ -41,7 +41,16 @@ const cover = getBlogCover(post.data.slug, post.data.cover);
   updatedTime={post.data.updatedDate}
 >
   <div class="reading-progress" data-reading-progress aria-hidden="true"></div>
-  <article data-article data-pagefind-body>
+  <article
+    data-article
+    data-pagefind-body
+    data-ai-article
+    data-ai-title={post.data.title}
+    data-ai-description={post.data.description}
+    data-ai-category={post.data.category}
+    data-ai-tags={JSON.stringify(post.data.tags)}
+    data-ai-url={`/blog/${post.data.slug}`}
+  >
     <header class="article-hero">
       <p class="eyebrow">
         <a href={`/categories/${encodeURIComponent(post.data.category)}`}>{post.data.category}</a>
