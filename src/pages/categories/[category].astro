@@ -2,12 +2,18 @@
 import { getCollection } from 'astro:content';
 import PostCard from '@/components/blog/PostCard.astro';
 import PageHeader from '@/components/common/PageHeader.astro';
+import { featuredCategories } from '@/config/categories';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getPublishedPosts } from '@/utils/posts';
 
 export async function getStaticPaths() {
   const posts = getPublishedPosts(await getCollection('blog'));
-  const categories = [...new Set(posts.map((post) => post.data.category))];
+  const categories = [
+    ...new Set([
+      ...featuredCategories.map((category) => category.name),
+      ...posts.map((post) => post.data.category),
+    ]),
+  ];
   return categories.map((category) => ({
     params: { category },
     props: { posts: posts.filter((post) => post.data.category === category) },
@@ -24,6 +30,16 @@ const { posts } = Astro.props;
     <a href="/categories">← 全部分类</a><a href="/tags">浏览标签</a><a href="/series">浏览系列</a>
   </nav>
   <section class="section-compact container-wide post-grid" data-pagefind-body>
-    {posts.map((post) => <PostCard post={post} />)}
+    {posts.map((post, index) => <PostCard post={post} revealDelay={index * 50} />)}
+    {
+      posts.length === 0 && (
+        <div class="empty-state">
+          <p>这个分类正在生长，第一篇文章发布后会自动出现在这里。</p>
+          <a class="button secondary" href="/blog">
+            浏览全部文章
+          </a>
+        </div>
+      )
+    }
   </section>
 </BaseLayout>

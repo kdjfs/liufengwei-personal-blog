@@ -11,6 +11,7 @@ export const BLOG_DIRECTORY = path.resolve('src/content/blog');
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const CONTENT_EXTENSIONS = new Set(['.md', '.mdx']);
 export const IMPORT_EXTENSIONS = new Set(['.md', '.mdx', '.txt']);
+export const COVER_PATTERN = /^(?:auto|(?:[1-9]|1[0-4])\.jpg|15\.png)$/;
 
 export function createArticleBody() {
   return '\n## 开始写作\n\n<!-- 发布前请完成正文并删除本提示。 -->\n';
@@ -164,6 +165,9 @@ export function findContentIssues(entries, { contentDirectory = BLOG_DIRECTORY }
     }
     if (!data.category || !Array.isArray(data.tags) || data.tags.length === 0) {
       report('error', entry, 'category 和 tags 必须完整');
+    }
+    if (!COVER_PATTERN.test(String(data.cover ?? ''))) {
+      report('error', entry, 'cover 必须是 auto、1.jpg 至 14.jpg，或 15.png');
     }
     if (data.draft === false && /\bTODO\b/i.test(entry.body ?? '')) {
       report('error', entry, '正式文章正文不能包含 TODO 标记');

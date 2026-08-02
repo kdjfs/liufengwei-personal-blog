@@ -9,8 +9,10 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "dev": "astro dev",
+    "predev": "pnpm content:prepare",
+    "dev": "node scripts/dev.mjs",
     "start": "astro dev",
+    "prebuild": "pnpm content:prepare",
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "typecheck": "astro check",
@@ -24,6 +26,7 @@
     "content:check": "node scripts/content/index.mjs check",
     "content:stats": "node scripts/content/index.mjs stats",
     "content:import": "node scripts/content/index.mjs import",
+    "content:prepare": "node scripts/content/index.mjs prepare",
     "new:post": "pnpm content:new"
   },
   "dependencies": {
@@ -58,6 +61,7 @@
     "prettier": "3.9.6",
     "prettier-plugin-astro": "0.14.1",
     "remark-parse": "^11.0.0",
+    "sharp": "^0.35.3",
     "typescript": "6.0.3",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0"

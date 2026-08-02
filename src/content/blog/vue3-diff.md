@@ -1,17 +1,18 @@
 ---
-title: "Vue3 Diff 算法与最长递增子序列详解"
-slug: "vue3-diff"
-description: "从源码视角理解 Vue3 Diff 算法、双端比较以及最长递增子序列优化。"
-publishDate: 2026-08-01
-category: "Vue"
+title: Vue3 Diff 算法与最长递增子序列详解
+slug: vue3-diff
+description: 从源码视角理解 Vue3 Diff 算法、双端比较以及最长递增子序列优化。
+publishDate: '2026-08-01'
+category: Vue
 tags:
-  - "Vue3"
-  - "Diff"
-  - "虚拟DOM"
-  - "源码"
-cover: grid
+  - Vue3
+  - Diff
+  - 虚拟DOM
+  - 源码
+cover: auto
 draft: false
 featured: false
+toc: true
 ---
 
 ## 一、先说结论：Diff 算法解决什么问题？

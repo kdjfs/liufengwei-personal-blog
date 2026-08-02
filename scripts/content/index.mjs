@@ -17,6 +17,7 @@ import {
   scanFiles,
   slugify,
 } from './core.mjs';
+import { prepareContentDirectory } from './prepare.mjs';
 
 function parseArgs(tokens) {
   const flags = new Map();
@@ -72,7 +73,7 @@ async function contentNew(flags) {
     const draft = boolValue(await ask('draft', '是否草稿 yes/no', 'yes'), true);
     const featured = boolValue(await ask('featured', '是否精选 yes/no', 'no'));
     const series = flags.has('no-series') ? '' : await ask('series', '系列（可选）');
-    const cover = flags.has('no-cover') ? '' : await ask('cover', '封面（可选）', 'grid');
+    const cover = flags.has('no-cover') ? 'auto' : await ask('cover', '封面（可选）', 'auto');
     const requestedSlug = await ask('slug', 'Slug（可选）');
     const slug = slugify(requestedSlug || title);
 
@@ -184,6 +185,14 @@ async function contentCheck() {
   process.exitCode = 1;
 }
 
+async function contentPrepare() {
+  const result = await prepareContentDirectory();
+  printHeading('CONTENT PREPARE', `${result.scanned} 篇文章 · ${result.changed} 篇已更新`);
+  for (const file of result.files) console.log(`  ✓ ${path.relative(process.cwd(), file)}`);
+  if (result.changed === 0) console.log('  ✓ 所有文章已具备完整 Frontmatter');
+  console.log('');
+}
+
 function inferImportData(entry) {
   const title =
     entry.data.title?.trim() ||
@@ -218,7 +227,7 @@ function inferImportData(entry) {
     ...(entry.data.series
       ? { series: entry.data.series, seriesOrder: entry.data.seriesOrder ?? 1 }
       : {}),
-    ...(entry.data.cover ? { cover: entry.data.cover } : {}),
+    cover: entry.data.cover || 'auto',
     toc: entry.data.toc ?? true,
     inferred,
   };
@@ -340,7 +349,8 @@ try {
   else if (command === 'check') await contentCheck();
   else if (command === 'stats') await contentStats();
   else if (command === 'import') await contentImport(flags, positionals);
-  else throw new Error('可用命令：new、list、check、stats、import');
+  else if (command === 'prepare') await contentPrepare();
+  else throw new Error('可用命令：new、list、check、stats、import、prepare');
 } catch (error) {
   console.error(`\nContent 命令失败：${error instanceof Error ? error.message : String(error)}\n`);
   process.exitCode = 1;
