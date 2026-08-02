@@ -1,5 +1,10 @@
 {
   "framework": "astro",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "functions": {
+    "api/chat.ts": {
+      "maxDuration": 60
+    }
+  }
 }
