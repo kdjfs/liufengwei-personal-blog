@@ -1,12 +1,22 @@
 ---
 import { getCollection } from 'astro:content';
+import FeaturedCategoryCard from '@/components/categories/FeaturedCategoryCard.astro';
 import PageHeader from '@/components/common/PageHeader.astro';
+import { featuredCategories } from '@/config/categories';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getPublishedPosts } from '@/utils/posts';
 import { getCategorySummaries } from '@/utils/taxonomy';
 
 const posts = getPublishedPosts(await getCollection('blog'));
-const categories = getCategorySummaries(posts);
+const summaries = getCategorySummaries(posts);
+const summaryMap = new Map(summaries.map((summary) => [summary.name, summary]));
+const fixedNames = new Set(featuredCategories.map((category) => category.name));
+const categoryCards = featuredCategories.map((category) => ({
+  category,
+  count: summaryMap.get(category.name)?.count ?? 0,
+  tags: summaryMap.get(category.name)?.tags ?? [],
+}));
+const otherCategories = summaries.filter((category) => !fixedNames.has(category.name));
 ---
 
 <BaseLayout title="分类">
@@ -15,21 +25,45 @@ const categories = getCategorySummaries(posts);
     title="分类"
     description="从主题入口进入文章，让内容形成稳定的知识脉络。"
   />
-  <section class="section-compact container-wide taxonomy-grid" data-pagefind-body>
+  <main class="section-compact container-wide categories-page" data-pagefind-body>
+    <section aria-labelledby="featured-categories-title">
+      <div class="section-kicker">
+        <span id="featured-categories-title">FEATURED CATEGORIES</span>
+        <span>08 TOPICS</span>
+      </div>
+      <div class="featured-category-grid categories-directory-grid">
+        {
+          categoryCards.map((item, index) => (
+            <FeaturedCategoryCard {...item} revealDelay={index * 45} />
+          ))
+        }
+      </div>
+    </section>
+
     {
-      categories.map((category, index) => (
-        <a
-          class="taxonomy-card category-card"
-          href={`/categories/${encodeURIComponent(category.name)}`}
-        >
-          <span class="taxonomy-index">{String(index + 1).padStart(2, '0')}</span>
-          <div>
-            <strong>{category.name}</strong>
-            <p>{category.tags.join(' · ') || '持续生长中的主题'}</p>
+      otherCategories.length > 0 && (
+        <section class="other-categories" aria-labelledby="other-categories-title" data-reveal>
+          <div class="section-kicker">
+            <span id="other-categories-title">OTHER CATEGORIES</span>
+            <span>{String(otherCategories.length).padStart(2, '0')} TOPICS</span>
           </div>
-          <span>{String(category.count).padStart(2, '0')} POSTS →</span>
-        </a>
-      ))
+          <div class="taxonomy-grid">
+            {otherCategories.map((category, index) => (
+              <a
+                class="taxonomy-card category-card"
+                href={`/categories/${encodeURIComponent(category.name)}`}
+              >
+                <span class="taxonomy-index">{String(index + 9).padStart(2, '0')}</span>
+                <div>
+                  <strong>{category.name}</strong>
+                  <p>{category.tags.join(' · ') || '持续生长中的主题'}</p>
+                </div>
+                <span>{String(category.count).padStart(2, '0')} POSTS →</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
     }
-  </section>
+  </main>
 </BaseLayout>

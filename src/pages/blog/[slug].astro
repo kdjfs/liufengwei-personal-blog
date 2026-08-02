@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
 import PostCard from '@/components/blog/PostCard.astro';
 import TableOfContents from '@/components/blog/TableOfContents.astro';
@@ -10,6 +11,7 @@ import {
   getReadingStats,
   getRelatedPosts,
 } from '@/utils/posts';
+import { getBlogCover } from '@/utils/blog-cover';
 
 export async function getStaticPaths() {
   const posts = getPublishedPosts(await getCollection('blog'));
@@ -28,6 +30,7 @@ const seriesPosts = post.data.series
       .filter((item) => item.data.series === post.data.series)
       .sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0))
   : [];
+const cover = getBlogCover(post.data.slug, post.data.cover);
 ---
 
 <BaseLayout
@@ -74,12 +77,16 @@ const seriesPosts = post.data.series
       </div>
       <span class="sr-only" data-pagefind-meta="category">{post.data.category}</span>
     </header>
-    <div
-      class={`article-cover cover-${post.data.cover ?? 'grid'}`}
-      role="img"
-      aria-label={`${post.data.title} 的抽象封面`}
-      transition:name={`article-cover-${post.data.slug}`}
-    >
+    <div class="article-cover" transition:name={`article-cover-${post.data.slug}`}>
+      <Image
+        src={cover.image}
+        alt={`${post.data.title}文章封面`}
+        widths={[720, 960, 1280, 1600]}
+        sizes="(max-width: 900px) 94vw, 1120px"
+        loading="eager"
+        fetchpriority="high"
+        format="webp"
+      />
     </div>
     <div class="article-layout">
       {post.data.toc !== false && <TableOfContents headings={headings} />}

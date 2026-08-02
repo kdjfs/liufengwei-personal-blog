@@ -23,7 +23,13 @@ const statItems = [
 <aside class="profile-rail" aria-labelledby="profile-name">
   <div class="profile-identity">
     <div class="profile-avatar-wrap">
-      <img src={profile.avatar} width="640" height="640" alt={`${profile.name}的头像`} />
+      <img
+        class="profile-avatar"
+        src={profile.avatar}
+        width="640"
+        height="640"
+        alt={`${profile.name}的头像`}
+      />
       <span class="profile-status" title="正在持续学习与构建"><i></i> OPEN TO GROW</span>
     </div>
     <div class="profile-name-wrap">
@@ -44,6 +50,7 @@ const statItems = [
           title={social.label}
           target={social.external ? '_blank' : undefined}
           rel={social.external ? 'noopener noreferrer' : undefined}
+          data-social={social.icon}
         >
           <SocialIcon icon={social.icon} />
           <span>{social.label}</span>
@@ -66,7 +73,7 @@ const statItems = [
   <section class="profile-experience" aria-labelledby="profile-experience-title">
     <div class="profile-section-title">
       <span>EXPERIENCE</span>
-      <a href="/about">ALL ↗</a>
+      <a href="/about"><span>ALL</span> <i aria-hidden="true">↗</i></a>
     </div>
     <h3 id="profile-experience-title" class="sr-only">实习与项目经历</h3>
     <ol>

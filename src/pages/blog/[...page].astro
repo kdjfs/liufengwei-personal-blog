@@ -77,7 +77,12 @@ const pageTitle = page.currentPage === 1 ? '文章' : `文章 · 第 ${page.curr
         <h2 id="featured-writing-title">精选写作</h2>
         <div class="post-grid featured-grid">
           {featured.map((post, index) => (
-            <PostCard post={post} featured={index === 0} />
+            <PostCard
+              post={post}
+              featured={index === 0}
+              loading={index === 0 ? 'eager' : 'lazy'}
+              revealDelay={index * 60}
+            />
           ))}
         </div>
       </section>
@@ -98,9 +103,12 @@ const pageTitle = page.currentPage === 1 ? '文章' : `文章 · 第 ${page.curr
       </div>
       <div class="blog-list" data-pagefind-body>
         {
-          page.data.map((post) => (
+          page.data.map((post, index) => (
             <PostCard
               post={post}
+              editorial
+              reverse={index % 2 === 1}
+              revealDelay={(index % 4) * 55}
               transitionSuffix={featured.some((item) => item.id === post.id) ? 'list' : undefined}
             />
           ))

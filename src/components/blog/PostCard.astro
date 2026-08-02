@@ -1,30 +1,55 @@
 ---
+import { Image } from 'astro:assets';
 import type { BlogEntry } from '@/utils/posts';
 import { formatDate, getPostSlug, getReadingStats } from '@/utils/posts';
+import { getBlogCover } from '@/utils/blog-cover';
 
 interface Props {
   post: BlogEntry;
   featured?: boolean;
+  editorial?: boolean;
+  reverse?: boolean;
+  loading?: 'eager' | 'lazy';
+  revealDelay?: number;
   transitionSuffix?: string;
 }
 
-const { post, featured = false, transitionSuffix } = Astro.props;
+const {
+  post,
+  featured = false,
+  editorial = false,
+  reverse = false,
+  loading = 'lazy',
+  revealDelay = 0,
+  transitionSuffix,
+} = Astro.props;
 const stats = getReadingStats(post.body ?? '');
 const slug = getPostSlug(post);
 const transitionSlug = transitionSuffix ? `${slug}-${transitionSuffix}` : slug;
+const cover = getBlogCover(slug, post.data.cover);
 ---
 
-<article class:list={['post-card', { featured }]}>
+<article
+  class:list={['post-card', { featured, editorial, reverse }]}
+  data-reveal
+  style={`--reveal-delay: ${revealDelay}ms`}
+>
   <a
-    class={`post-cover cover-${post.data.cover ?? 'grid'}`}
+    class="post-cover"
     href={`/blog/${slug}`}
     aria-label={`阅读《${post.data.title}》`}
     transition:name={`article-cover-${transitionSlug}`}
   >
-    <span class="cover-code" aria-hidden="true"
-      >{String(post.data.publishDate.getFullYear()).slice(2)}</span
-    >
-    <span class="cover-line" aria-hidden="true"></span>
+    <Image
+      src={cover.image}
+      alt={`${post.data.title}文章封面`}
+      widths={[480, 720, 960, 1280]}
+      sizes={editorial ? '(max-width: 680px) 94vw, 42vw' : '(max-width: 680px) 94vw, 36vw'}
+      loading={loading}
+      fetchpriority={loading === 'eager' ? 'high' : 'auto'}
+      format="webp"
+    />
+    <span class="post-cover-overlay" aria-hidden="true"></span>
   </a>
   <div class="post-card-body">
     <div class="post-meta">
@@ -43,5 +68,8 @@ const transitionSlug = transitionSuffix ? `${slug}-${transitionSuffix}` : slug;
           .map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>#{tag}</a>)
       }
     </div>
+    <a class="post-read-more" href={`/blog/${slug}`} aria-label={`继续阅读《${post.data.title}》`}>
+      Read article <i aria-hidden="true">→</i>
+    </a>
   </div>
 </article>
