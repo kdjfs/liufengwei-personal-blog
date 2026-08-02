@@ -1,18 +1,48 @@
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-const pnpmHome = process.env.PNPM_HOME || path.join(process.env.LOCALAPPDATA ?? '', 'pnpm');
-if (!process.env.PATH?.split(path.delimiter).includes(pnpmHome)) {
-  process.env.PATH = `${pnpmHome}${path.delimiter}${process.env.PATH ?? ''}`;
+// Vercel CLI (Rust) cannot handle non-ASCII PATH entries.
+// Remove them from process.env.PATH BEFORE spawning so the child
+// inherits a clean PATH directly (without cmd.exe re-injecting garbage).
+function isAscii(input) {
+  for (let i = 0; i < input.length; i += 1) {
+    const code = input.charCodeAt(i);
+    if (code > 127 || code < 32) return false;
+  }
+  return input.length > 0;
 }
 
-const lookup =
-  process.platform === 'win32'
-    ? spawnSync('where.exe', ['vercel'], { stdio: 'ignore' })
-    : spawnSync('sh', ['-c', 'command -v vercel'], { stdio: 'ignore' });
+const cleanEntries = (process.env.PATH ?? '')
+  .split(path.delimiter)
+  .filter(isAscii);
 
-if (lookup.status !== 0) {
+const pnpmHome =
+  process.env.PNPM_HOME ||
+  path.join(process.env.LOCALAPPDATA ?? '', 'pnpm');
+
+if (!cleanEntries.includes(pnpmHome)) {
+  cleanEntries.unshift(pnpmHome);
+}
+
+process.env.PATH = cleanEntries.join(path.delimiter);
+
+// Locate vercel
+const candidates = [
+  path.join(pnpmHome, 'vercel.cmd'),
+  ...cleanEntries.map((dir) => path.join(dir, 'vercel.cmd')),
+];
+
+let vercelBin = '';
+for (const candidate of candidates) {
+  if (existsSync(candidate)) {
+    vercelBin = candidate;
+    break;
+  }
+}
+
+if (!vercelBin) {
   console.error(`
 [LFW AI] 未检测到 Vercel CLI，普通博客开发仍可使用 pnpm dev。
 [LFW AI] 完整 AI 联调请先安装：pnpm add --global vercel
@@ -20,12 +50,16 @@ if (lookup.status !== 0) {
 `);
   process.exitCode = 1;
 } else {
-  const child = spawn('pnpm', ['exec', 'vercel', 'dev'], {
-    cwd: process.cwd(),
-    env: process.env,
-    shell: process.platform === 'win32',
-    stdio: 'inherit',
-  });
+  // cmd.exe /d /c 执行 .cmd 文件，子进程继承已清理的 PATH
+  const child = spawn(
+    'cmd.exe',
+    ['/d', '/c', vercelBin, 'dev'],
+    {
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: 'inherit',
+    },
+  );
 
   child.on('error', (error) => {
     console.error(`[LFW AI] 无法启动 Vercel Dev：${error.message}`);

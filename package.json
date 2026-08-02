@@ -68,7 +68,8 @@
     "sharp": "^0.35.3",
     "typescript": "6.0.3",
     "unified": "^11.0.5",
-    "unist-util-visit": "^5.1.0"
+    "unist-util-visit": "^5.1.0",
+    "vercel": "^58.4.4"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
