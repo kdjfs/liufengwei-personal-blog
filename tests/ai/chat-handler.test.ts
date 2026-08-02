@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { InMemoryRateLimiter } from '../../api/_rate-limit.ts';
-import { handleChat } from '../../api/chat.ts';
+import { handleChat, fetch as vercelFetch } from '../../api/chat.ts';
+
+test('chat exposes a Vercel Web Handler named export', () => {
+  assert.equal(vercelFetch, handleChat);
+  assert.equal(typeof vercelFetch, 'function');
+});
 
 function createDependencies(overrides: Record<string, unknown> = {}) {
   return {

@@ -24,14 +24,6 @@ export function handleAIHealth(environment: NodeJS.ProcessEnv = process.env): Re
   );
 }
 
-export default {
-  fetch(request: Request) {
-    if (request.method !== 'GET') {
-      return Response.json(
-        { error: { code: 'METHOD_NOT_ALLOWED', message: '仅支持 GET 请求' } },
-        { status: 405, headers: { Allow: 'GET', 'Cache-Control': 'no-store' } },
-      );
-    }
-    return handleAIHealth();
-  },
-};
+export function GET(_request: Request): Response {
+  return handleAIHealth();
+}

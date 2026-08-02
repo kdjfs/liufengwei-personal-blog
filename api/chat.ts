@@ -23,7 +23,7 @@ let activeStreams = 0;
 
 export interface ChatHandlerDependencies {
   environment: NodeJS.ProcessEnv;
-  fetchImpl: typeof fetch;
+  fetchImpl: typeof globalThis.fetch;
   rateLimiter: InMemoryRateLimiter;
   now: () => number;
   randomUUID: () => string;
@@ -407,4 +407,7 @@ export async function handleChat(
   });
 }
 
-export default { fetch: handleChat };
+// Vercel detects Web API handlers from named `fetch`/HTTP method exports.
+// A default `{ fetch }` object is a Cloudflare Worker shape and is not callable
+// by the Vercel Node runtime.
+export const fetch = handleChat;

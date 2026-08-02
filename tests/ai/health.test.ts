@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { handleAIHealth } from '../../api/ai-health.ts';
+import { GET, handleAIHealth } from '../../api/ai-health.ts';
+
+test('AI health exposes a Vercel GET Web Handler', () => {
+  assert.equal(typeof GET, 'function');
+  const response = GET(new Request('https://lfw.example/api/ai-health'));
+  assert.equal(response.status, 200);
+});
 
 test('AI health reports only safe production configuration metadata', async () => {
   const response = handleAIHealth({
