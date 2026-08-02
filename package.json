@@ -24,6 +24,8 @@
     "test:content": "node --test scripts/content/*.test.mjs",
     "test:ai": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/ai/*.test.ts",
     "test": "pnpm test:content && pnpm test:ai",
+    "ai:probe": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-probe.mjs",
+    "ai:probe:prod": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-probe.mjs --production",
     "content:new": "node scripts/content/index.mjs new",
     "content:list": "node scripts/content/index.mjs list",
     "content:check": "node scripts/content/index.mjs check",
@@ -52,6 +54,7 @@
     "rehype-slug": "6.0.0",
     "remark-gfm": "4.0.1",
     "remark-math": "6.0.0",
+    "tailwindcss": "4.3.3",
     "zod": "4.4.3"
   },
   "devDependencies": {

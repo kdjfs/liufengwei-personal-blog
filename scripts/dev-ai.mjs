@@ -1,79 +1,52 @@
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import path from 'node:path';
+import { resolve } from 'node:path';
 import process from 'node:process';
 
-// Vercel CLI (Rust) cannot handle non-ASCII PATH entries.
-// Remove them from process.env.PATH BEFORE spawning so the child
-// inherits a clean PATH directly (without cmd.exe re-injecting garbage).
-function isAscii(input) {
-  for (let i = 0; i < input.length; i += 1) {
-    const code = input.charCodeAt(i);
-    if (code > 127 || code < 32) return false;
-  }
-  return input.length > 0;
-}
+const children = new Map();
+let shuttingDown = false;
 
-const cleanEntries = (process.env.PATH ?? '')
-  .split(path.delimiter)
-  .filter(isAscii);
-
-const pnpmHome =
-  process.env.PNPM_HOME ||
-  path.join(process.env.LOCALAPPDATA ?? '', 'pnpm');
-
-if (!cleanEntries.includes(pnpmHome)) {
-  cleanEntries.unshift(pnpmHome);
-}
-
-process.env.PATH = cleanEntries.join(path.delimiter);
-
-// Locate vercel
-const candidates = [
-  path.join(pnpmHome, 'vercel.cmd'),
-  ...cleanEntries.map((dir) => path.join(dir, 'vercel.cmd')),
-];
-
-let vercelBin = '';
-for (const candidate of candidates) {
-  if (existsSync(candidate)) {
-    vercelBin = candidate;
-    break;
-  }
-}
-
-if (!vercelBin) {
-  console.error(`
-[LFW AI] 未检测到 Vercel CLI，普通博客开发仍可使用 pnpm dev。
-[LFW AI] 完整 AI 联调请先安装：pnpm add --global vercel
-[LFW AI] 安装后重新运行：pnpm dev:ai
-`);
-  process.exitCode = 1;
-} else {
-  // cmd.exe /d /c 执行 .cmd 文件，子进程继承已清理的 PATH
-  const child = spawn(
-    'cmd.exe',
-    ['/d', '/c', vercelBin, 'dev'],
-    {
-      cwd: process.cwd(),
-      env: process.env,
-      stdio: 'inherit',
-    },
-  );
-
+function start(name, args, env = process.env) {
+  const child = spawn(process.execPath, args, {
+    cwd: process.cwd(),
+    env,
+    stdio: 'inherit',
+    windowsHide: true,
+  });
+  children.set(name, child);
   child.on('error', (error) => {
-    console.error(`[LFW AI] 无法启动 Vercel Dev：${error.message}`);
-    process.exitCode = 1;
+    console.error(`[LFW AI] ${name} 启动失败：${error.message}`);
+    shutdown(1);
   });
-
   child.on('exit', (code, signal) => {
-    if (signal) process.kill(process.pid, signal);
-    else process.exitCode = code ?? 0;
+    children.delete(name);
+    if (shuttingDown) return;
+    const reason = signal ? `signal ${signal}` : `code ${code ?? 1}`;
+    console.error(`[LFW AI] ${name} 已退出（${reason}），正在关闭本地联调服务。`);
+    shutdown(code ?? 1);
   });
-
-  for (const signal of ['SIGINT', 'SIGTERM']) {
-    process.on(signal, () => {
-      if (!child.killed) child.kill(signal);
-    });
-  }
 }
+
+function shutdown(exitCode = 0) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  process.exitCode = exitCode;
+  for (const child of children.values()) {
+    if (!child.killed) child.kill('SIGTERM');
+  }
+  const deadline = setTimeout(() => process.exit(exitCode), 3_000);
+  deadline.unref();
+}
+
+console.log('[LFW AI] 启动 Astro Dev + Local AI Gateway（无需 Vercel 登录）');
+start('Astro Dev', [resolve('node_modules/astro/bin/astro.mjs'), 'dev', '--ignore-lock'], {
+  ...process.env,
+  ASTRO_DEV_BACKGROUND: '0',
+});
+start('Local AI Gateway', [
+  '--disable-warning=ExperimentalWarning',
+  '--experimental-strip-types',
+  'scripts/ai-local-server.ts',
+]);
+
+process.once('SIGINT', () => shutdown(0));
+process.once('SIGTERM', () => shutdown(0));

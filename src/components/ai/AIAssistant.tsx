@@ -79,6 +79,7 @@ export default function AIAssistant() {
             knowledgeStatus={assistant.knowledgeStatus}
             onModeChange={assistant.setMode}
             onSend={assistant.sendMessage}
+            onStop={assistant.stopStreaming}
             onClear={assistant.clearMessages}
             onMinimize={() => assistant.setIsOpen(false)}
             onClose={() => assistant.setIsOpen(false)}

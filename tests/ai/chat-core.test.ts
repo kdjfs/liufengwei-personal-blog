@@ -5,6 +5,7 @@ import {
   parseChatRequest,
   resolveApiKey,
   resolveBaseUrl,
+  validateApiKeyValue,
 } from '../../api/_chat-core.ts';
 
 const validBody = {
@@ -53,6 +54,8 @@ test('buildDeepSeekRequest uses Pro fast mode without thinking', () => {
   assert.equal(request.stream, true);
   assert.equal(request.max_tokens, 1200);
   assert.ok(request.system.includes('LFW Space'));
+  assert.equal(request.messages[0]?.content[0]?.type, 'text');
+  assert.match(request.messages[0]?.content[0]?.text ?? '', /解释 Vue3 Diff/);
 });
 
 test('buildDeepSeekRequest uses Pro with max thinking in deep mode', () => {
@@ -70,6 +73,37 @@ test('resolveApiKey only permits the compatibility token fallback off Vercel', (
   );
   assert.equal(resolveApiKey({ ANTHROPIC_AUTH_TOKEN: 'fallback' }), 'fallback');
   assert.equal(resolveApiKey({ VERCEL: '1', ANTHROPIC_AUTH_TOKEN: 'fallback' }), undefined);
+});
+
+test('system prompt permits deterministic short-text health checks', () => {
+  const request = buildDeepSeekRequest(parseChatRequest(validBody));
+  assert.match(request.system, /健康检查.*严格只输出/);
+});
+
+test('validateApiKeyValue rejects missing values and common placeholders', () => {
+  assert.equal(validateApiKeyValue(undefined).status, 'missing');
+  for (const placeholder of [
+    '',
+    'replace_me',
+    'your_key',
+    'your-new-key',
+    '<your-api-key>',
+    'YOUR_API_KEY',
+  ]) {
+    assert.equal(validateApiKeyValue(placeholder).status, placeholder ? 'placeholder' : 'missing');
+  }
+});
+
+test('validateApiKeyValue rejects Unicode and invisible header characters', () => {
+  assert.equal(validateApiKeyValue('密钥-value').status, 'invalid');
+  assert.equal(validateApiKeyValue('valid-looking\nvalue').status, 'invalid');
+  assert.equal(validateApiKeyValue('“quoted-value”').status, 'invalid');
+});
+
+test('validateApiKeyValue accepts a printable ASCII credential without revealing it', () => {
+  const result = validateApiKeyValue('unit-test-credential');
+  assert.equal(result.status, 'valid');
+  assert.equal(result.value, 'unit-test-credential');
 });
 
 test('resolveBaseUrl only accepts the official DeepSeek Anthropic API root', () => {

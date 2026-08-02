@@ -30,7 +30,8 @@ function friendlyError(error: unknown): string {
   }
   if (error.code === 'RATE_LIMITED') return '提问有点频繁，请稍后再试。';
   if (error.code === 'AI_TIMEOUT') return '这次思考超时了，请重试或切换到快速模式。';
-  return error.message || 'AI 服务暂时不可用，请稍后重试。';
+  const message = error.message || 'AI 服务暂时不可用，请稍后重试。';
+  return error.requestId ? `${message}\n\n请求 ID：${error.requestId}` : message;
 }
 
 export function useAIAssistant() {
@@ -142,6 +143,19 @@ export function useAIAssistant() {
           ),
         );
       } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          setMessages((current) =>
+            current.map((item) =>
+              item.id === assistantId
+                ? {
+                    ...item,
+                    content: received || '已停止生成。',
+                    status: 'done',
+                  }
+                : item,
+            ),
+          );
+        }
         const message = friendlyError(error);
         if (message) {
           setMessages((current) =>
@@ -167,6 +181,8 @@ export function useAIAssistant() {
     setMessages([]);
   }, []);
 
+  const stopStreaming = useCallback(() => abortRef.current?.abort(), []);
+
   return {
     isOpen,
     setIsOpen,
@@ -180,6 +196,7 @@ export function useAIAssistant() {
       [articlePage],
     ),
     sendMessage,
+    stopStreaming,
     clearMessages,
   };
 }

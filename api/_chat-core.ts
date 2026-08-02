@@ -69,7 +69,21 @@ interface DeepSeekRequest {
   thinking: { type: 'enabled' | 'disabled' };
   output_config?: { effort: 'max' };
   system: string;
-  messages: { role: 'user' | 'assistant'; content: string }[];
+  messages: {
+    role: 'user' | 'assistant';
+    content: { type: 'text'; text: string }[];
+  }[];
+}
+
+type InvalidApiKeyValidation = { status: 'missing' | 'placeholder' | 'invalid' };
+type ValidApiKeyValidation = { status: 'valid'; value: string };
+export type ApiKeyValidation = InvalidApiKeyValidation | ValidApiKeyValidation;
+
+export class AIConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AIConfigurationError';
+  }
 }
 
 function truncate(value: string, maxChars: number): string {
@@ -133,15 +147,49 @@ export function buildDeepSeekRequest(input: ChatRequestPayload): DeepSeekRequest
     thinking: { type: deep ? 'enabled' : 'disabled' },
     ...(deep ? { output_config: { effort: 'max' as const } } : {}),
     system: SYSTEM_PROMPT,
-    messages,
+    messages: messages.map((message) => ({
+      role: message.role,
+      content: [{ type: 'text' as const, text: message.content }],
+    })),
   };
 }
 
+export function validateApiKeyValue(rawValue: string | undefined): ApiKeyValidation {
+  const value = rawValue?.trim() ?? '';
+  if (!value) return { status: 'missing' };
+
+  const placeholder = value
+    .toLowerCase()
+    .replace(/[<>"']/g, '')
+    .replace(/[\s_-]+/g, '-');
+  if (
+    placeholder === 'replace-me' ||
+    /^your-(?:new-)?(?:deepseek-)?(?:api-)?key$/.test(placeholder)
+  ) {
+    return { status: 'placeholder' };
+  }
+
+  if (
+    [...value].some((character) => character.charCodeAt(0) < 33 || character.charCodeAt(0) > 126)
+  ) {
+    return { status: 'invalid' };
+  }
+
+  return { status: 'valid', value };
+}
+
 export function resolveApiKey(environment: NodeJS.ProcessEnv): string | undefined {
-  const primary = environment.DEEPSEEK_API_KEY?.trim();
-  if (primary) return primary;
-  if (environment.VERCEL) return undefined;
-  return environment.ANTHROPIC_AUTH_TOKEN?.trim() || undefined;
+  const rawValue =
+    environment.DEEPSEEK_API_KEY !== undefined
+      ? environment.DEEPSEEK_API_KEY
+      : environment.VERCEL
+        ? undefined
+        : environment.ANTHROPIC_AUTH_TOKEN;
+  const validation = validateApiKeyValue(rawValue);
+  if (validation.status === 'invalid') {
+    throw new AIConfigurationError('API Key contains invalid header characters');
+  }
+  return validation.status === 'valid' ? validation.value : undefined;
 }
 
 export function resolveBaseUrl(environment: NodeJS.ProcessEnv): string {

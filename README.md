@@ -60,18 +60,25 @@ pnpm dev
 
 ### AI 完整联调
 
-普通内容开发继续使用 `pnpm dev`。要同时运行 Astro 与 `/api/chat`，先安装 Vercel CLI，
-再启动完整环境：
+普通内容开发继续使用 `pnpm dev`。完整 AI 联调直接运行：
 
 ```bash
-pnpm add --global vercel
 pnpm dev:ai
 ```
 
+该命令不需要 Vercel CLI 或登录，会同时启动 `http://localhost:4321` 的 Astro Dev 和
+`http://127.0.0.1:8787/api/chat` 的原生 Node Local AI Gateway。Gateway 复用生产环境的
+`api/chat.ts`，不会维护第二份 DeepSeek 请求实现。
+
 在项目根目录创建不会被 Git 跟踪的 `.env.local`，从 `.env.example` 复制配置，并把
 `DEEPSEEK_API_KEY=replace_me` 中的 `replace_me` 替换为你在 DeepSeek 控制台新建的 Key。
-不要把 Key 写进源码、README、测试或提交记录。开发者本机可使用
-`ANTHROPIC_AUTH_TOKEN` 作为 fallback；Vercel 生产环境只读取 `DEEPSEEK_API_KEY`。
+不要把 Key 写进源码、README、测试或提交记录。`pnpm dev:ai` 会在启动前拒绝缺失、占位符
+或包含非 ASCII Header 字符的 Key。共享 Handler 在非 Vercel 环境保留
+`ANTHROPIC_AUTH_TOKEN` fallback；Local Gateway 和 Vercel 生产环境都要求
+`DEEPSEEK_API_KEY`。
+
+连接问题可先运行 `pnpm ai:probe` 直接验证 DeepSeek，再用生产域名运行
+`pnpm ai:probe:prod` 验证已部署的 Streaming Function。两个探针都不会输出 API Key。
 
 在 Vercel 项目的 **Settings → Environment Variables** 中添加相同变量后重新部署。
 快速模式使用 `deepseek-v4-pro` 并关闭 thinking；深度思考模式仍使用 Pro，开启 thinking
@@ -103,7 +110,9 @@ pnpm new:post -- --title "文章标题" --category "前端" --tags "Astro,TypeSc
 
 ```bash
 pnpm dev           # 开发
-pnpm dev:ai        # Astro + Vercel Function 完整 AI 联调
+pnpm dev:ai        # Astro + Local AI Gateway，无需 Vercel 登录
+pnpm ai:probe      # 安全直连 DeepSeek 探针
+pnpm ai:probe:prod # 生产 /api/chat Streaming 探针
 pnpm typecheck     # Astro + TypeScript 检查
 pnpm lint          # Biome 检查
 pnpm format:check  # 格式检查
@@ -141,7 +150,8 @@ pnpm content:prepare # 补齐原始 Markdown 的 Frontmatter
 
 将 Git 仓库导入 Vercel，使用 `pnpm install --frozen-lockfile` 安装、`pnpm build` 构建，输出目录为 `dist`。发布前务必把 `astro.config.mjs`、`src/config/site.ts` 和 `public/robots.txt` 中的占位域名统一替换为正式域名。
 
-站点仍保持 Astro SSG；仅 `/api/chat` 由 root Vercel Function 处理，不需要数据库、Redis 或独立 Node 服务。
+站点仍保持 Astro SSG；仅 `/api/chat` 和无模型调用的 `/api/ai-health` 由 root Vercel
+Function 处理，不需要数据库、Redis 或独立 Node 服务。
 部署时在 Vercel 环境变量中配置 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、
 `DEEPSEEK_MODEL` 与 `SITE_URL`。当前代码级限流是无外部存储的 serverless 实例内限流；
 若将来需要严格的全局配额，应在 Vercel Firewall 中增加项目级 Rate Limit 规则。

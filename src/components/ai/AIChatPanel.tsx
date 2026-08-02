@@ -13,6 +13,7 @@ interface Props {
   knowledgeStatus: 'idle' | 'loading' | 'ready' | 'unavailable';
   onModeChange: (mode: ChatMode) => void;
   onSend: (message: string) => void;
+  onStop: () => void;
   onClear: () => void;
   onMinimize: () => void;
   onClose: () => void;
@@ -35,6 +36,7 @@ export const AIChatPanel = forwardRef<HTMLElement, Props>(function AIChatPanel(
     knowledgeStatus,
     onModeChange,
     onSend,
+    onStop,
     onClear,
     onMinimize,
     onClose,
@@ -63,6 +65,11 @@ export const AIChatPanel = forwardRef<HTMLElement, Props>(function AIChatPanel(
           </div>
         </div>
         <div className="ai-panel-actions">
+          {isStreaming && (
+            <button type="button" onClick={onStop}>
+              Stop
+            </button>
+          )}
           <button type="button" onClick={onClear} disabled={messages.length === 0}>
             Clear
           </button>

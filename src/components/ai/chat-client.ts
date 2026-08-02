@@ -1,3 +1,4 @@
+import { resolveChatEndpoint } from '@/lib/ai/chat-endpoint';
 import { AnthropicSSEDecoder } from '@/lib/ai/sse';
 import type { ChatRequestPayload } from '@/lib/ai/types';
 
@@ -5,6 +6,7 @@ interface ErrorPayload {
   error?: {
     code?: string;
     message?: string;
+    requestId?: string;
   };
 }
 
@@ -13,6 +15,7 @@ export class AIChatClientError extends Error {
     public readonly code: string,
     public readonly status: number,
     message: string,
+    public readonly requestId?: string,
   ) {
     super(message);
     this.name = 'AIChatClientError';
@@ -32,12 +35,18 @@ export async function streamAIResponse(
   onDelta: (delta: string) => void,
   signal: AbortSignal,
 ): Promise<void> {
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-    signal,
-  });
+  let response: Response;
+  try {
+    response = await fetch(resolveChatEndpoint(window.location.hostname), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error;
+    throw new AIChatClientError('ENDPOINT_UNAVAILABLE', 0, '完整 AI 联调请运行 pnpm dev:ai');
+  }
 
   if (!response.ok) {
     const body = await readError(response);
@@ -45,6 +54,7 @@ export async function streamAIResponse(
       body.error?.code ?? (response.status === 404 ? 'ENDPOINT_UNAVAILABLE' : 'AI_REQUEST_FAILED'),
       response.status,
       body.error?.message ?? 'AI 服务暂时不可用',
+      body.error?.requestId,
     );
   }
 
