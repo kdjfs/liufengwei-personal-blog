@@ -36,10 +36,9 @@ export const profile = {
       icon: 'juejin',
       external: true,
     },
-    // TODO: 用户提供真实 Bilibili UID 后替换此占位地址。
     {
       label: 'Bilibili',
-      href: 'https://space.bilibili.com/REPLACE_ME',
+      href: 'https://space.bilibili.com/609903342?spm_id_from=333.1007.0.0',
       icon: 'bilibili',
       external: true,
     },
