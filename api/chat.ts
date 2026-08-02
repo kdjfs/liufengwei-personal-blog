@@ -40,17 +40,14 @@ function errorResponse(
   message: string,
   headers?: HeadersInit,
 ): Response {
-  return Response.json(
-    { error: { code, message } } satisfies ErrorBody,
-    {
-      status,
-      headers: {
-        'Cache-Control': 'no-store',
-        'X-Content-Type-Options': 'nosniff',
-        ...headers,
-      },
+  return Response.json({ error: { code, message } } satisfies ErrorBody, {
+    status,
+    headers: {
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      ...headers,
     },
-  );
+  });
 }
 
 function isAllowedOrigin(request: Request, environment: NodeJS.ProcessEnv): boolean {

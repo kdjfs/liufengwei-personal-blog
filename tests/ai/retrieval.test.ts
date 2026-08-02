@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { rankKnowledge } from '../../src/lib/ai/retrieval.ts';
+import { rankKnowledge, selectKnowledgeSources } from '../../src/lib/ai/retrieval.ts';
 import type { KnowledgeItem } from '../../src/lib/ai/types.ts';
 
 const items: KnowledgeItem[] = [
@@ -53,4 +53,12 @@ test('rankKnowledge is case-insensitive for English queries', () => {
 test('rankKnowledge returns only real positive-scoring sources', () => {
   const ranked = rankKnowledge('完全无关的问题', items, 4);
   assert.deepEqual(ranked, []);
+});
+
+test('selectKnowledgeSources puts the current article first without duplicating it', () => {
+  const selected = selectKnowledgeSources('Promise Event Loop', items, '/blog/vue3-diff', 3);
+
+  assert.equal(selected[0]?.id, 'article:vue-diff');
+  assert.equal(selected[1]?.id, 'article:event-loop');
+  assert.equal(new Set(selected.map((item) => item.id)).size, selected.length);
 });

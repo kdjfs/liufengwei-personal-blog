@@ -88,7 +88,8 @@ test('handleChat sends a server-owned request and streams provider SSE', async (
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type') ?? '', /text\/event-stream/);
-  assert.equal(await response.text(),
+  assert.equal(
+    await response.text(),
     'event: content_block_delta\ndata: {"type":"content_block_delta","delta":{"type":"text_delta","text":"你好"}}\n\n',
   );
   assert.equal(upstreamUrl, 'https://api.deepseek.com/anthropic/v1/messages');

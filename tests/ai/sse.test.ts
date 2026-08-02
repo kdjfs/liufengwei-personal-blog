@@ -21,8 +21,7 @@ test('AnthropicSSEDecoder emits only final text deltas across arbitrary chunks',
 test('AnthropicSSEDecoder preserves an incomplete event until the next chunk', () => {
   const decoder = new AnthropicSSEDecoder();
   assert.deepEqual(decoder.push('event: content_block_delta\ndata: {"type":"content_'), []);
-  assert.deepEqual(
-    decoder.push('block_delta","delta":{"type":"text_delta","text":"完成"}}\n\n'),
-    ['完成'],
-  );
+  assert.deepEqual(decoder.push('block_delta","delta":{"type":"text_delta","text":"完成"}}\n\n'), [
+    '完成',
+  ]);
 });

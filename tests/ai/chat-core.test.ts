@@ -4,6 +4,7 @@ import {
   buildDeepSeekRequest,
   parseChatRequest,
   resolveApiKey,
+  resolveBaseUrl,
 } from '../../api/_chat-core.ts';
 
 const validBody = {
@@ -69,4 +70,13 @@ test('resolveApiKey only permits the compatibility token fallback off Vercel', (
   );
   assert.equal(resolveApiKey({ ANTHROPIC_AUTH_TOKEN: 'fallback' }), 'fallback');
   assert.equal(resolveApiKey({ VERCEL: '1', ANTHROPIC_AUTH_TOKEN: 'fallback' }), undefined);
+});
+
+test('resolveBaseUrl only accepts the official DeepSeek Anthropic API root', () => {
+  assert.equal(
+    resolveBaseUrl({ DEEPSEEK_BASE_URL: 'https://api.deepseek.com/anthropic/' }),
+    'https://api.deepseek.com/anthropic',
+  );
+  assert.throws(() => resolveBaseUrl({ DEEPSEEK_BASE_URL: 'https://api.deepseek.com/v1' }));
+  assert.throws(() => resolveBaseUrl({ DEEPSEEK_BASE_URL: 'https://example.com/anthropic' }));
 });

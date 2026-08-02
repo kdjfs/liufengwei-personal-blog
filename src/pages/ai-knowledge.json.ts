@@ -1,5 +1,5 @@
-import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
+import type { APIRoute } from 'astro';
 import { profile } from '@/config/profile';
 import { projects } from '@/data/projects';
 import { timeline } from '@/data/timeline';

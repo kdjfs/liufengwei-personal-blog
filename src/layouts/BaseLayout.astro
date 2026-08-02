@@ -2,6 +2,7 @@
 import { ClientRouter } from 'astro:transitions';
 import Footer from '@/components/common/Footer.astro';
 import Header from '@/components/common/Header.astro';
+import AIAssistant from '@/components/ai/AIAssistant';
 import SearchCommand from '@/components/interactive/SearchCommand';
 import { siteConfig } from '@/config/site';
 import '@/styles/global.css';
@@ -87,6 +88,7 @@ const ogImage = image ? new URL(image, siteUrl) : undefined;
       </main>
       <Footer />
     </div>
+    <AIAssistant client:idle transition:persist="lfw-ai-assistant" />
 
     <script>
       let cleanupPageEnhancements: (() => void) | undefined;

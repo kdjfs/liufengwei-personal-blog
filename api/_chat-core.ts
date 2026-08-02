@@ -13,7 +13,10 @@ const contextSchema = z
   .object({
     id: z.string().min(1).max(160),
     title: z.string().min(1).max(160),
-    url: z.string().regex(/^\/(?!\/)[^\s]*$/).max(300),
+    url: z
+      .string()
+      .regex(/^\/(?!\/)[^\s]*$/)
+      .max(300),
     category: z.string().min(1).max(60),
     excerpt: z.string().trim().min(1).max(1800),
   })
@@ -22,7 +25,10 @@ const contextSchema = z
 const currentPageSchema = z
   .object({
     title: z.string().min(1).max(180),
-    url: z.string().regex(/^\/(?!\/)[^\s]*$/).max(300),
+    url: z
+      .string()
+      .regex(/^\/(?!\/)[^\s]*$/)
+      .max(300),
     description: z.string().max(300).optional(),
     category: z.string().max(60).optional(),
     tags: z.array(z.string().max(40)).max(8).optional(),
@@ -39,12 +45,19 @@ const chatRequestSchema = z
   })
   .strict()
   .superRefine((value, context) => {
-    const messageChars = value.messages.reduce((total, message) => total + message.content.length, 0);
+    const messageChars = value.messages.reduce(
+      (total, message) => total + message.content.length,
+      0,
+    );
     if (messageChars > 16_000) {
       context.addIssue({ code: 'custom', message: 'Conversation is too long', path: ['messages'] });
     }
     if (value.messages.at(-1)?.role !== 'user') {
-      context.addIssue({ code: 'custom', message: 'Last message must be from the user', path: ['messages'] });
+      context.addIssue({
+        code: 'custom',
+        message: 'Last message must be from the user',
+        path: ['messages'],
+      });
     }
   });
 
@@ -134,10 +147,16 @@ export function resolveApiKey(environment: NodeJS.ProcessEnv): string | undefine
 export function resolveBaseUrl(environment: NodeJS.ProcessEnv): string {
   const raw = environment.DEEPSEEK_BASE_URL?.trim() || 'https://api.deepseek.com/anthropic';
   const url = new URL(raw);
-  if (url.protocol !== 'https:' || url.hostname !== 'api.deepseek.com') {
+  if (
+    url.protocol !== 'https:' ||
+    url.hostname !== 'api.deepseek.com' ||
+    url.pathname.replace(/\/$/, '') !== '/anthropic' ||
+    url.search ||
+    url.hash
+  ) {
     throw new Error('Invalid DeepSeek base URL');
   }
-  return url.toString().replace(/\/$/, '');
+  return 'https://api.deepseek.com/anthropic';
 }
 
 export function assertConfiguredModel(environment: NodeJS.ProcessEnv): 'deepseek-v4-pro' {

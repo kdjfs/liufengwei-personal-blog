@@ -1,9 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {
-  createKnowledgeItems,
-  stripMarkdownForKnowledge,
-} from '../../src/lib/ai/knowledge.ts';
+import { createKnowledgeItems, stripMarkdownForKnowledge } from '../../src/lib/ai/knowledge.ts';
 
 test('stripMarkdownForKnowledge keeps prose and removes non-knowledge syntax', () => {
   const markdown = `---

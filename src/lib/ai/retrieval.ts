@@ -66,6 +66,27 @@ export function rankKnowledge(
         scoreField(item.excerpt, terms, FIELD_WEIGHTS.excerpt),
     }))
     .filter(({ score }) => score > 0)
-    .sort((left, right) => right.score - left.score || left.item.title.localeCompare(right.item.title))
+    .sort(
+      (left, right) => right.score - left.score || left.item.title.localeCompare(right.item.title),
+    )
     .slice(0, Math.max(0, limit));
+}
+
+export function selectKnowledgeSources(
+  query: string,
+  items: readonly KnowledgeItem[],
+  currentUrl: string,
+  limit = 4,
+): KnowledgeItem[] {
+  const selected: KnowledgeItem[] = [];
+  const currentArticle = items.find((item) => item.type === 'article' && item.url === currentUrl);
+  if (currentArticle) selected.push(currentArticle);
+
+  for (const { item } of rankKnowledge(query, items, limit)) {
+    if (selected.some((source) => source.id === item.id)) continue;
+    selected.push(item);
+    if (selected.length >= limit) break;
+  }
+
+  return selected.slice(0, Math.max(0, limit));
 }

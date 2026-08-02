@@ -1,15 +1,15 @@
 # LFW Space
 
 > 刘凤伟的数字花园 —— 记录技术、项目、思考与成长。
-在线浏览：https://liufengwei-personal-blog.vercel.app/
-LFW Space 是一个内容优先的个人博客、项目作品集与数字花园。它不是套用现成主题的换皮项目：视觉语言、组件边界、内容模型与交互均围绕长期维护重新设计。
+> 在线浏览：https://liufengwei-personal-blog.vercel.app/
+> LFW Space 是一个内容优先的个人博客、项目作品集与数字花园。它不是套用现成主题的换皮项目：视觉语言、组件边界、内容模型与交互均围绕长期维护重新设计。
 
 > 首页预览截图占位：项目稳定部署后，将真实桌面端与移动端截图放入 `docs/` 并在这里展示。
 
 ## 技术栈
 
 - Astro 7 + TypeScript，SSG 静态输出。
-- React 19 Islands，仅用于命令面板与 Hero WebGL 生命周期。
+- React 19 Islands，用于命令面板、Hero WebGL 生命周期与 LFW AI。
 - Tailwind CSS 4 + CSS Variables 设计令牌。
 - Markdown / MDX + Content Collections + Zod。
 - Shiki、GFM、KaTeX、Mermaid、Callout。
@@ -26,12 +26,13 @@ LFW Space 是一个内容优先的个人博客、项目作品集与数字花园�
 - `Ctrl/Cmd + K` 命令面板和 Pagefind 全文搜索。
 - RSS、sitemap、robots、canonical、OpenGraph、Twitter Card、favicon。
 - `prefers-reduced-motion`、移动端与低性能设备 WebGL 降级。
+- DeepSeek V4 Pro 流式对话、文章感知、静态知识检索与真实站内来源。
 
 ## 项目结构
 
 ```text
 src/
-├─ components/       静态组件与两个交互 Islands
+├─ components/       静态组件与局部交互 Islands
 ├─ config/           站点级单一配置入口
 ├─ content/blog/     Markdown / MDX 文章
 ├─ data/             项目、主题与时间线数据
@@ -41,6 +42,7 @@ src/
 ├─ styles/           Design System 与全局排版
 └─ utils/            文章排序、阅读时间、相关推荐
 scripts/             新文章 CLI
+api/                 Vercel Functions（服务端 AI 代理）
 docs/                架构、Roadmap 与旧站审计
 public/              favicon、robots 等静态资源
 ```
@@ -55,6 +57,25 @@ pnpm dev
 ```
 
 开发服务器默认地址为 `http://localhost:4321`。
+
+### AI 完整联调
+
+普通内容开发继续使用 `pnpm dev`。要同时运行 Astro 与 `/api/chat`，先安装 Vercel CLI，
+再启动完整环境：
+
+```bash
+pnpm add --global vercel
+pnpm dev:ai
+```
+
+在项目根目录创建不会被 Git 跟踪的 `.env.local`，从 `.env.example` 复制配置，并把
+`DEEPSEEK_API_KEY=replace_me` 中的 `replace_me` 替换为你在 DeepSeek 控制台新建的 Key。
+不要把 Key 写进源码、README、测试或提交记录。开发者本机可使用
+`ANTHROPIC_AUTH_TOKEN` 作为 fallback；Vercel 生产环境只读取 `DEEPSEEK_API_KEY`。
+
+在 Vercel 项目的 **Settings → Environment Variables** 中添加相同变量后重新部署。
+快速模式使用 `deepseek-v4-pro` 并关闭 thinking；深度思考模式仍使用 Pro，开启 thinking
+且设置最大 effort。浏览器只能选择这两个服务端模式，不能传入模型名、Base URL 或 System Prompt。
 
 ## 最快发布文章
 
@@ -82,6 +103,7 @@ pnpm new:post -- --title "文章标题" --category "前端" --tags "Astro,TypeSc
 
 ```bash
 pnpm dev           # 开发
+pnpm dev:ai        # Astro + Vercel Function 完整 AI 联调
 pnpm typecheck     # Astro + TypeScript 检查
 pnpm lint          # Biome 检查
 pnpm format:check  # 格式检查
@@ -119,4 +141,7 @@ pnpm content:prepare # 补齐原始 Markdown 的 Frontmatter
 
 将 Git 仓库导入 Vercel，使用 `pnpm install --frozen-lockfile` 安装、`pnpm build` 构建，输出目录为 `dist`。发布前务必把 `astro.config.mjs`、`src/config/site.ts` 和 `public/robots.txt` 中的占位域名统一替换为正式域名。
 
-V1 不需要数据库、后端或环境变量。
+站点仍保持 Astro SSG；仅 `/api/chat` 由 root Vercel Function 处理，不需要数据库、Redis 或独立 Node 服务。
+部署时在 Vercel 环境变量中配置 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、
+`DEEPSEEK_MODEL` 与 `SITE_URL`。当前代码级限流是无外部存储的 serverless 实例内限流；
+若将来需要严格的全局配额，应在 Vercel Firewall 中增加项目级 Rate Limit 规则。
