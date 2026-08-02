@@ -22,14 +22,25 @@ export function healthPayload(environment: NodeJS.ProcessEnv = process.env) {
   } as const;
 }
 
-export default function vercelAIHealthHandler(
+export default async function vercelAIHealthHandler(
   _request: IncomingMessage,
   response: ServerResponse,
-): void {
+): Promise<void> {
+  const [coreModule, adapterModule, chatModule] = await Promise.allSettled([
+    import('./_chat-core.ts'),
+    import('./_vercel-node.ts'),
+    import('./chat.ts'),
+  ]);
   response.statusCode = 200;
   response.setHeader('Cache-Control', 'no-store');
   response.setHeader('Content-Type', 'application/json; charset=utf-8');
   response.setHeader('X-Content-Type-Options', 'nosniff');
   response.setHeader('X-LFW-AI-Health-Version', '2');
+  response.setHeader('X-LFW-AI-Core-Module', coreModule.status === 'fulfilled' ? 'ok' : 'failed');
+  response.setHeader(
+    'X-LFW-AI-Adapter-Module',
+    adapterModule.status === 'fulfilled' ? 'ok' : 'failed',
+  );
+  response.setHeader('X-LFW-AI-Chat-Module', chatModule.status === 'fulfilled' ? 'ok' : 'failed');
   response.end(JSON.stringify(healthPayload()));
 }
