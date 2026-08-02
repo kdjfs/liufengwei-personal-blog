@@ -7,9 +7,9 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 
 <BaseLayout title="项目" description="刘凤伟的项目、作品与技术实验。">
   <PageHeader
-    eyebrow="PROJECTS"
-    title="项目"
-    description="以问题、决策和结果来讲述作品。示例占位不会冒充真实项目。"
+    eyebrow="PROJECTS / CASE STUDIES"
+    title="项目作品"
+    description="从背景、职责和技术决策出发，记录真实做过的产品与工程实践。"
   />
   <section class="section-compact container-wide project-grid" data-pagefind-body>
     {projects.map((project, index) => <ProjectCard project={project} large={index === 0} />)}
