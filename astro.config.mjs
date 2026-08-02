@@ -13,8 +13,15 @@ import { remarkCallouts } from './src/plugins/remark-callouts.mjs';
 import { remarkCodeMeta } from './src/plugins/remark-code-meta.mjs';
 import { remarkMermaid } from './src/plugins/remark-mermaid.mjs';
 
+const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+const site =
+  process.env.SITE_URL ??
+  (productionHost
+    ? `${productionHost.startsWith('http') ? '' : 'https://'}${productionHost}`
+    : 'http://localhost:4321');
+
 export default defineConfig({
-  site: 'https://lfw-space.vercel.app',
+  site,
   output: 'static',
   integrations: [react(), mdx(), sitemap()],
   vite: {
