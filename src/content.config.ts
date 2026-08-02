@@ -22,7 +22,10 @@ const blog = defineCollection({
     tags: z.array(z.string().min(1).max(30)).min(1).max(8),
     series: z.string().min(1).max(60).optional(),
     seriesOrder: z.number().int().positive().optional(),
-    cover: z.string().optional(),
+    cover: z
+      .string()
+      .regex(/^(?:auto|(?:[1-9]|1[0-4])\.jpg|15\.png)$/, 'cover 不在受管封面池中')
+      .default('auto'),
     draft: z.boolean().default(false),
     featured: z.boolean().default(false),
     toc: z.boolean().default(true),

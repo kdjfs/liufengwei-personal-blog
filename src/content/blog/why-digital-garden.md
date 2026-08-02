@@ -2,16 +2,17 @@
 title: 为什么我要建立自己的数字花园
 slug: why-digital-garden
 description: 博客不是内容仓库，而是一套让零散知识逐渐建立连接、可以持续修订的个人系统。
-publishDate: 2026-07-26
-updatedDate: 2026-07-30
+publishDate: '2026-07-26'
+updatedDate: '2026-07-30'
 category: 思考
 tags:
   - 数字花园
   - 写作
   - 知识管理
-cover: grid
+cover: auto
 draft: false
 featured: true
+toc: true
 ---
 
 社交平台适合让一段想法快速流动，但不擅长让它在几年后仍然容易找到。数字花园更像自己的工作台：内容可以不完整，可以被修订，也可以随着新的理解长出连接。

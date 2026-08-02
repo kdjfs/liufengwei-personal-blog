@@ -104,3 +104,26 @@ test('createArticleBody starts from H2 without publishing TODO markers', () => {
   assert.doesNotMatch(body, /^#\s/m);
   assert.doesNotMatch(body, /TODO/i);
 });
+
+test('findContentIssues rejects covers outside the managed cover pool', () => {
+  const entries = [
+    {
+      file: 'invalid-cover.md',
+      body: '## Content\n',
+      data: {
+        slug: 'invalid-cover',
+        title: 'Invalid cover',
+        description: 'A sufficiently long article description.',
+        publishDate: '2026-08-02',
+        category: 'Notes',
+        tags: ['Notes'],
+        cover: 'cover-grid',
+        draft: false,
+      },
+      analysis: { title: undefined, images: [], links: [] },
+    },
+  ];
+
+  const issues = findContentIssues(entries, { contentDirectory: process.cwd() });
+  assert.ok(issues.some((issue) => issue.message.includes('cover')));
+});

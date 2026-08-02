@@ -56,6 +56,14 @@ pnpm dev
 
 开发服务器默认地址为 `http://localhost:4321`。
 
+## 最快发布文章
+
+1. 把 Markdown 放进 `src/content/blog/<分类>/`，例如 `src/content/blog/面经/腾讯前端一面.md`。
+2. 运行 `pnpm dev`；项目会自动补齐 Frontmatter，并在开发中继续监听新文件。
+3. 确认页面后提交并推送到 Git，已绑定的部署平台会按仓库配置发布。
+
+需要精细控制时仍可使用 `pnpm content:new`、`pnpm content:import` 和 `pnpm content:check`。
+
 ## 创建文章
 
 ```bash
@@ -79,6 +87,7 @@ pnpm lint          # Biome 检查
 pnpm format:check  # 格式检查
 pnpm build         # 静态构建并生成 Pagefind 索引
 pnpm preview       # 预览生产构建
+pnpm content:prepare # 补齐原始 Markdown 的 Frontmatter
 ```
 
 ## 常用修改入口
