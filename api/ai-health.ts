@@ -1,44 +1,35 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { validateApiKeyValue } from './_chat-core.ts';
-import { sendWebResponse } from './_vercel-node.ts';
 
-export function handleAIHealth(environment: NodeJS.ProcessEnv = process.env): Response {
-  const key = validateApiKeyValue(environment.DEEPSEEK_API_KEY);
-  const configured =
-    key.status === 'valid' &&
-    (environment.DEEPSEEK_MODEL === undefined ||
-      environment.DEEPSEEK_MODEL.trim() === 'deepseek-v4-pro');
-
-  return Response.json(
-    {
-      ok: true,
-      configured,
-      model: 'deepseek-v4-pro',
-      provider: 'DeepSeek',
-      runtime: 'vercel',
-    },
-    {
-      headers: {
-        'Cache-Control': 'no-store',
-        'X-Content-Type-Options': 'nosniff',
-      },
-    },
+function isConfigured(environment: NodeJS.ProcessEnv): boolean {
+  const key = environment.DEEPSEEK_API_KEY?.trim() ?? '';
+  if (!key || key.toLowerCase().replace(/[\s_-]+/g, '-') === 'replace-me') return false;
+  if ([...key].some((character) => character.charCodeAt(0) < 33 || character.charCodeAt(0) > 126)) {
+    return false;
+  }
+  return (
+    environment.DEEPSEEK_MODEL === undefined ||
+    environment.DEEPSEEK_MODEL.trim() === 'deepseek-v4-pro'
   );
 }
 
-export default async function vercelAIHealthHandler(
+export function healthPayload(environment: NodeJS.ProcessEnv = process.env) {
+  return {
+    ok: true,
+    configured: isConfigured(environment),
+    model: 'deepseek-v4-pro',
+    provider: 'DeepSeek',
+    runtime: 'vercel',
+  } as const;
+}
+
+export default function vercelAIHealthHandler(
   _request: IncomingMessage,
   response: ServerResponse,
-): Promise<void> {
-  try {
-    await sendWebResponse(handleAIHealth(), response);
-  } catch {
-    if (!response.headersSent) {
-      response.statusCode = 500;
-      response.setHeader('Content-Type', 'application/json; charset=utf-8');
-      response.end(JSON.stringify({ error: { code: 'AI_HEALTH_ERROR' } }));
-    } else if (!response.destroyed) {
-      response.end();
-    }
-  }
+): void {
+  response.statusCode = 200;
+  response.setHeader('Cache-Control', 'no-store');
+  response.setHeader('Content-Type', 'application/json; charset=utf-8');
+  response.setHeader('X-Content-Type-Options', 'nosniff');
+  response.setHeader('X-LFW-AI-Health-Version', '2');
+  response.end(JSON.stringify(healthPayload()));
 }
