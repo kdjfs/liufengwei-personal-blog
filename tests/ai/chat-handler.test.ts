@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import vercelChat, { handleChat } from '../../api/_chat-handler.ts';
 import { InMemoryRateLimiter } from '../../api/_rate-limit.ts';
-import vercelChat, { handleChat } from '../../api/chat.ts';
 
 test('chat exposes a Vercel Node handler default export', () => {
   assert.equal(typeof vercelChat, 'function');

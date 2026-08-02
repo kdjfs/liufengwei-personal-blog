@@ -6,7 +6,8 @@
       "!dist",
       "!.astro",
       "!node_modules",
-      "!public/pagefind"
+      "!public/pagefind",
+      "!api/chat.mjs"
     ]
   },
   "formatter": {

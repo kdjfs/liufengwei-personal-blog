@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { createServer, type RequestListener } from 'node:http';
 import test from 'node:test';
+import vercelChat from '../../api/_chat-handler.ts';
 import vercelHealth from '../../api/ai-health.ts';
-import vercelChat from '../../api/chat.ts';
 
 async function withServer(listener: RequestListener, run: (baseUrl: string) => Promise<void>) {
   const server = createServer(listener);

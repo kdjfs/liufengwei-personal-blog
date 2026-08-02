@@ -67,8 +67,9 @@ pnpm dev:ai
 ```
 
 该命令不需要 Vercel CLI 或登录，会同时启动 `http://localhost:4321` 的 Astro Dev 和
-`http://127.0.0.1:8787/api/chat` 的原生 Node Local AI Gateway。Gateway 复用生产环境的
-`api/chat.ts`，不会维护第二份 DeepSeek 请求实现。
+`http://127.0.0.1:8787/api/chat` 的原生 Node Local AI Gateway。Gateway 直接复用
+`api/_chat-handler.ts` 的共享 Handler，不会维护第二份 DeepSeek 请求实现。生产部署由构建脚本
+从同一源码生成自包含的 `api/chat.mjs`，避免 Vercel Node Runtime 的多文件 TypeScript 装载差异。
 
 在项目根目录创建不会被 Git 跟踪的 `.env.local`，从 `.env.example` 复制配置，并把
 `DEEPSEEK_API_KEY=replace_me` 中的 `replace_me` 替换为你在 DeepSeek 控制台新建的 Key。

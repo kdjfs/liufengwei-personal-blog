@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { validateApiKeyValue } from '../api/_chat-core.ts';
-import { handleChat } from '../api/chat.ts';
+import { handleChat } from '../api/_chat-handler.ts';
 
 const HOST = '127.0.0.1';
 const PORT = 8787;
