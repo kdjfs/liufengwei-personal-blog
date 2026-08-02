@@ -1,5 +1,11 @@
 import { spawn, spawnSync } from 'node:child_process';
+import path from 'node:path';
 import process from 'node:process';
+
+const pnpmHome = process.env.PNPM_HOME || path.join(process.env.LOCALAPPDATA ?? '', 'pnpm');
+if (!process.env.PATH?.split(path.delimiter).includes(pnpmHome)) {
+  process.env.PATH = `${pnpmHome}${path.delimiter}${process.env.PATH ?? ''}`;
+}
 
 const lookup =
   process.platform === 'win32'
