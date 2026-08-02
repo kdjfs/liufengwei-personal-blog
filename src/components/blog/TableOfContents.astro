@@ -3,16 +3,10 @@ import type { MarkdownHeading } from 'astro';
 
 interface Props {
   headings: MarkdownHeading[];
-  articleTitle: string;
 }
 
-const { headings, articleTitle } = Astro.props;
-const visible = headings.filter(
-  (heading) =>
-    heading.depth >= 1 &&
-    heading.depth <= 3 &&
-    !(heading.depth === 1 && heading.text.trim() === articleTitle.trim()),
-);
+const { headings } = Astro.props;
+const visible = headings.filter((heading) => heading.depth >= 2 && heading.depth <= 3);
 ---
 
 {
@@ -22,7 +16,7 @@ const visible = headings.filter(
         <p>ON THIS PAGE</p>
         <ol>
           {visible.map((heading, index) => (
-            <li class:list={[`depth-${heading.depth}`, { nested: heading.depth > 1 }]}>
+            <li class:list={[`depth-${heading.depth}`, { nested: heading.depth > 2 }]}>
               <a href={`#${heading.slug}`} data-toc-link={heading.slug}>
                 <span>{String(index + 1).padStart(2, '0')}</span>
                 <span>{heading.text}</span>
@@ -55,7 +49,7 @@ const visible = headings.filter(
           </header>
           <ol>
             {visible.map((heading, index) => (
-              <li class:list={[`depth-${heading.depth}`, { nested: heading.depth > 1 }]}>
+              <li class:list={[`depth-${heading.depth}`, { nested: heading.depth > 2 }]}>
                 <a href={`#${heading.slug}`} data-mobile-toc-link={heading.slug}>
                   <span>{String(index + 1).padStart(2, '0')}</span>
                   <span>{heading.text}</span>

@@ -2,7 +2,9 @@
 import { getCollection } from 'astro:content';
 import PostCard from '@/components/blog/PostCard.astro';
 import Hero from '@/components/home/Hero.astro';
+import ProfileRail from '@/components/profile/ProfileRail.astro';
 import ProjectCard from '@/components/projects/ProjectCard.astro';
+import { profile } from '@/config/profile';
 import { projects } from '@/data/projects';
 import { timeline } from '@/data/timeline';
 import BaseLayout from '@/layouts/BaseLayout.astro';
@@ -15,119 +17,136 @@ const latestPosts = posts.slice(0, 3);
 const featuredProject = projects.find((project) => project.featured) ?? projects[0];
 const topics = getCategorySummaries(posts);
 const topicTones = ['violet', 'blue', 'cyan', 'green'];
+const profileStats = {
+  articles: posts.length,
+  categories: new Set(posts.map((post) => post.data.category)).size,
+  tags: new Set(posts.flatMap((post) => post.data.tags)).size,
+  series: new Set(posts.map((post) => post.data.series).filter(Boolean)).size,
+};
 ---
 
 <BaseLayout>
-  <Hero />
+  <div class="home-portfolio-grid">
+    <Hero />
+    <ProfileRail stats={profileStats} />
 
-  <section class="section container-wide" aria-labelledby="featured-title">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">01 · SELECTED WRITING</p>
-        <h2 id="featured-title">精选文章</h2>
-        <p>不是信息流，而是此刻最值得被重新打开的内容。</p>
-      </div>
-      <a class="section-link" href="/blog">浏览全部文章 →</a>
-    </div>
-    <div class="post-grid featured-grid">
-      {featuredPosts.map((post, index) => <PostCard post={post} featured={index === 0} />)}
-    </div>
-  </section>
-
-  <section class="home-band section">
-    <div class="container-wide">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">02 · RECENT NOTES</p>
-          <h2>最近文章</h2>
+    <div class="home-content">
+      <section class="section container-wide" aria-labelledby="featured-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">01 · FEATURED WRITING</p>
+            <h2 id="featured-title">精选文章</h2>
+            <p>从源码学习到工程实践，保留值得再次打开的长期内容。</p>
+          </div>
+          <a class="section-link" href="/blog">浏览全部文章 →</a>
         </div>
-        <a class="section-link" href="/archive">按时间归档 →</a>
-      </div>
-      <div class="post-grid">
-        {latestPosts.map((post) => <PostCard post={post} transitionSuffix="latest" />)}
-      </div>
-    </div>
-  </section>
-
-  <section class="section container-wide" aria-labelledby="topics-title">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">03 · FOCUS</p>
-        <h2 id="topics-title">Tech / Topics</h2>
-        <p>围绕工程、体验与长期知识积累，建立彼此连接的主题脉络。</p>
-      </div>
-      <a class="section-link" href="/tags">查看标签 →</a>
-    </div>
-    <div class="topic-grid">
-      {
-        topics.map((topic, index) => (
-          <a
-            class="topic-card"
-            data-tone={topicTones[index % topicTones.length]}
-            href={`/categories/${encodeURIComponent(topic.name)}`}
-          >
-            <span class="topic-index">0{index + 1}</span>
-            <h3>{topic.name}</h3>
-            <p>{topic.tags.join(' · ') || '持续生长中的主题'}</p>
-            <span class="topic-count">{topic.count} ARTICLES →</span>
-          </a>
-        ))
-      }
-    </div>
-  </section>
-
-  <section class="home-band section">
-    <div class="container-wide">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">04 · BUILT & BUILDING</p>
-          <h2>Projects</h2>
-          <p>展示真实做过的事，也坦诚记录仍在生长的部分。</p>
+        <div class="post-grid featured-grid">
+          {featuredPosts.map((post, index) => <PostCard post={post} featured={index === 0} />)}
         </div>
-        <a class="section-link" href="/projects">完整作品集 →</a>
-      </div>
-      <div class="project-grid">
-        <ProjectCard project={featuredProject} large />
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <section class="section container-wide">
-    <div class="section-head">
-      <div>
-        <p class="eyebrow">05 · CHANGELOG OF ME</p>
-        <h2>Timeline</h2>
-      </div>
-      <a class="section-link" href="/timeline">查看时间线 →</a>
-    </div>
-    <div class="timeline-preview">
-      {
-        timeline.slice(0, 3).map((item) => (
-          <article class="timeline-row">
-            <time>{item.date}</time>
+      <section class="home-band section">
+        <div class="container-wide">
+          <div class="section-head">
             <div>
-              <>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-              </>
+              <p class="eyebrow">02 · LATEST WRITING</p>
+              <h2>最近文章</h2>
             </div>
-          </article>
-        ))
-      }
-    </div>
-  </section>
+            <a class="section-link" href="/archive">按时间归档 →</a>
+          </div>
+          <div class="post-grid">
+            {latestPosts.map((post) => <PostCard post={post} transitionSuffix="latest" />)}
+          </div>
+        </div>
+      </section>
 
-  <section class="home-band section">
-    <div class="container-wide about-preview">
-      <div class="avatar-frame" role="img" aria-label="刘凤伟头像占位"></div>
-      <div class="about-copy">
-        <p class="eyebrow">06 · ABOUT</p>
-        <h2>你好，我是刘凤伟。这里存放代码之外，仍值得长期保留的东西。</h2>
-        <p>
-          目前先从一个可靠、快速、好读的博客开始。个人简介、技能与经历将由作者按真实情况逐步补充。
-        </p>
-        <a class="button secondary" href="/about">关于我 →</a>
-      </div>
+      <section class="section container-wide" aria-labelledby="topics-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">03 · EXPLORE TOPICS</p>
+            <h2 id="topics-title">Knowledge Map</h2>
+            <p>文章数量由内容系统实时统计，主题会随着持续写作自然生长。</p>
+          </div>
+          <a class="section-link" href="/tags">查看标签 →</a>
+        </div>
+        <div class="topic-grid">
+          {
+            topics.map((topic, index) => (
+              <a
+                class="topic-card"
+                data-tone={topicTones[index % topicTones.length]}
+                href={`/categories/${encodeURIComponent(topic.name)}`}
+              >
+                <span class="topic-index">{String(index + 1).padStart(2, '0')}</span>
+                <h3>{topic.name}</h3>
+                <p>{topic.tags.join(' · ') || '持续生长中的主题'}</p>
+                <span class="topic-count">{topic.count} ARTICLES →</span>
+              </a>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="home-band section">
+        <div class="container-wide">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">04 · FEATURED PROJECTS</p>
+              <h2>Projects</h2>
+              <p>用背景、职责与技术决策讲清楚做过的项目。</p>
+            </div>
+            <a class="section-link" href="/projects">完整作品集 →</a>
+          </div>
+          <div class="project-grid">
+            <ProjectCard project={featuredProject} large />
+          </div>
+        </div>
+      </section>
+
+      <section class="section container-wide">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">05 · TIMELINE</p>
+            <h2>Growth Log</h2>
+          </div>
+          <a class="section-link" href="/timeline">查看时间线 →</a>
+        </div>
+        <div class="timeline-preview">
+          {
+            timeline.slice(0, 3).map((item) => (
+              <article class="timeline-row">
+                <time>{item.date}</time>
+                <div>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </div>
+              </article>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="home-band section">
+        <div class="container-wide about-preview home-about-preview">
+          <img
+            class="about-avatar"
+            src={profile.avatar}
+            width="640"
+            height="640"
+            alt={`${profile.name}的头像`}
+            loading="lazy"
+          />
+          <div class="about-copy">
+            <p class="eyebrow">06 · ABOUT</p>
+            <h2>你好，我是刘凤伟。</h2>
+            <p>
+              广东金融学院数学与应用数学专业学生，持续学习和实践前端开发，关注
+              Vue、React、工程化以及 AI Agent 应用开发。LFW Space 用于记录技术、项目和成长。
+            </p>
+            <a class="button secondary" href="/about">了解更多 →</a>
+          </div>
+        </div>
+      </section>
     </div>
-  </section>
+  </div>
 </BaseLayout>

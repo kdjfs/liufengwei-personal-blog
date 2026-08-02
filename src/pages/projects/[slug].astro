@@ -1,0 +1,127 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { projects } from '@/data/projects';
+
+export function getStaticPaths() {
+  return projects.map((project) => ({ params: { slug: project.slug }, props: { project } }));
+}
+
+const { project } = Astro.props;
+---
+
+<BaseLayout title={project.name} description={project.description}>
+  <article class="project-detail" data-pagefind-body>
+    <header class="project-detail-hero container-wide">
+      <p class="eyebrow">PROJECT / {project.eyebrow}</p>
+      <div class="project-detail-title">
+        <h1>{project.name}</h1>
+        <span class="status">{project.status}</span>
+      </div>
+      <p class="project-detail-lead">{project.description}</p>
+      <ul class="tech-list" aria-label="技术栈">
+        {project.techStack.map((tech) => <li>{tech}</li>)}
+      </ul>
+      <div class="project-detail-actions">
+        {
+          project.github && (
+            <a
+              class="button primary"
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              查看源码 ↗
+            </a>
+          )
+        }
+        {
+          project.demo && (
+            <a
+              class="button secondary"
+              href={project.demo}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              在线预览 ↗
+            </a>
+          )
+        }
+        <a class="button text" href="/projects">返回项目列表</a>
+      </div>
+    </header>
+
+    <div class="project-detail-art-wrap container-wide" aria-hidden="true">
+      <div class={`project-detail-art cover-${project.cover}`}>
+        <span>{project.name.slice(0, 2).toUpperCase()}</span>
+      </div>
+      <p>CASE STUDY / {project.slug.toUpperCase()}</p>
+    </div>
+
+    <div class="project-story container-wide">
+      <section aria-labelledby="project-background">
+        <div class="project-section-index"><span>01</span><p>BACKGROUND</p></div>
+        <div>
+          <h2 id="project-background">项目背景</h2>{
+            project.background.map((paragraph) => <p>{paragraph}</p>)
+          }
+        </div>
+      </section>
+
+      <section aria-labelledby="project-work">
+        <div class="project-section-index"><span>02</span><p>MY WORK</p></div>
+        <div>
+          <h2 id="project-work">我的工作</h2><ul>
+            {project.myWork.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="project-highlights">
+        <div class="project-section-index"><span>03</span><p>HIGHLIGHTS</p></div>
+        <div>
+          <h2 id="project-highlights">技术亮点</h2>
+          <div class="project-highlight-grid">
+            {
+              project.highlights.map((item, index) => (
+                <article>
+                  <>
+                    <span>0{index + 1}</span>
+                    <h3>{item.title}</h3>
+                    <p>{item.description}</p>
+                  </>
+                </article>
+              ))
+            }
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="project-challenges">
+        <div class="project-section-index"><span>04</span><p>CHALLENGES</p></div>
+        <div>
+          <h2 id="project-challenges">关键挑战</h2><ul>
+            {project.challenges.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="project-flow">
+        <div class="project-section-index"><span>05</span><p>FLOW</p></div>
+        <div>
+          <h2 id="project-flow">Architecture / Flow</h2><ol class="project-flow">
+            {
+              project.flow.map((item, index) => (
+                <li>
+                  <>
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <strong>{item}</strong>
+                  </>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </section>
+    </div>
+  </article>
+</BaseLayout>

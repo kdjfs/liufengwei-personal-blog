@@ -3,7 +3,13 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { analyzeMarkdown, findContentIssues, parseContentFile, slugify } from './core.mjs';
+import {
+  analyzeMarkdown,
+  createArticleBody,
+  findContentIssues,
+  parseContentFile,
+  slugify,
+} from './core.mjs';
 
 test('slugify creates readable mixed Chinese and English slugs', () => {
   assert.equal(slugify('Vue3 Diff 算法详解'), 'vue3-diff-suan-fa-xiang-jie');
@@ -46,4 +52,55 @@ test('findContentIssues reports duplicate slugs and invalid series order', () =>
   const issues = findContentIssues(entries, { contentDirectory: process.cwd() });
   assert.ok(issues.some((issue) => issue.message.includes('重复 slug')));
   assert.ok(issues.some((issue) => issue.message.includes('seriesOrder')));
+});
+
+test('findContentIssues rejects TODO markers in published articles', () => {
+  const entries = [
+    {
+      file: 'published.md',
+      body: '## 正文\n\n这里仍有 TODO 需要处理。',
+      data: {
+        slug: 'published',
+        title: '正式文章',
+        description: '这是一段长度足够的正式文章摘要。',
+        publishDate: '2026-08-02',
+        category: '工程化',
+        tags: ['内容'],
+        draft: false,
+      },
+      analysis: { title: undefined, images: [], links: [] },
+    },
+  ];
+
+  const issues = findContentIssues(entries, { contentDirectory: process.cwd() });
+  assert.ok(issues.some((issue) => issue.message.includes('TODO')));
+});
+
+test('findContentIssues rejects an H1 that duplicates the frontmatter title', () => {
+  const entries = [
+    {
+      file: 'duplicate-heading.md',
+      body: '# Vue3 Diff 算法详解\n',
+      data: {
+        slug: 'vue3-diff',
+        title: 'Vue3 Diff 算法详解',
+        description: '这是一段长度足够的正式文章摘要。',
+        publishDate: '2026-08-02',
+        category: 'Vue',
+        tags: ['Vue3'],
+        draft: false,
+      },
+      analysis: { title: 'Vue3 Diff 算法详解', images: [], links: [] },
+    },
+  ];
+
+  const issues = findContentIssues(entries, { contentDirectory: process.cwd() });
+  assert.ok(issues.some((issue) => issue.message.includes('重复 H1')));
+});
+
+test('createArticleBody starts from H2 without publishing TODO markers', () => {
+  const body = createArticleBody();
+  assert.match(body, /^\n## 开始写作/m);
+  assert.doesNotMatch(body, /^#\s/m);
+  assert.doesNotMatch(body, /TODO/i);
 });

@@ -12,6 +12,10 @@ export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const CONTENT_EXTENSIONS = new Set(['.md', '.mdx']);
 export const IMPORT_EXTENSIONS = new Set(['.md', '.mdx', '.txt']);
 
+export function createArticleBody() {
+  return '\n## 开始写作\n\n<!-- 发布前请完成正文并删除本提示。 -->\n';
+}
+
 export function slugify(value) {
   const transliterated = pinyin(value.normalize('NFKC'), {
     toneType: 'none',
@@ -160,6 +164,15 @@ export function findContentIssues(entries, { contentDirectory = BLOG_DIRECTORY }
     }
     if (!data.category || !Array.isArray(data.tags) || data.tags.length === 0) {
       report('error', entry, 'category 和 tags 必须完整');
+    }
+    if (data.draft === false && /\bTODO\b/i.test(entry.body ?? '')) {
+      report('error', entry, '正式文章正文不能包含 TODO 标记');
+    }
+    if (
+      typeof data.title === 'string' &&
+      entry.analysis.title?.trim().toLowerCase() === data.title.trim().toLowerCase()
+    ) {
+      report('error', entry, '重复 H1：正文 H1 与 frontmatter title 相同');
     }
     if (data.series && !Number.isInteger(data.seriesOrder)) {
       report('error', entry, '设置 series 时必须提供正整数 seriesOrder');

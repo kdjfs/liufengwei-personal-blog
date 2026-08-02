@@ -27,8 +27,9 @@ const {
 const pageTitle = title
   ? siteConfig.titleTemplate.replace('%s', title)
   : `${siteConfig.name} · ${siteConfig.subtitle}`;
-const canonical = new URL(Astro.url.pathname, Astro.site ?? siteConfig.url);
-const ogImage = image ? new URL(image, Astro.site ?? siteConfig.url) : undefined;
+const siteUrl = Astro.site ?? new URL('http://localhost:4321');
+const canonical = new URL(Astro.url.pathname, siteUrl);
+const ogImage = image ? new URL(image, siteUrl) : undefined;
 ---
 
 <!doctype html>
