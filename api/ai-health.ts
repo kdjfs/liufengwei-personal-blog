@@ -1,4 +1,6 @@
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { validateApiKeyValue } from './_chat-core.ts';
+import { sendWebResponse } from './_vercel-node.ts';
 
 export function handleAIHealth(environment: NodeJS.ProcessEnv = process.env): Response {
   const key = validateApiKeyValue(environment.DEEPSEEK_API_KEY);
@@ -24,6 +26,19 @@ export function handleAIHealth(environment: NodeJS.ProcessEnv = process.env): Re
   );
 }
 
-export function GET(_request: Request): Response {
-  return handleAIHealth();
+export default async function vercelAIHealthHandler(
+  _request: IncomingMessage,
+  response: ServerResponse,
+): Promise<void> {
+  try {
+    await sendWebResponse(handleAIHealth(), response);
+  } catch {
+    if (!response.headersSent) {
+      response.statusCode = 500;
+      response.setHeader('Content-Type', 'application/json; charset=utf-8');
+      response.end(JSON.stringify({ error: { code: 'AI_HEALTH_ERROR' } }));
+    } else if (!response.destroyed) {
+      response.end();
+    }
+  }
 }

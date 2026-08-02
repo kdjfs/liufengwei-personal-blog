@@ -1,4 +1,5 @@
 import { createHash, randomUUID as createRandomUUID } from 'node:crypto';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { ZodError } from 'zod';
 import {
   AIConfigurationError,
@@ -9,6 +10,7 @@ import {
   resolveBaseUrl,
 } from './_chat-core.ts';
 import { InMemoryRateLimiter } from './_rate-limit.ts';
+import { sendWebResponse, toWebRequest } from './_vercel-node.ts';
 
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_ACTIVE_STREAMS = 4;
@@ -407,7 +409,36 @@ export async function handleChat(
   });
 }
 
-// Vercel detects Web API handlers from named `fetch`/HTTP method exports.
-// A default `{ fetch }` object is a Cloudflare Worker shape and is not callable
-// by the Vercel Node runtime.
-export const fetch = handleChat;
+export default async function vercelChatHandler(
+  incoming: IncomingMessage,
+  outgoing: ServerResponse,
+): Promise<void> {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  incoming.once('aborted', abort);
+  outgoing.once('close', abort);
+
+  try {
+    const request = await toWebRequest(incoming, controller.signal);
+    await sendWebResponse(await handleChat(request), outgoing);
+  } catch (error) {
+    const requestId = createRandomUUID();
+    console.error('[LFW AI]', {
+      requestId,
+      event: 'vercel_adapter_error',
+      model: 'deepseek-v4-pro',
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+    });
+    if (!outgoing.headersSent) {
+      await sendWebResponse(
+        errorResponse(requestId, 500, 'AI_UPSTREAM_UNAVAILABLE', 'AI 服务暂时不可用，请稍后重试。'),
+        outgoing,
+      );
+    } else if (!outgoing.destroyed) {
+      outgoing.end();
+    }
+  } finally {
+    incoming.removeListener('aborted', abort);
+    outgoing.removeListener('close', abort);
+  }
+}
