@@ -7,6 +7,7 @@ import matter from 'gray-matter';
 import {
   BLOG_DIRECTORY,
   countWords,
+  createArticleBody,
   findContentIssues,
   formatDateValue,
   IMPORT_EXTENSIONS,
@@ -104,7 +105,7 @@ async function contentNew(flags) {
         : {}),
       toc: true,
     };
-    const body = `\n# ${title}\n\n<!-- TODO: 在这里开始写作。 -->\n`;
+    const body = createArticleBody();
     const output = matter.stringify(body, data);
     if (flags.has('dry-run')) {
       console.log(`\n[DRY RUN] 将创建 ${path.relative(process.cwd(), target)}\n${output}`);
