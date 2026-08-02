@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { selectKnowledgeSources } from '@/lib/ai/retrieval';
+import { retrieveKnowledge } from '@/lib/ai/retrieval';
 import type { ChatMode, KnowledgeItem } from '@/lib/ai/types';
 import { AIChatClientError, streamAIResponse } from './chat-client';
 import { loadKnowledge } from './knowledge-client';
@@ -70,15 +70,23 @@ export function useAIAssistant() {
       streamingRef.current = true;
       setIsStreaming(true);
       const currentPage = readCurrentPageContext();
-      let knowledge: KnowledgeItem[] = [];
+      let retrieval: ReturnType<typeof retrieveKnowledge> | undefined;
       try {
-        knowledge = await loadKnowledge();
+        retrieval = retrieveKnowledge(question, await loadKnowledge(), currentPage.url);
         setKnowledgeStatus('ready');
       } catch {
         setKnowledgeStatus('unavailable');
       }
 
-      const sources = selectKnowledgeSources(question, knowledge, currentPage.url, 4);
+      const sources: KnowledgeItem[] = retrieval?.sources.slice(0, 4) ?? [];
+      const contextSources = sources.map((source) => ({
+        id: source.id,
+        title: source.title,
+        url: source.url,
+        category: source.category,
+        excerpt:
+          retrieval?.chunks.find((chunk) => chunk.articleId === source.id)?.text ?? source.excerpt,
+      }));
       const userMessage: DisplayMessage = {
         id: createId(),
         role: 'user',
@@ -95,6 +103,20 @@ export function useAIAssistant() {
       };
       setMessages((current) => [...current, userMessage, assistantMessage]);
 
+      if (retrieval?.fastAnswer) {
+        const fastAnswer = retrieval.fastAnswer;
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === assistantId
+              ? { ...message, content: fastAnswer, status: 'done' }
+              : message,
+          ),
+        );
+        streamingRef.current = false;
+        setIsStreaming(false);
+        return;
+      }
+
       const controller = new AbortController();
       abortRef.current = controller;
       let received = '';
@@ -109,13 +131,8 @@ export function useAIAssistant() {
                 .map(({ role, content }) => ({ role, content })),
               { role: 'user', content: question },
             ],
-            context: sources.map((source) => ({
-              id: source.id,
-              title: source.title,
-              url: source.url,
-              category: source.category,
-              excerpt: source.excerpt,
-            })),
+            context: contextSources,
+            structuredFacts: retrieval?.facts,
             currentPage,
           },
           (delta) => {

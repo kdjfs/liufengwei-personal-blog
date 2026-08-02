@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createKnowledgeItems, stripMarkdownForKnowledge } from '../../src/lib/ai/knowledge.ts';
+import {
+  createKnowledgeIndex,
+  createKnowledgeItems,
+  stripMarkdownForKnowledge,
+} from '../../src/lib/ai/knowledge.ts';
 
 test('stripMarkdownForKnowledge keeps prose and removes non-knowledge syntax', () => {
   const markdown = `---
@@ -87,4 +91,113 @@ test('knowledge excerpts remove private contact and local-machine traces', () =>
   );
 
   assert.doesNotMatch(excerpt, /private@example\.com|13800138000|private_wechat|D:\\workspace/);
+});
+
+test('createKnowledgeIndex separates published document metadata, taxonomies, and heading chunks', () => {
+  const index = createKnowledgeIndex({
+    posts: [
+      {
+        id: 'redis.md',
+        body: `# Redis overview
+
+## 大 Key
+
+大 Key 会占用大量内存，也可能让删除和迁移变慢。它会拖慢网络传输、释放内存与集群迁移，
+因此应按业务维度拆分数据并避免一次读取完整集合。
+
+\`\`\`redis
+UNLINK large:key
+\`\`\`
+
+## 热 Key
+
+热 Key 会使单节点压力集中。`,
+        data: {
+          slug: 'redis-keys',
+          title: 'Redis 热 Key 与大 Key',
+          description: '解释 Redis 热点与大对象的风险。',
+          category: '后端',
+          tags: ['Redis'],
+          publishDate: new Date('2026-08-01T00:00:00Z'),
+          draft: false,
+        },
+      },
+      {
+        id: 'draft.md',
+        body: '不应发布',
+        data: {
+          slug: 'draft',
+          title: '草稿',
+          description: '不应进入索引的草稿。',
+          category: '后端',
+          tags: ['Redis'],
+          publishDate: new Date('2026-08-02T00:00:00Z'),
+          draft: true,
+        },
+      },
+    ],
+    profile: {
+      name: '刘凤伟',
+      role: '开发者',
+      school: '学校',
+      major: '专业',
+      graduation: 2027,
+      bio: '简介',
+      experiences: [],
+      techFocus: {},
+      awards: [],
+    },
+    projects: [],
+    timeline: [],
+  });
+
+  assert.equal(index.version, 2);
+  assert.equal(index.stats.articles, 1);
+  assert.equal(index.taxonomies.categories[0]?.name, '后端');
+  assert.equal(index.taxonomies.categories[0]?.count, 1);
+  assert.equal(index.documents[0]?.publishDate, '2026-08-01T00:00:00.000Z');
+  assert.ok(index.chunks.some((chunk) => chunk.heading === '大 Key'));
+  assert.ok(index.chunks.some((chunk) => /UNLINK/.test(chunk.text)));
+  assert.ok(index.chunks.some((chunk) => chunk.url.endsWith('#大-key')));
+});
+
+test('knowledge fingerprints change whenever published content changes', () => {
+  const source = {
+    posts: [
+      {
+        id: 'one.md',
+        body: '## One\n\nFirst version.',
+        data: {
+          slug: 'one',
+          title: 'One',
+          description: 'A published article.',
+          category: '笔记',
+          tags: ['Test'],
+          publishDate: new Date('2026-01-01T00:00:00Z'),
+          draft: false,
+        },
+      },
+    ],
+    profile: {
+      name: 'LFW',
+      role: '开发者',
+      school: '学校',
+      major: '专业',
+      graduation: 2027,
+      bio: '简介',
+      experiences: [],
+      techFocus: {},
+      awards: [],
+    },
+    projects: [],
+    timeline: [],
+  };
+
+  const first = createKnowledgeIndex(source);
+  const second = createKnowledgeIndex({
+    ...source,
+    posts: [{ ...source.posts[0], body: '## One\n\nChanged version.' }],
+  });
+
+  assert.notEqual(first.fingerprint, second.fingerprint);
 });

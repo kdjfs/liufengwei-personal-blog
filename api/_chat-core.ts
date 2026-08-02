@@ -41,6 +41,7 @@ const chatRequestSchema = z
     mode: z.enum(['fast', 'deep']).default('fast'),
     messages: z.array(messageSchema).min(1).max(12),
     context: z.array(contextSchema).max(4).default([]),
+    structuredFacts: z.string().trim().max(6000).optional(),
     currentPage: currentPageSchema.optional(),
   })
   .strict()
@@ -92,6 +93,12 @@ function truncate(value: string, maxChars: number): string {
 
 function buildBlogContext(input: ChatRequestPayload): string {
   const sections: string[] = [];
+
+  if (input.structuredFacts) {
+    sections.push(
+      `STRUCTURED BLOG FACTS (authoritative metadata; preserve all counts, titles, categories, and URLs exactly)\n${input.structuredFacts}`,
+    );
+  }
 
   if (input.currentPage) {
     const page = input.currentPage;

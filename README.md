@@ -27,6 +27,7 @@
 - RSS、sitemap、robots、canonical、OpenGraph、Twitter Card、favicon。
 - `prefers-reduced-motion`、移动端与低性能设备 WebGL 降级。
 - DeepSeek V4 Pro 流式对话、文章感知、静态知识检索与真实站内来源。
+- AI Retrieval 2.0：结构化 Metadata 查询、按 Heading 的内容分块与中英混合词法检索；不使用向量数据库。
 
 ## 项目结构
 

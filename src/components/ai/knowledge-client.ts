@@ -1,31 +1,32 @@
-import type { KnowledgeIndex, KnowledgeItem } from '@/lib/ai/types';
+import type { KnowledgeIndex } from '@/lib/ai/types';
 
-let knowledgeRequest: Promise<KnowledgeItem[]> | undefined;
+let knowledgeRequest: Promise<KnowledgeIndex> | undefined;
 
-function isKnowledgeItem(value: unknown): value is KnowledgeItem {
+function isKnowledgeIndex(value: unknown): value is KnowledgeIndex {
   if (!value || typeof value !== 'object') return false;
-  const item = value as Partial<KnowledgeItem>;
+  const index = value as Partial<KnowledgeIndex>;
   return (
-    typeof item.id === 'string' &&
-    typeof item.title === 'string' &&
-    typeof item.url === 'string' &&
-    item.url.startsWith('/') &&
-    typeof item.excerpt === 'string' &&
-    Array.isArray(item.tags)
+    index.version === 2 &&
+    typeof index.fingerprint === 'string' &&
+    Array.isArray(index.documents) &&
+    Array.isArray(index.chunks)
   );
 }
 
-async function requestKnowledge(): Promise<KnowledgeItem[]> {
-  const response = await fetch('/ai-knowledge.json', { cache: 'force-cache' });
+async function requestKnowledge(): Promise<KnowledgeIndex> {
+  const response = await fetch('/ai-knowledge.json', { cache: 'no-cache' });
   if (!response.ok) throw new Error('KNOWLEDGE_UNAVAILABLE');
-  const payload = (await response.json()) as Partial<KnowledgeIndex>;
-  if (payload.version !== 1 || !Array.isArray(payload.items)) {
-    throw new Error('KNOWLEDGE_INVALID');
-  }
-  return payload.items.filter(isKnowledgeItem);
+  const payload = await response.json();
+  if (!isKnowledgeIndex(payload)) throw new Error('KNOWLEDGE_INVALID');
+  if (import.meta.env.DEV)
+    console.info('[LFW AI] Knowledge V2', {
+      fingerprint: payload.fingerprint.slice(0, 8),
+      ...payload.stats,
+    });
+  return payload;
 }
 
-export function loadKnowledge(): Promise<KnowledgeItem[]> {
+export function loadKnowledge(): Promise<KnowledgeIndex> {
   knowledgeRequest ??= requestKnowledge().catch((error: unknown) => {
     knowledgeRequest = undefined;
     throw error;
