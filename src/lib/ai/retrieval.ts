@@ -19,6 +19,9 @@ function normalize(value: string): string {
   return value
     .normalize('NFKC')
     .toLocaleLowerCase('en-US')
+    // Insert a space at every script boundary so "MySQL和redis" becomes "mysql 和 redis".
+    .replace(/([\p{Script=Latin}\p{Script=Greek}\p{Script=Cyrillic}])(\p{Script=Han})/gu, '$1 $2')
+    .replace(/(\p{Script=Han})([\p{Script=Latin}\p{Script=Greek}\p{Script=Cyrillic}])/gu, '$1 $2')
     .replace(/[^\p{Letter}\p{Number}]+/gu, ' ')
     .trim();
 }
