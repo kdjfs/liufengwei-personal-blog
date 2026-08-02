@@ -21,6 +21,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:content": "node --test scripts/content/*.test.mjs",
+    "test:ai": "node --experimental-strip-types --test tests/ai/*.test.ts",
+    "test": "pnpm test:content && pnpm test:ai",
     "content:new": "node scripts/content/index.mjs new",
     "content:list": "node scripts/content/index.mjs list",
     "content:check": "node scripts/content/index.mjs check",
