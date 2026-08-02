@@ -82,11 +82,7 @@ const seriesPosts = post.data.series
     >
     </div>
     <div class="article-layout">
-      {
-        post.data.toc !== false && (
-          <TableOfContents headings={headings} articleTitle={post.data.title} />
-        )
-      }
+      {post.data.toc !== false && <TableOfContents headings={headings} />}
       <div class="prose"><Content /></div>
     </div>
   </article>
