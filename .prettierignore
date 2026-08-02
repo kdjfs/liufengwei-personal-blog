@@ -3,3 +3,5 @@ dist
 node_modules
 public/pagefind
 pnpm-lock.yaml
+# 用户文章正文保持原始排版；仅允许手工补充必要 frontmatter。
+src/content/blog/vue3-diff.md

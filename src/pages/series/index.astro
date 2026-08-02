@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+import PageHeader from '@/components/common/PageHeader.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getPostSlug, getPublishedPosts } from '@/utils/posts';
+import { getSeriesSummaries } from '@/utils/taxonomy';
+
+const posts = getPublishedPosts(await getCollection('blog'));
+const series = getSeriesSummaries(posts);
+---
+
+<BaseLayout title="系列">
+  <PageHeader
+    eyebrow="SERIES"
+    title="文章系列"
+    description="把需要持续展开的问题组织成有顺序、可追踪的学习路径。"
+  />
+  <section class="section-compact container-wide series-grid" data-pagefind-body>
+    {
+      series.map((item, index) => (
+        <article class="series-card">
+          <div class="series-card-head">
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <span>{item.count} POSTS</span>
+          </div>
+          <h2>
+            <a href={`/series/${encodeURIComponent(item.name)}`}>{item.name}</a>
+          </h2>
+          <ol>
+            {item.posts.slice(0, 4).map((post, postIndex) => (
+              <li>
+                <span>{String(postIndex + 1).padStart(2, '0')}</span>
+                <a href={`/blog/${getPostSlug(post)}`}>{post.data.title}</a>
+              </li>
+            ))}
+          </ol>
+          <a class="series-explore" href={`/series/${encodeURIComponent(item.name)}`}>
+            查看完整系列 →
+          </a>
+        </article>
+      ))
+    }
+    {
+      series.length === 0 && (
+        <p class="empty-state">系列文章正在整理中。单篇文章仍可通过分类与标签浏览。</p>
+      )
+    }
+  </section>
+</BaseLayout>

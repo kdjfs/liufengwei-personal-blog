@@ -5,14 +5,16 @@ import Hero from '@/components/home/Hero.astro';
 import ProjectCard from '@/components/projects/ProjectCard.astro';
 import { projects } from '@/data/projects';
 import { timeline } from '@/data/timeline';
-import { topics } from '@/data/topics';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getPublishedPosts } from '@/utils/posts';
+import { getCategorySummaries } from '@/utils/taxonomy';
 
 const posts = getPublishedPosts(await getCollection('blog'));
 const featuredPosts = posts.filter((post) => post.data.featured).slice(0, 2);
 const latestPosts = posts.slice(0, 3);
 const featuredProject = projects.find((project) => project.featured) ?? projects[0];
+const topics = getCategorySummaries(posts);
+const topicTones = ['violet', 'blue', 'cyan', 'green'];
 ---
 
 <BaseLayout>
@@ -42,7 +44,7 @@ const featuredProject = projects.find((project) => project.featured) ?? projects
         <a class="section-link" href="/archive">按时间归档 →</a>
       </div>
       <div class="post-grid">
-        {latestPosts.map((post) => <PostCard post={post} />)}
+        {latestPosts.map((post) => <PostCard post={post} transitionSuffix="latest" />)}
       </div>
     </div>
   </section>
@@ -59,11 +61,16 @@ const featuredProject = projects.find((project) => project.featured) ?? projects
     <div class="topic-grid">
       {
         topics.map((topic, index) => (
-          <article class="topic-card" data-tone={topic.tone}>
+          <a
+            class="topic-card"
+            data-tone={topicTones[index % topicTones.length]}
+            href={`/categories/${encodeURIComponent(topic.name)}`}
+          >
             <span class="topic-index">0{index + 1}</span>
             <h3>{topic.name}</h3>
-            <p>{topic.note}</p>
-          </article>
+            <p>{topic.tags.join(' · ') || '持续生长中的主题'}</p>
+            <span class="topic-count">{topic.count} ARTICLES →</span>
+          </a>
         ))
       }
     </div>

@@ -5,10 +5,13 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { formatDate, getPostSlug, getPublishedPosts } from '@/utils/posts';
 
 const posts = getPublishedPosts(await getCollection('blog'));
-const years = new Map<number, typeof posts>();
+const years = new Map<number, Map<number, typeof posts>>();
 posts.forEach((post) => {
   const year = post.data.publishDate.getFullYear();
-  years.set(year, [...(years.get(year) ?? []), post]);
+  const month = post.data.publishDate.getMonth();
+  const months = years.get(year) ?? new Map<number, typeof posts>();
+  months.set(month, [...(months.get(month) ?? []), post]);
+  years.set(year, months);
 });
 ---
 
@@ -18,18 +21,38 @@ posts.forEach((post) => {
     title="归档"
     description={`${posts.length} 篇文章，按时间保存一次次理解的变化。`}
   />
-  <section class="section-compact container-wide">
+  <section class="section-compact container-wide" data-pagefind-body>
     {
-      [...years].map(([year, yearPosts]) => (
+      [...years].map(([year, months]) => (
         <div class="archive-year">
-          <h2>{year}</h2>
-          <div class="archive-list">
-            {yearPosts.map((post) => (
-              <a class="archive-item" href={`/blog/${getPostSlug(post)}`}>
-                <time>{formatDate(post.data.publishDate).replace(`${year}年`, '')}</time>
-                <strong>{post.data.title}</strong>
-                <span>{post.data.category}</span>
-              </a>
+          <div class="archive-year-label">
+            <>
+              <h2>{year}</h2>
+              <span>{[...months.values()].flat().length} POSTS</span>
+            </>
+          </div>
+          <div class="archive-months">
+            {[...months].map(([month, monthPosts]) => (
+              <section class="archive-month">
+                <h3>
+                  {new Intl.DateTimeFormat('en', { month: 'short' })
+                    .format(new Date(year, month, 1))
+                    .toUpperCase()}
+                </h3>
+                <div class="archive-list">
+                  {monthPosts.map((post) => (
+                    <a class="archive-item" href={`/blog/${getPostSlug(post)}`}>
+                      <time datetime={post.data.publishDate.toISOString()}>
+                        {String(post.data.publishDate.getDate()).padStart(2, '0')}
+                      </time>
+                      <strong>{post.data.title}</strong>
+                      <span>
+                        {post.data.category} · {formatDate(post.data.publishDate)}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         </div>

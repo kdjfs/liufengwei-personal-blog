@@ -3,10 +3,10 @@ import { getCollection } from 'astro:content';
 import PageHeader from '@/components/common/PageHeader.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getPublishedPosts } from '@/utils/posts';
+import { getCategorySummaries } from '@/utils/taxonomy';
 
 const posts = getPublishedPosts(await getCollection('blog'));
-const counts = new Map<string, number>();
-posts.forEach((post) => counts.set(post.data.category, (counts.get(post.data.category) ?? 0) + 1));
+const categories = getCategorySummaries(posts);
 ---
 
 <BaseLayout title="分类">
@@ -15,14 +15,19 @@ posts.forEach((post) => counts.set(post.data.category, (counts.get(post.data.cat
     title="分类"
     description="从主题入口进入文章，让内容形成稳定的知识脉络。"
   />
-  <section class="section-compact container-wide taxonomy-grid">
+  <section class="section-compact container-wide taxonomy-grid" data-pagefind-body>
     {
-      [...counts].map(([category, count]) => (
-        <a class="taxonomy-card" href={`/categories/${encodeURIComponent(category)}`}>
-          <>
-            <strong>{category}</strong>
-            <span>{String(count).padStart(2, '0')} POSTS →</span>
-          </>
+      categories.map((category, index) => (
+        <a
+          class="taxonomy-card category-card"
+          href={`/categories/${encodeURIComponent(category.name)}`}
+        >
+          <span class="taxonomy-index">{String(index + 1).padStart(2, '0')}</span>
+          <div>
+            <strong>{category.name}</strong>
+            <p>{category.tags.join(' · ') || '持续生长中的主题'}</p>
+          </div>
+          <span>{String(category.count).padStart(2, '0')} POSTS →</span>
         </a>
       ))
     }

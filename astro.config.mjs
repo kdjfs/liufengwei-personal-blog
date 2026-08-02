@@ -10,6 +10,7 @@ import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import { remarkCallouts } from './src/plugins/remark-callouts.mjs';
+import { remarkCodeMeta } from './src/plugins/remark-code-meta.mjs';
 import { remarkMermaid } from './src/plugins/remark-mermaid.mjs';
 
 export default defineConfig({
@@ -28,7 +29,7 @@ export default defineConfig({
       wrap: true,
     },
     processor: unified({
-      remarkPlugins: [remarkGfm, remarkMath, remarkCallouts, remarkMermaid],
+      remarkPlugins: [remarkGfm, remarkMath, remarkCallouts, remarkCodeMeta, remarkMermaid],
       rehypePlugins: [rehypeSlug, [rehypeAutolinkHeadings, { behavior: 'wrap' }], rehypeKatex],
     }),
   },

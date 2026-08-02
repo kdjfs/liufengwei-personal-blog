@@ -3,23 +3,68 @@ import type { MarkdownHeading } from 'astro';
 
 interface Props {
   headings: MarkdownHeading[];
+  articleTitle: string;
 }
 
-const { headings } = Astro.props;
-const visible = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const { headings, articleTitle } = Astro.props;
+const visible = headings.filter(
+  (heading) =>
+    heading.depth >= 1 &&
+    heading.depth <= 3 &&
+    !(heading.depth === 1 && heading.text.trim() === articleTitle.trim()),
+);
 ---
 
 {
   visible.length > 0 && (
-    <nav class="toc" aria-label="文章目录">
-      <p>ON THIS PAGE</p>
-      <ol>
-        {visible.map((heading) => (
-          <li class:list={{ nested: heading.depth === 3 }}>
-            <a href={`#${heading.slug}`}>{heading.text}</a>
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <>
+      <nav class="toc toc-desktop" aria-label="文章目录" data-toc>
+        <p>ON THIS PAGE</p>
+        <ol>
+          {visible.map((heading, index) => (
+            <li class:list={[`depth-${heading.depth}`, { nested: heading.depth > 1 }]}>
+              <a href={`#${heading.slug}`} data-toc-link={heading.slug}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <span>{heading.text}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <div class="mobile-toc-bar" data-mobile-toc-bar>
+        <p>
+          <span>当前</span>
+          <strong data-current-heading>{visible[0].text}</strong>
+        </p>
+        <button type="button" data-toc-open aria-haspopup="dialog">
+          目录
+        </button>
+      </div>
+
+      <dialog class="mobile-toc-dialog" data-mobile-toc aria-labelledby="mobile-toc-title">
+        <div class="mobile-toc-panel">
+          <header>
+            <div>
+              <p>ON THIS PAGE</p>
+              <h2 id="mobile-toc-title">文章目录</h2>
+            </div>
+            <button type="button" data-toc-close aria-label="关闭文章目录">
+              关闭
+            </button>
+          </header>
+          <ol>
+            {visible.map((heading, index) => (
+              <li class:list={[`depth-${heading.depth}`, { nested: heading.depth > 1 }]}>
+                <a href={`#${heading.slug}`} data-mobile-toc-link={heading.slug}>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <span>{heading.text}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </dialog>
+    </>
   )
 }

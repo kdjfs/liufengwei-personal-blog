@@ -3,28 +3,23 @@ import { getCollection } from 'astro:content';
 import PageHeader from '@/components/common/PageHeader.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getPublishedPosts } from '@/utils/posts';
+import { getTagSummaries } from '@/utils/taxonomy';
 
 const posts = getPublishedPosts(await getCollection('blog'));
-const counts = new Map<string, number>();
-posts
-  .flatMap((post) => post.data.tags)
-  .forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1));
+const tags = getTagSummaries(posts);
 ---
 
 <BaseLayout title="标签">
   <PageHeader eyebrow="TAGS" title="标签" description="细粒度的线索，让不同文章在意外之处相遇。" />
-  <section class="section-compact container-wide taxonomy-grid">
+  <section class="section-compact container-wide taxonomy-grid" data-pagefind-body>
     {
-      [...counts]
-        .sort((a, b) => b[1] - a[1])
-        .map(([tag, count]) => (
-          <a class="taxonomy-card" href={`/tags/${encodeURIComponent(tag)}`}>
-            <>
-              <strong>#{tag}</strong>
-              <span>{String(count).padStart(2, '0')} POSTS →</span>
-            </>
-          </a>
-        ))
+      tags.map((tag, index) => (
+        <a class="taxonomy-card tag-card" href={`/tags/${encodeURIComponent(tag.name)}`}>
+          <span class="taxonomy-index">{String(index + 1).padStart(2, '0')}</span>
+          <strong>#{tag.name}</strong>
+          <span>{String(tag.count).padStart(2, '0')} POSTS →</span>
+        </a>
+      ))
     }
   </section>
 </BaseLayout>
