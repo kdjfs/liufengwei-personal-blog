@@ -1,23 +1,3 @@
-/** @deprecated Import from `./chat-contract.ts` instead. Re-exports kept for backward compatibility. */
-export {
-  AI_LIMITS,
-  type ChatContextSource,
-  type ChatMessageInput,
-  type ChatRequestPayload,
-  type CurrentPageContext,
-  chatRequestSchema,
-  contextSchema,
-  currentPageSchema,
-  formatZodIssues,
-  messageSchema,
-  normalizeChatPayload,
-  normalizeSelectionContext,
-  type SelectionContext,
-  selectionSchema,
-  truncateCodePoints,
-  type ValidationIssue,
-} from './chat-contract.ts';
-
 export type KnowledgeItemType = 'article' | 'profile' | 'project' | 'timeline';
 
 export interface KnowledgeDocument {
@@ -81,3 +61,45 @@ export interface KnowledgeIndex {
 }
 
 export type ChatMode = 'fast' | 'deep';
+
+export interface ChatMessageInput {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface ChatContextSource {
+  id: string;
+  title: string;
+  url: string;
+  category: string;
+  excerpt: string;
+}
+
+export interface CurrentPageContext {
+  title: string;
+  url: string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  content?: string;
+  activeHeading?: string;
+  readingProgress?: number;
+}
+
+export interface SelectionContext {
+  text: string;
+  headingId?: string;
+  headingText?: string;
+  surroundingText?: string;
+  articleSlug?: string;
+  annotationNote?: string;
+}
+
+export interface ChatRequestPayload {
+  mode: ChatMode;
+  messages: ChatMessageInput[];
+  context: ChatContextSource[];
+  structuredFacts?: string;
+  currentPage?: CurrentPageContext;
+  selection?: SelectionContext;
+}

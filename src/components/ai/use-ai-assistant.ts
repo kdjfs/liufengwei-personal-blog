@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { retrieveKnowledge } from '@/lib/ai/retrieval';
-import {
-  type ChatMode,
-  type KnowledgeItem,
-  normalizeChatPayload,
-  type SelectionContext,
-} from '@/lib/ai/types';
+import type { ChatMode, KnowledgeItem, SelectionContext } from '@/lib/ai/types';
 import { AIChatClientError, streamAIResponse } from './chat-client';
 import { loadKnowledge } from './knowledge-client';
 import { isArticlePage, readCurrentPageContext } from './page-context';
@@ -132,7 +127,7 @@ export function useAIAssistant() {
       let received = '';
       try {
         await streamAIResponse(
-          normalizeChatPayload({
+          {
             mode,
             messages: [
               ...messages
@@ -145,7 +140,7 @@ export function useAIAssistant() {
             structuredFacts: retrieval?.facts,
             currentPage,
             selection: activeSelection,
-          }),
+          },
           (delta) => {
             received += delta;
             setMessages((current) =>

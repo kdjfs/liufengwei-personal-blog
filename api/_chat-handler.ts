@@ -1,7 +1,6 @@
 import { createHash, randomUUID as createRandomUUID } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { ZodError } from 'zod';
-import { formatZodIssues } from '../src/lib/ai/chat-contract.ts';
 import {
   AIConfigurationError,
   assertConfiguredModel,
@@ -243,40 +242,11 @@ export async function handleChat(
   try {
     input = parseChatRequest(JSON.parse(rawBody) as unknown);
   } catch (error) {
-    if (error instanceof ZodError) {
-      const issues = formatZodIssues(error);
-      const development = isDevelopment(environment);
-      logger.error('[LFW AI]', {
-        requestId,
-        event: 'validation_error',
-        durationMs: now() - startedAt,
-        issues: issues.map((issue) => ({
-          path: issue.path,
-          code: issue.code,
-          expected: issue.expected,
-        })),
-      });
-      return errorResponse(
-        requestId,
-        422,
-        'VALIDATION_ERROR',
-        development
-          ? `请求字段不符合约定。${issues
-              .slice(0, 4)
-              .map(
-                (issue) =>
-                  `${issue.path} (${issue.code}${issue.expected ? `, ${issue.expected}` : ''})`,
-              )
-              .join('；')}`
-          : '请求字段不符合约定',
-        rateHeaders(rate.limit, rate.remaining),
-      );
-    }
     return errorResponse(
       requestId,
       error instanceof SyntaxError ? 400 : 422,
-      error instanceof SyntaxError ? 'INVALID_JSON' : 'VALIDATION_ERROR',
-      error instanceof SyntaxError ? 'JSON 格式无效' : '请求字段不符合约定',
+      error instanceof ZodError ? 'VALIDATION_ERROR' : 'INVALID_JSON',
+      error instanceof ZodError ? '请求字段不符合约定' : 'JSON 格式无效',
       rateHeaders(rate.limit, rate.remaining),
     );
   }
