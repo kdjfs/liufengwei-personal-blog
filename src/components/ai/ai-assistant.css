@@ -9,48 +9,62 @@
   right: 24px;
   bottom: 24px;
   z-index: 141;
-  width: 112px;
-  height: 54px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--violet) 38%, var(--line-strong));
-  border-radius: 999px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--violet) 16%, transparent), transparent 52%),
-    color-mix(in srgb, var(--bg-elevated) 92%, transparent);
-  box-shadow:
-    0 15px 42px rgba(15, 10, 35, 0.22),
-    inset 0 1px rgba(255, 255, 255, 0.12);
+  width: 82px;
+  height: 82px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 28px;
+  background: transparent;
   color: var(--text);
-  cursor: pointer;
-  backdrop-filter: blur(20px) saturate(1.25);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
   transition:
     transform var(--motion-fast) var(--ease-spring),
-    border-color var(--motion-fast) var(--ease-out),
+    left var(--motion-normal) var(--ease-spring),
+    top var(--motion-normal) var(--ease-spring),
     box-shadow var(--motion-normal) var(--ease-out),
     opacity var(--motion-fast) var(--ease-out);
-  animation: ai-trigger-collapse 0.7s 2.8s var(--ease-spring) forwards;
+  animation: ai-pet-float 5.2s ease-in-out infinite;
 }
 
-.ai-trigger::before {
+.ai-trigger[style] {
+  right: auto;
+  bottom: auto;
+}
+
+.ai-pet-visual::before {
   position: absolute;
-  inset: -1px;
-  border: 1px solid color-mix(in srgb, var(--cyan) 28%, transparent);
-  border-radius: inherit;
+  inset: 11px;
+  z-index: -1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--cyan) 26%, transparent);
+  filter: blur(16px);
   content: '';
   pointer-events: none;
-  animation: ai-trigger-breathe 4.8s ease-in-out infinite;
+  animation: ai-pet-breathe 4.8s ease-in-out infinite;
 }
 
 .ai-trigger:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--violet) 62%, var(--line-strong));
-  box-shadow:
-    0 20px 48px rgba(15, 10, 35, 0.28),
-    0 0 0 5px color-mix(in srgb, var(--violet) 9%, transparent);
+  transform: scale(1.06) rotate(-1.5deg);
+}
+
+.ai-assistant.is-dragging .ai-trigger {
+  cursor: grabbing;
+  transform: scale(0.96);
+  transition: none;
+  animation: none;
+}
+
+.ai-assistant.is-thinking .ai-pet-visual::before {
+  background: color-mix(in srgb, var(--violet) 58%, transparent);
+  animation-duration: 1.2s;
+}
+
+.ai-assistant.has-replied .ai-pet-visual {
+  animation: ai-pet-replied 0.75s var(--ease-spring);
 }
 
 .ai-assistant.is-open .ai-trigger {
@@ -58,22 +72,38 @@
   pointer-events: none;
 }
 
-.ai-trigger-icon {
-  flex: none;
-  color: var(--violet);
-  font-size: 1.3rem;
-  line-height: 1;
-  text-shadow: 0 0 18px color-mix(in srgb, var(--violet) 62%, transparent);
+.ai-pet-visual,
+.ai-pet-visual img {
+  width: 82px;
+  height: 82px;
+  display: block;
+  pointer-events: none;
+}
+
+.ai-pet-visual {
+  position: relative;
+}
+
+.ai-pet-visual img {
+  object-fit: contain;
+  filter: drop-shadow(0 12px 14px rgba(4, 6, 14, 0.28));
 }
 
 .ai-trigger-label {
-  overflow: hidden;
+  position: absolute;
+  right: 2px;
+  bottom: -3px;
+  padding: 4px 7px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 35%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  box-shadow: 0 5px 14px rgba(4, 6, 14, 0.2);
+  color: var(--cyan);
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.56rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  animation: ai-trigger-label-hide 0.35s 2.75s ease forwards;
 }
 
 .ai-panel {
@@ -214,6 +244,11 @@
   padding: 10px 14px;
   border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface) 68%, transparent);
+}
+
+.ai-assistant[data-edge='left'] .ai-panel {
+  right: auto;
+  left: 24px;
 }
 
 .ai-selection-context {
@@ -800,29 +835,33 @@
   }
 }
 
-@keyframes ai-trigger-collapse {
-  to {
-    width: 54px;
+@keyframes ai-pet-float {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  50% {
+    translate: 0 -5px;
+    rotate: 1deg;
   }
 }
 
-@keyframes ai-trigger-label-hide {
-  to {
-    width: 0;
-    transform: translateX(5px);
-    opacity: 0;
-  }
-}
-
-@keyframes ai-trigger-breathe {
+@keyframes ai-pet-breathe {
   0%,
   100% {
     transform: scale(1);
-    opacity: 0.38;
+    opacity: 0.42;
   }
   50% {
-    transform: scale(1.08);
-    opacity: 0.12;
+    transform: scale(1.16);
+    opacity: 0.2;
+  }
+}
+
+@keyframes ai-pet-replied {
+  45% {
+    transform: scale(1.12) rotate(3deg);
   }
 }
 
@@ -881,6 +920,11 @@
     border-left: 0;
     border-radius: 22px 22px 0 0;
     animation-name: ai-sheet-enter;
+  }
+
+  .ai-assistant[data-edge='left'] .ai-panel {
+    right: 0;
+    left: 0;
   }
 
   .ai-panel-header {
@@ -943,20 +987,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ai-trigger,
-  .ai-trigger::before,
-  .ai-trigger-label,
+  .ai-pet-visual,
+  .ai-pet-visual::before,
   .ai-panel,
   .ai-thinking-pulse i,
   .ai-stream-cursor {
     animation: none !important;
-  }
-
-  .ai-trigger {
-    width: 54px;
-  }
-
-  .ai-trigger-label {
-    display: none;
   }
 }
 
