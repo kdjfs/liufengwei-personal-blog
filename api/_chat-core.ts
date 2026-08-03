@@ -33,6 +33,19 @@ const currentPageSchema = z
     category: z.string().max(60).optional(),
     tags: z.array(z.string().max(40)).max(8).optional(),
     content: z.string().max(8000).optional(),
+    activeHeading: z.string().max(300).optional(),
+    readingProgress: z.number().min(0).max(100).optional(),
+  })
+  .strict();
+
+const selectionSchema = z
+  .object({
+    text: z.string().trim().min(1).max(3000),
+    headingId: z.string().max(240).optional(),
+    headingText: z.string().max(500).optional(),
+    surroundingText: z.string().max(2000).optional(),
+    articleSlug: z.string().max(160).optional(),
+    annotationNote: z.string().max(10000).optional(),
   })
   .strict();
 
@@ -43,6 +56,7 @@ const chatRequestSchema = z
     context: z.array(contextSchema).max(4).default([]),
     structuredFacts: z.string().trim().max(6000).optional(),
     currentPage: currentPageSchema.optional(),
+    selection: selectionSchema.optional(),
   })
   .strict()
   .superRefine((value, context) => {
@@ -94,9 +108,18 @@ function truncate(value: string, maxChars: number): string {
 function buildBlogContext(input: ChatRequestPayload): string {
   const sections: string[] = [];
 
-  if (input.structuredFacts) {
+  if (input.selection) {
+    const selection = input.selection;
     sections.push(
-      `STRUCTURED BLOG FACTS (authoritative metadata; preserve all counts, titles, categories, and URLs exactly)\n${input.structuredFacts}`,
+      [
+        'SELECTED TEXT (highest priority; answer this before broader context)',
+        `Text: ${selection.text}`,
+        selection.headingText ? `Heading: ${selection.headingText}` : '',
+        selection.surroundingText ? `Surrounding text: ${selection.surroundingText}` : '',
+        selection.annotationNote ? `User annotation: ${selection.annotationNote}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n'),
     );
   }
 
@@ -111,6 +134,10 @@ function buildBlogContext(input: ChatRequestPayload): string {
         page.tags?.length ? `Tags: ${page.tags.join(', ')}` : '',
         page.description ? `Description: ${page.description}` : '',
         page.content ? `Content: ${truncate(page.content, 4200)}` : '',
+        page.activeHeading ? `Active heading: ${page.activeHeading}` : '',
+        typeof page.readingProgress === 'number'
+          ? `Reading progress: ${Math.round(page.readingProgress)}%`
+          : '',
       ]
         .filter(Boolean)
         .join('\n'),
@@ -126,6 +153,12 @@ function buildBlogContext(input: ChatRequestPayload): string {
         `Category: ${source.category}`,
         `Excerpt: ${source.excerpt}`,
       ].join('\n'),
+    );
+  }
+
+  if (input.structuredFacts) {
+    sections.push(
+      `STRUCTURED BLOG FACTS (authoritative metadata; preserve all counts, titles, categories, and URLs exactly)\n${input.structuredFacts}`,
     );
   }
 

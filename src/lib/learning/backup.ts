@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { LearningDatabase } from './db.ts';
 import type { LearningBackup, LearningData } from './types.ts';
 
-const isoDate = z.string().datetime({ offset: true });
+const isoDate = z.iso.datetime({ offset: true });
 const dailyTime = z.object({
   readSeconds: z.number().nonnegative(),
   listenSeconds: z.number().nonnegative(),

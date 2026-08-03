@@ -216,6 +216,57 @@
   background: color-mix(in srgb, var(--surface) 68%, transparent);
 }
 
+.ai-selection-context {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--cyan) 7%, var(--surface));
+}
+
+.ai-selection-context span {
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.ai-selection-context p {
+  max-height: 3.2em;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: var(--text-soft);
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.ai-selection-context > button,
+.ai-selection-actions button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  cursor: pointer;
+}
+
+.ai-selection-context > button {
+  width: 28px;
+  height: 28px;
+}
+
+.ai-selection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  grid-column: 1 / -1;
+}
+
+.ai-selection-actions button {
+  padding: 5px 7px;
+  font-size: 0.68rem;
+}
+
 .ai-mode-switch {
   margin: 0;
   padding: 0;

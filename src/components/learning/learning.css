@@ -349,6 +349,178 @@
   background: var(--cyan);
 }
 
+::highlight(lfw-annotations) {
+  color: inherit;
+  background: color-mix(in srgb, var(--amber, #f5a623) 32%, transparent);
+}
+
+.annotation-highlight {
+  color: inherit;
+  background: color-mix(in srgb, var(--amber, #f5a623) 32%, transparent);
+}
+
+.annotation-focus-pulse {
+  animation: annotation-focus 1.4s ease-out;
+}
+
+@keyframes annotation-focus {
+  0%,
+  35% {
+    outline: 3px solid color-mix(in srgb, var(--cyan) 65%, transparent);
+    outline-offset: 5px;
+  }
+  100% {
+    outline-color: transparent;
+  }
+}
+
+.annotation-drawer-trigger {
+  position: fixed;
+  z-index: 82;
+  right: 18px;
+  top: 46%;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-width: 54px;
+  padding: 10px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  color: var(--text-soft);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px);
+  font: 600 0.68rem/1 var(--font-mono);
+}
+
+.annotation-drawer-trigger span {
+  font-size: 1rem;
+}
+.annotation-drawer-trigger:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.annotation-popover,
+.annotation-drawer {
+  position: fixed;
+  z-index: 125;
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--surface) 97%, transparent);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(20px);
+}
+
+.annotation-popover {
+  width: min(320px, calc(100vw - 16px));
+  padding: 16px;
+  border-radius: 13px;
+}
+
+.annotation-popover p,
+.annotation-drawer .annotation-quote {
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.65;
+}
+
+.annotation-popover label {
+  display: block;
+  margin: 12px 0 6px;
+  color: var(--text-faint);
+  font: 600 0.68rem/1 var(--font-mono);
+}
+
+.annotation-popover textarea,
+.annotation-drawer textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--surface-raised);
+}
+
+.annotation-popover > div,
+.annotation-drawer li > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.annotation-popover button,
+.annotation-drawer button {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--text-soft);
+  background: transparent;
+}
+
+.annotation-popover button:last-child {
+  color: var(--surface);
+  background: var(--cyan);
+}
+.annotation-popover button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.annotation-drawer {
+  top: var(--header-height, 72px);
+  right: 0;
+  bottom: 0;
+  width: min(390px, 100vw);
+  overflow: auto;
+  padding: 20px;
+  border-width: 1px 0 0 1px;
+}
+
+.annotation-drawer > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.annotation-drawer > header span {
+  color: var(--cyan);
+  font: 600 0.62rem/1 var(--font-mono);
+}
+.annotation-drawer h2 {
+  margin: 5px 0 0;
+  font-size: 1.15rem;
+}
+.annotation-drawer ol {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.annotation-drawer li {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.annotation-drawer .annotation-quote {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  text-align: left;
+}
+.annotation-drawer li p {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+.annotation-empty {
+  color: var(--text-faint);
+  line-height: 1.7;
+}
+
 @media (max-width: 980px) {
   .learning-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -379,6 +551,26 @@
 
   .learning-bar-value {
     display: none;
+  }
+
+  .annotation-drawer-trigger {
+    right: 10px;
+    top: auto;
+    bottom: 84px;
+  }
+
+  .annotation-drawer {
+    top: auto;
+    width: 100%;
+    max-height: min(72vh, 620px);
+    border-width: 1px 0 0;
+    border-radius: 18px 18px 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .annotation-focus-pulse {
+    animation: none;
   }
 }
 

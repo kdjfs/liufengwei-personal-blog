@@ -34,6 +34,8 @@ export function readCurrentPageContext(): CurrentPageContext {
   }
 
   const content = article.querySelector<HTMLElement>('.prose')?.innerText ?? '';
+  const activeHeading = document.querySelector<HTMLElement>('[data-current-heading]')?.textContent;
+  const readingProgress = Number(article.dataset.learningProgress);
   return {
     title: truncate(article.dataset.aiTitle || fallbackTitle, 180),
     url: article.dataset.aiUrl || location.pathname,
@@ -41,5 +43,7 @@ export function readCurrentPageContext(): CurrentPageContext {
     category: truncate(article.dataset.aiCategory ?? '', 60) || undefined,
     tags: readTags(article.dataset.aiTags)?.slice(0, 8),
     content: truncate(content, 6000) || undefined,
+    activeHeading: activeHeading ? truncate(activeHeading, 300) : undefined,
+    readingProgress: Number.isFinite(readingProgress) ? readingProgress : undefined,
   };
 }

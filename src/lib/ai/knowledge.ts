@@ -154,16 +154,17 @@ function buildArticleChunks(document: KnowledgeDocument, markdown: string): Know
   };
   const headings: string[] = [];
   for (const node of root.children ?? []) {
-    if (node.type === 'heading' && node.depth < 2) {
-      headings[node.depth] = nodeText(node).trim();
-      headings.length = node.depth + 1;
+    const depth = node.type === 'heading' ? node.depth : undefined;
+    if (typeof depth === 'number' && depth < 2) {
+      headings[depth] = nodeText(node).trim();
+      headings.length = depth + 1;
       continue;
     }
-    if (node.type === 'heading' && node.depth >= 2) {
+    if (typeof depth === 'number' && depth >= 2) {
       if (current.blocks.length) sections.push(current);
       const heading = nodeText(node).trim();
-      headings[node.depth] = heading;
-      headings.length = node.depth + 1;
+      headings[depth] = heading;
+      headings.length = depth + 1;
       current = {
         heading,
         anchor: slugger.slug(heading),

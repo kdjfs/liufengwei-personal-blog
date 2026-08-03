@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import type { ChatMode } from '@/lib/ai/types';
+import type { ChatMode, SelectionContext } from '@/lib/ai/types';
 import { AIComposer } from './AIComposer';
 import { AIMessageList } from './AIMessageList';
 import type { QuickAction } from './quick-actions';
@@ -18,6 +18,8 @@ interface Props {
   onMinimize: () => void;
   onClose: () => void;
   onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
+  selection?: SelectionContext;
+  onClearSelection: () => void;
 }
 
 const statusLabels = {
@@ -41,6 +43,8 @@ export const AIChatPanel = forwardRef<HTMLElement, Props>(function AIChatPanel(
     onMinimize,
     onClose,
     onKeyDown,
+    selection,
+    onClearSelection,
   },
   ref,
 ) {
@@ -109,6 +113,39 @@ export const AIChatPanel = forwardRef<HTMLElement, Props>(function AIChatPanel(
           <span>{statusLabels[knowledgeStatus]}</span>
         </p>
       </div>
+
+      {selection && (
+        <aside className="ai-selection-context" aria-label="当前选中文字">
+          <div>
+            <span>正在追问</span>
+            <p>
+              “{selection.text.slice(0, 180)}
+              {selection.text.length > 180 ? '…' : ''}”
+            </p>
+          </div>
+          <button type="button" onClick={onClearSelection} aria-label="清除选区上下文">
+            ×
+          </button>
+          <div className="ai-selection-actions">
+            {[
+              '解释这段',
+              '用更通俗的话说',
+              '为什么？',
+              '结合整篇文章解释',
+              '面试应该怎么回答？',
+            ].map((label) => (
+              <button
+                key={label}
+                type="button"
+                disabled={isStreaming}
+                onClick={() => onSend(label)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </aside>
+      )}
 
       <AIMessageList
         messages={messages}

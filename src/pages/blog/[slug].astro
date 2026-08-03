@@ -4,6 +4,7 @@ import { getCollection, render } from 'astro:content';
 import PostCard from '@/components/blog/PostCard.astro';
 import TableOfContents from '@/components/blog/TableOfContents.astro';
 import ArticleLearningBar from '@/components/learning/ArticleLearningBar';
+import AnnotationManager from '@/components/learning/AnnotationManager';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import {
   formatDate,
@@ -108,6 +109,7 @@ const cover = getBlogCover(post.data.slug, post.data.cover);
       {post.data.toc !== false && <TableOfContents headings={headings} />}
       <div class="prose"><Content /></div>
     </div>
+    <AnnotationManager client:load articleSlug={post.data.slug} articleTitle={post.data.title} />
   </article>
 
   <footer class="article-footer">

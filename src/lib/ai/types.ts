@@ -82,6 +82,17 @@ export interface CurrentPageContext {
   category?: string;
   tags?: string[];
   content?: string;
+  activeHeading?: string;
+  readingProgress?: number;
+}
+
+export interface SelectionContext {
+  text: string;
+  headingId?: string;
+  headingText?: string;
+  surroundingText?: string;
+  articleSlug?: string;
+  annotationNote?: string;
 }
 
 export interface ChatRequestPayload {
@@ -90,4 +101,5 @@ export interface ChatRequestPayload {
   context: ChatContextSource[];
   structuredFacts?: string;
   currentPage?: CurrentPageContext;
+  selection?: SelectionContext;
 }

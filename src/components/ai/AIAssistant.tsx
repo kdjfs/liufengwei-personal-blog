@@ -84,6 +84,8 @@ export default function AIAssistant() {
             onMinimize={() => assistant.setIsOpen(false)}
             onClose={() => assistant.setIsOpen(false)}
             onKeyDown={handlePanelKeyDown}
+            selection={assistant.selection}
+            onClearSelection={assistant.clearSelection}
           />
         </>
       )}

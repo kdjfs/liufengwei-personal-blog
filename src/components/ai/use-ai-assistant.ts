@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { retrieveKnowledge } from '@/lib/ai/retrieval';
-import type { ChatMode, KnowledgeItem } from '@/lib/ai/types';
+import type { ChatMode, KnowledgeItem, SelectionContext } from '@/lib/ai/types';
 import { AIChatClientError, streamAIResponse } from './chat-client';
 import { loadKnowledge } from './knowledge-client';
 import { isArticlePage, readCurrentPageContext } from './page-context';
@@ -41,6 +41,7 @@ export function useAIAssistant() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [articlePage, setArticlePage] = useState(false);
   const [knowledgeStatus, setKnowledgeStatus] = useState<KnowledgeStatus>('idle');
+  const [selection, setSelection] = useState<SelectionContext>();
   const abortRef = useRef<AbortController | undefined>(undefined);
   const streamingRef = useRef(false);
 
@@ -63,16 +64,20 @@ export function useAIAssistant() {
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const sendMessage = useCallback(
-    async (rawQuestion: string) => {
+    async (rawQuestion: string, selectionOverride?: SelectionContext) => {
       const question = rawQuestion.trim();
       if (!question || streamingRef.current) return;
 
       streamingRef.current = true;
       setIsStreaming(true);
       const currentPage = readCurrentPageContext();
+      const activeSelection = selectionOverride ?? selection;
       let retrieval: ReturnType<typeof retrieveKnowledge> | undefined;
       try {
-        retrieval = retrieveKnowledge(question, await loadKnowledge(), currentPage.url);
+        const retrievalQuestion = activeSelection
+          ? `${question} ${activeSelection.text} ${activeSelection.headingText ?? ''}`
+          : question;
+        retrieval = retrieveKnowledge(retrievalQuestion, await loadKnowledge(), currentPage.url);
         setKnowledgeStatus('ready');
       } catch {
         setKnowledgeStatus('unavailable');
@@ -134,6 +139,7 @@ export function useAIAssistant() {
             context: contextSources,
             structuredFacts: retrieval?.facts,
             currentPage,
+            selection: activeSelection,
           },
           (delta) => {
             received += delta;
@@ -187,8 +193,32 @@ export function useAIAssistant() {
         setIsStreaming(false);
       }
     },
-    [messages, mode],
+    [messages, mode, selection],
   );
+
+  useEffect(() => {
+    const handleSelectionQuestion = (event: Event) => {
+      const detail = (event as CustomEvent<SelectionContext>).detail;
+      if (!detail?.text) return;
+      const safeSelection: SelectionContext = {
+        ...detail,
+        text: Array.from(detail.text).slice(0, 3000).join(''),
+        surroundingText: detail.surroundingText
+          ? Array.from(detail.surroundingText).slice(0, 2000).join('')
+          : undefined,
+      };
+      setSelection(safeSelection);
+      setIsOpen(true);
+      void sendMessage(
+        safeSelection.annotationNote
+          ? '这是我自己的理解，请结合原文帮我检查有没有问题。'
+          : '请解释我选中的这段内容。',
+        safeSelection,
+      );
+    };
+    window.addEventListener('lfw:ai:ask-selection', handleSelectionQuestion);
+    return () => window.removeEventListener('lfw:ai:ask-selection', handleSelectionQuestion);
+  }, [sendMessage]);
 
   const clearMessages = useCallback(() => {
     abortRef.current?.abort();
@@ -212,6 +242,8 @@ export function useAIAssistant() {
       () => (articlePage ? articleQuickActions : generalQuickActions),
       [articlePage],
     ),
+    selection,
+    clearSelection: () => setSelection(undefined),
     sendMessage,
     stopStreaming,
     clearMessages,

@@ -27,6 +27,12 @@ type SpeechLanguage = 'zh-CN' | 'en-US';
 interface SelectionState {
   text: string;
   rect: DOMRect;
+  headingId?: string;
+  headingText?: string;
+  surroundingText?: string;
+  articleSlug?: string;
+  prefix: string;
+  suffix: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -192,6 +198,15 @@ function createToolbar(): HTMLElement {
     <button type="button" class="sel-tb-btn" data-action="speak" aria-label="朗读选中文字" aria-pressed="false">
       <span class="sel-tb-icon">${SPEAK_ICON_SVG}</span>
       <span class="sel-tb-label">朗读</span>
+    </button>
+    <span class="sel-tb-divider" aria-hidden="true"></span>
+    <button type="button" class="sel-tb-btn" data-action="ask" aria-label="基于选中文字问 AI">
+      <span class="sel-tb-icon" aria-hidden="true">AI</span>
+      <span class="sel-tb-label">问 AI</span>
+    </button>
+    <button type="button" class="sel-tb-btn" data-action="annotate" aria-label="为选中文字添加批注">
+      <span class="sel-tb-icon" aria-hidden="true">✎</span>
+      <span class="sel-tb-label">批注</span>
     </button>`;
 
   return toolbar;
@@ -297,11 +312,57 @@ function getValidSelection(): SelectionState | null {
   if (!text) return null;
 
   try {
-    const range = sel.getRangeAt(0);
+    const range = sel.getRangeAt(0).cloneRange();
     const rect = range.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) return null;
+    const article = (
+      range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+        ? (range.commonAncestorContainer as Element)
+        : range.commonAncestorContainer.parentElement
+    )?.closest<HTMLElement>('[data-ai-article]');
+    const prose = article?.querySelector<HTMLElement>('.prose');
+    let prefix = '';
+    let suffix = '';
+    let heading: HTMLElement | undefined;
+    let surroundingText: string | undefined;
+    if (prose?.contains(range.commonAncestorContainer)) {
+      const before = document.createRange();
+      before.selectNodeContents(prose);
+      before.setEnd(range.startContainer, range.startOffset);
+      prefix = before.toString().slice(-64);
+      const after = document.createRange();
+      after.selectNodeContents(prose);
+      after.setStart(range.endContainer, range.endOffset);
+      suffix = after.toString().slice(0, 64);
+      for (const candidate of prose.querySelectorAll<HTMLElement>('h2[id], h3[id], h4[id]')) {
+        const position = candidate.compareDocumentPosition(range.startContainer);
+        if (
+          position & Node.DOCUMENT_POSITION_FOLLOWING ||
+          candidate.contains(range.startContainer)
+        ) {
+          heading = candidate;
+        } else if (heading) {
+          break;
+        }
+      }
+      const proseText = prose.innerText.replace(/\s+/g, ' ').trim();
+      const selectionIndex = proseText.indexOf(text);
+      surroundingText =
+        selectionIndex >= 0
+          ? proseText.slice(Math.max(0, selectionIndex - 1000), selectionIndex + text.length + 1000)
+          : proseText.slice(0, 2000);
+    }
 
-    return { text, rect };
+    return {
+      text: Array.from(text).slice(0, 3000).join(''),
+      rect,
+      headingId: heading?.id,
+      headingText: heading?.textContent?.trim(),
+      surroundingText,
+      articleSlug: article?.dataset.aiUrl?.split('/').filter(Boolean).at(-1),
+      prefix,
+      suffix,
+    };
   } catch {
     return null;
   }
@@ -316,20 +377,7 @@ async function copySelectedText(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    try {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      textarea.style.pointerEvents = 'none';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      textarea.remove();
-      return true;
-    } catch {
-      return false;
-    }
+    return false;
   }
 }
 
@@ -349,12 +397,14 @@ export function initSelectionSpeech(signal: AbortSignal): void {
 
   const copyBtn = toolbar.querySelector<HTMLButtonElement>('[data-action="copy"]');
   const speakBtn = toolbar.querySelector<HTMLButtonElement>('[data-action="speak"]');
+  const askBtn = toolbar.querySelector<HTMLButtonElement>('[data-action="ask"]');
+  const annotateBtn = toolbar.querySelector<HTMLButtonElement>('[data-action="annotate"]');
   const speakIconEl = speakBtn?.querySelector<HTMLElement>('.sel-tb-icon');
   const speakLabelEl = speakBtn?.querySelector<HTMLElement>('.sel-tb-label');
   const copyLabelEl = copyBtn?.querySelector<HTMLElement>('.sel-tb-label');
 
   // State
-  let selectedText = '';
+  let selected: SelectionState | null = null;
 
   const COPY_DEFAULT = '复制';
   const COPY_DONE = '✓ 已复制';
@@ -373,7 +423,8 @@ export function initSelectionSpeech(signal: AbortSignal): void {
     requestAnimationFrame(() => {
       const sel = getValidSelection();
       if (sel) {
-        selectedText = sel.text;
+        selected = sel;
+        if (annotateBtn) annotateBtn.disabled = !sel.articleSlug;
         positionToolbar(toolbar, sel.rect);
         showToolbar(toolbar);
       } else if (!toolbar.contains(document.activeElement)) {
@@ -411,8 +462,8 @@ export function initSelectionSpeech(signal: AbortSignal): void {
 
   // Copy
   copyBtn?.addEventListener('click', async () => {
-    if (!selectedText) return;
-    const ok = await copySelectedText(selectedText);
+    if (!selected) return;
+    const ok = await copySelectedText(selected.text);
     if (ok && copyLabelEl) {
       copyLabelEl.textContent = COPY_DONE;
       copyBtn.classList.add('sel-tb-copied');
@@ -425,7 +476,8 @@ export function initSelectionSpeech(signal: AbortSignal): void {
 
   // Speak / Stop
   speakBtn?.addEventListener('click', () => {
-    if (!speechAvailable || !selectedText) return;
+    if (!speechAvailable || !selected) return;
+    const textToSpeak = selected.text;
 
     if (speech.isSpeaking()) {
       speech.cancel();
@@ -433,7 +485,7 @@ export function initSelectionSpeech(signal: AbortSignal): void {
     }
 
     const doSpeak = () => {
-      speech.speak(selectedText, (state) => {
+      speech.speak(textToSpeak, (state) => {
         if (state === 'start') {
           speakBtn.setAttribute('aria-pressed', 'true');
           speakBtn.classList.add('sel-tb-speaking');
@@ -458,6 +510,46 @@ export function initSelectionSpeech(signal: AbortSignal): void {
     } else {
       doSpeak();
     }
+  });
+
+  askBtn?.addEventListener('click', () => {
+    if (!selected) return;
+    window.dispatchEvent(
+      new CustomEvent('lfw:ai:ask-selection', {
+        detail: {
+          text: selected.text,
+          headingId: selected.headingId,
+          headingText: selected.headingText,
+          surroundingText: selected.surroundingText,
+          articleSlug: selected.articleSlug,
+        },
+      }),
+    );
+    hideToolbar(toolbar);
+  });
+
+  annotateBtn?.addEventListener('click', () => {
+    if (!selected?.articleSlug) return;
+    window.dispatchEvent(
+      new CustomEvent('lfw:annotation:create', {
+        detail: {
+          text: selected.text,
+          headingId: selected.headingId,
+          headingText: selected.headingText,
+          prefix: selected.prefix,
+          exact: selected.text,
+          suffix: selected.suffix,
+          articleSlug: selected.articleSlug,
+          rect: {
+            left: selected.rect.left,
+            top: selected.rect.top,
+            right: selected.rect.right,
+            bottom: selected.rect.bottom,
+          },
+        },
+      }),
+    );
+    hideToolbar(toolbar);
   });
 
   /* ---- Navigation cleanup ---- */

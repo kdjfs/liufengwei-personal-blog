@@ -36,6 +36,25 @@ test('parseChatRequest accepts the standardized browser contract', () => {
   assert.equal(parsed.messages[0]?.content, '解释 Vue3 Diff');
 });
 
+test('selection context is validated and placed ahead of the current article and retrieval', () => {
+  const parsed = parseChatRequest({
+    ...validBody,
+    structuredFacts: 'GLOBAL FACTS',
+    selection: {
+      text: 'MVCC',
+      headingId: 'mvcc',
+      headingText: '事务与 MVCC',
+      surroundingText: 'MVCC 使用 Read View 判断可见性。',
+      articleSlug: 'mysql-mvcc',
+    },
+  });
+  const request = buildDeepSeekRequest(parsed);
+  const text = request.messages.at(-1)?.content[0]?.text ?? '';
+  assert.ok(text.indexOf('SELECTED TEXT') < text.indexOf('CURRENT PAGE'));
+  assert.ok(text.indexOf('CURRENT PAGE') < text.indexOf('[1]'));
+  assert.ok(text.indexOf('[1]') < text.indexOf('STRUCTURED BLOG FACTS'));
+});
+
 test('parseChatRequest rejects client-controlled provider configuration', () => {
   assert.throws(() =>
     parseChatRequest({
