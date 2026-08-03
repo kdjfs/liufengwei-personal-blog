@@ -29,6 +29,7 @@
     "ai:probe:prod": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-probe.mjs --production",
     "ai:inspect": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-inspect.ts",
     "ai:function:build": "node scripts/build-ai-function.mjs",
+    "ai:function:check": "node scripts/ai-function-check.mjs",
     "content:new": "node scripts/content/index.mjs new",
     "content:list": "node scripts/content/index.mjs list",
     "content:check": "node scripts/content/index.mjs check",
