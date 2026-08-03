@@ -366,6 +366,11 @@ const ogImage = image ? new URL(image, siteUrl) : undefined;
           await mermaid.run({ nodes: diagrams });
         }
 
+        // Selection toolbar with copy & read-aloud
+        import('@/lib/selection-speech.ts').then(({ initSelectionSpeech }) => {
+          initSelectionSpeech(signal);
+        });
+
         cleanupPageEnhancements = () => {
           controller.abort();
           observers.forEach((observer) => observer.disconnect());

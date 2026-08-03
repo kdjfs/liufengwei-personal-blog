@@ -3781,6 +3781,98 @@ html.dialog-open {
   }
 }
 
+/* ── Selection Toolbar ──────────────────────────────────────────────── */
+
+.selection-toolbar {
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+  pointer-events: none;
+}
+
+.selection-toolbar.sel-tb-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dark .selection-toolbar {
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.sel-tb-btn {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.sel-tb-btn:not(:disabled):hover {
+  color: var(--text);
+  background: var(--surface-soft);
+}
+
+.sel-tb-btn:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+.sel-tb-btn:disabled {
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+
+.sel-tb-btn .sel-tb-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sel-tb-btn.sel-tb-copied {
+  color: var(--violet);
+}
+
+.sel-tb-btn.sel-tb-speaking {
+  color: var(--violet);
+}
+
+.sel-tb-divider {
+  width: 1px;
+  height: 18px;
+  margin-inline: 2px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
