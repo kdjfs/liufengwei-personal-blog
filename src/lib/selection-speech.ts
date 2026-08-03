@@ -8,21 +8,18 @@
  * Designed to integrate into the existing `enhancePage()` lifecycle in BaseLayout.
  */
 
+import type { SpeechEngine } from './speech/speech-engine.ts';
+
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
 /* ------------------------------------------------------------------ */
 
-const SPEECH_RATE = 0.96;
-const SPEECH_PITCH = 1;
-const SPEECH_VOLUME = 1;
 const TOOLBAR_GAP = 10; // px between selection rect and toolbar
 const VIEWPORT_PAD = 8; // px minimum distance from viewport edge
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
 /* ------------------------------------------------------------------ */
-
-type SpeechLanguage = 'zh-CN' | 'en-US';
 
 interface SelectionState {
   text: string;
@@ -33,127 +30,6 @@ interface SelectionState {
   articleSlug?: string;
   prefix: string;
   suffix: string;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Language detection                                                */
-/* ------------------------------------------------------------------ */
-
-const CJK_RE = /[㐀-鿿豈-﫿]/g;
-const LATIN_RE = /[a-zA-Z]/g;
-
-function countRegex(text: string, re: RegExp): number {
-  const matches = text.match(re);
-  return matches ? matches.length : 0;
-}
-
-function detectSpeechLanguage(text: string): SpeechLanguage {
-  const cjk = countRegex(text, CJK_RE);
-  const latin = countRegex(text, LATIN_RE);
-  return cjk >= latin ? 'zh-CN' : 'en-US';
-}
-
-/* ------------------------------------------------------------------ */
-/*  Voice selection                                                   */
-/* ------------------------------------------------------------------ */
-
-function getVoices(): SpeechSynthesisVoice[] {
-  return speechSynthesis.getVoices();
-}
-
-function getBestVoice(lang: SpeechLanguage): SpeechSynthesisVoice | null {
-  const voices = getVoices();
-  if (voices.length === 0) return null;
-
-  const exact = voices.find((v) => v.lang === lang);
-  if (exact) return exact;
-
-  const prefix = lang.split('-')[0];
-  const prefixed = voices.find((v) => v.lang.startsWith(prefix));
-  if (prefixed) return prefixed;
-
-  return voices.find((v) => v.default) ?? voices[0] ?? null;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Mixed-text segmentation                                           */
-/* ------------------------------------------------------------------ */
-
-const SEGMENT_BREAK_RE = /(?<=[.!?。！？\n,，;；:：])|(?=[.!?。！？\n])/g;
-
-function splitMixedText(text: string): Array<{ text: string; lang: SpeechLanguage }> {
-  const parts = text.split(SEGMENT_BREAK_RE).filter(Boolean);
-  const segments: Array<{ text: string; lang: SpeechLanguage }> = [];
-
-  for (const part of parts) {
-    const trimmed = part.trim();
-    if (!trimmed) continue;
-    segments.push({ text: trimmed, lang: detectSpeechLanguage(trimmed) });
-  }
-
-  return segments.length > 0 ? segments : [{ text, lang: detectSpeechLanguage(text) }];
-}
-
-/* ------------------------------------------------------------------ */
-/*  Speech manager (scoped per init call)                             */
-/* ------------------------------------------------------------------ */
-
-type SpeechStateCallback = (state: 'start' | 'end' | 'error') => void;
-
-function createSpeechManager() {
-  let cancelled = false;
-
-  function speak(text: string, onState: SpeechStateCallback): void {
-    cancel();
-    cancelled = false;
-
-    const segments = splitMixedText(text);
-    const lastIdx = segments.length - 1;
-
-    for (let i = 0; i < segments.length; i++) {
-      const { text: segText, lang } = segments[i];
-      const utterance = new SpeechSynthesisUtterance(segText);
-      utterance.lang = lang;
-      utterance.rate = SPEECH_RATE;
-      utterance.pitch = SPEECH_PITCH;
-      utterance.volume = SPEECH_VOLUME;
-
-      const voice = getBestVoice(lang);
-      if (voice) utterance.voice = voice;
-
-      if (i === 0) {
-        utterance.onstart = () => {
-          if (!cancelled) onState('start');
-        };
-      }
-
-      if (i === lastIdx) {
-        utterance.onend = () => {
-          if (!cancelled) onState('end');
-        };
-        utterance.onerror = (event) => {
-          if (!cancelled && event.error !== 'canceled' && event.error !== 'interrupted') {
-            onState('error');
-          } else if (!cancelled) {
-            onState('end');
-          }
-        };
-      }
-
-      speechSynthesis.speak(utterance);
-    }
-  }
-
-  function cancel(): void {
-    cancelled = true;
-    speechSynthesis.cancel();
-  }
-
-  function isSpeaking(): boolean {
-    return speechSynthesis.speaking || speechSynthesis.pending;
-  }
-
-  return { speak, cancel, isSpeaking };
 }
 
 /* ------------------------------------------------------------------ */
@@ -391,7 +267,8 @@ export function initSelectionSpeech(signal: AbortSignal): void {
     'speechSynthesis' in window &&
     'SpeechSynthesisUtterance' in window;
 
-  const speech = createSpeechManager();
+  let selectionEngine: SpeechEngine | undefined;
+  let unsubscribeSpeech: (() => void) | undefined;
   const toolbar = createToolbar();
   document.body.appendChild(toolbar);
 
@@ -436,7 +313,7 @@ export function initSelectionSpeech(signal: AbortSignal): void {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       hideToolbar(toolbar);
-      speech.cancel();
+      if (selectionEngine?.getState().mode === 'selection') selectionEngine.stop();
     }
   };
 
@@ -475,41 +352,29 @@ export function initSelectionSpeech(signal: AbortSignal): void {
   });
 
   // Speak / Stop
-  speakBtn?.addEventListener('click', () => {
+  speakBtn?.addEventListener('click', async () => {
     if (!speechAvailable || !selected) return;
     const textToSpeak = selected.text;
-
-    if (speech.isSpeaking()) {
-      speech.cancel();
+    const { getSpeechEngine } = await import('./speech/speech-engine.ts');
+    selectionEngine = getSpeechEngine();
+    await selectionEngine.hydrateSettings();
+    if (!unsubscribeSpeech) {
+      unsubscribeSpeech = selectionEngine.subscribe((state) => {
+        const active = state.mode === 'selection' && state.status === 'playing';
+        speakBtn.setAttribute('aria-pressed', String(active));
+        speakBtn.classList.toggle('sel-tb-speaking', active);
+        if (speakIconEl) speakIconEl.innerHTML = active ? STOP_ICON_SVG : SPEAK_ICON_SVG;
+        if (speakLabelEl) speakLabelEl.textContent = active ? SPEAK_STOP : SPEAK_DEFAULT;
+      });
+    }
+    if (
+      selectionEngine.getState().mode === 'selection' &&
+      selectionEngine.getState().status === 'playing'
+    ) {
+      selectionEngine.stop();
       return;
     }
-
-    const doSpeak = () => {
-      speech.speak(textToSpeak, (state) => {
-        if (state === 'start') {
-          speakBtn.setAttribute('aria-pressed', 'true');
-          speakBtn.classList.add('sel-tb-speaking');
-          if (speakIconEl) speakIconEl.innerHTML = STOP_ICON_SVG;
-          if (speakLabelEl) speakLabelEl.textContent = SPEAK_STOP;
-        } else {
-          speakBtn.setAttribute('aria-pressed', 'false');
-          speakBtn.classList.remove('sel-tb-speaking');
-          if (speakIconEl) speakIconEl.innerHTML = SPEAK_ICON_SVG;
-          if (speakLabelEl) speakLabelEl.textContent = SPEAK_DEFAULT;
-        }
-      });
-    };
-
-    const voices = getVoices();
-    if (voices.length === 0) {
-      const onVoicesChanged = () => {
-        speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
-        doSpeak();
-      };
-      speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
-    } else {
-      doSpeak();
-    }
+    selectionEngine.playSelection(textToSpeak);
   });
 
   askBtn?.addEventListener('click', () => {
@@ -557,7 +422,8 @@ export function initSelectionSpeech(signal: AbortSignal): void {
   signal.addEventListener(
     'abort',
     () => {
-      speech.cancel();
+      if (selectionEngine?.getState().mode === 'selection') selectionEngine.stop();
+      unsubscribeSpeech?.();
       toolbar.remove();
     },
     { once: true },
