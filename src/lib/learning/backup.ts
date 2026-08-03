@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { LearningDatabase } from './db.ts';
 import type { LearningBackup, LearningData } from './types.ts';
 
 const isoDate = z.string().datetime({ offset: true });
@@ -109,4 +110,45 @@ export function mergeLearningBackup(current: LearningData, incoming: LearningBac
       (item) => item.updatedAt,
     ),
   };
+}
+
+export async function createLearningBackup(
+  database: LearningDatabase,
+  includeAudioScripts = false,
+): Promise<LearningBackup> {
+  const [articleProgressItems, annotationItems, settingItems, audioScriptItems] = await Promise.all(
+    [
+      database.getAll('articleProgress'),
+      database.getAll('annotations'),
+      database.getAll('settings'),
+      includeAudioScripts ? database.getAll('audioScripts') : Promise.resolve([]),
+    ],
+  );
+  return {
+    format: 'lfw-learning-backup',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    articleProgress: articleProgressItems,
+    annotations: annotationItems,
+    settings: settingItems,
+    ...(includeAudioScripts ? { audioScripts: audioScriptItems } : {}),
+  };
+}
+
+export async function restoreLearningBackup(
+  database: LearningDatabase,
+  backup: LearningBackup,
+): Promise<void> {
+  const current: LearningData = {
+    articleProgress: await database.getAll('articleProgress'),
+    annotations: await database.getAll('annotations'),
+    settings: await database.getAll('settings'),
+  };
+  const merged = mergeLearningBackup(current, backup);
+  await Promise.all([
+    database.putMany('articleProgress', merged.articleProgress),
+    database.putMany('annotations', merged.annotations),
+    database.putMany('settings', merged.settings),
+    database.putMany('audioScripts', backup.audioScripts ?? []),
+  ]);
 }

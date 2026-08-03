@@ -1,0 +1,15 @@
+---
+import LearningDashboard from '@/components/learning/LearningDashboard';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="学习面板" description="仅保存在当前浏览器中的个人阅读、听读与批注学习记录。">
+  <header class="page-header container-wide learning-page-header">
+    <p class="eyebrow">PERSONAL LEARNING OS · LOCAL ONLY</p>
+    <h1>学习面板</h1>
+    <p>记住读过什么、读到哪里、听了多久，以及留下的每一条理解。</p>
+  </header>
+  <div class="container-wide learning-page-content">
+    <LearningDashboard client:load />
+  </div>
+</BaseLayout>

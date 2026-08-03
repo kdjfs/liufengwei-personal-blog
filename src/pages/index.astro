@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import PostCard from '@/components/blog/PostCard.astro';
 import FeaturedCategoryCard from '@/components/categories/FeaturedCategoryCard.astro';
 import Hero from '@/components/home/Hero.astro';
+import ContinueLearning from '@/components/learning/ContinueLearning';
 import ProfileRail from '@/components/profile/ProfileRail.astro';
 import ProjectCard from '@/components/projects/ProjectCard.astro';
 import { featuredCategories } from '@/config/categories';
@@ -42,6 +43,7 @@ const profileStats = {
     <ProfileRail stats={profileStats} />
 
     <div class="home-content">
+      <ContinueLearning client:idle />
       <section class="section container-wide" aria-labelledby="featured-title" data-reveal>
         <div class="section-head">
           <div>

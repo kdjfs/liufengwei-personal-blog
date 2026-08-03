@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
 import PostCard from '@/components/blog/PostCard.astro';
 import TableOfContents from '@/components/blog/TableOfContents.astro';
+import ArticleLearningBar from '@/components/learning/ArticleLearningBar';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import {
   formatDate,
@@ -75,6 +76,12 @@ const cover = getBlogCover(post.data.slug, post.data.cover);
         <span>预计 {stats.minutes} 分钟</span>
         {post.data.updatedDate && <span>更新于 {formatDate(post.data.updatedDate)}</span>}
       </div>
+      <ArticleLearningBar
+        client:load
+        articleSlug={post.data.slug}
+        title={post.data.title}
+        category={post.data.category}
+      />
       <div class="tag-row" style="justify-content:center">
         {
           post.data.tags.map((tag) => (
