@@ -26,6 +26,12 @@
   --radius-sm: 12px;
   --radius-md: 20px;
   --radius-lg: 30px;
+  --z-annotation-trigger: 82;
+  --z-selection: 120;
+  --z-annotation: 126;
+  --z-player: 130;
+  --z-ai: 140;
+  --z-dialog: 150;
   --container: min(1180px, calc(100vw - 48px));
   --narrow: min(760px, calc(100vw - 48px));
   --font-sans:
@@ -3785,7 +3791,7 @@ html.dialog-open {
 
 .selection-toolbar {
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-selection);
   display: flex;
   align-items: center;
   gap: 2px;

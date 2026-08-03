@@ -132,6 +132,21 @@ pnpm content:prepare # 补齐原始 Markdown 的 Frontmatter
 - 主题色与布局令牌：`src/styles/global.css` 顶部的 CSS Variables
 - Hero 背景：静态层在 `src/styles/global.css`，WebGL 层在 `src/components/interactive/HeroVisual.tsx`
 - 头像：当前是 `.avatar-frame` CSS 占位；替换方式见“个性化清单”
+- AI 宠物：将合法拥有使用权的宠物图片替换为 `public/mascot/ali.webp`（建议透明 WebP）
+
+## Personal Learning OS
+
+文章页会在当前浏览器的 IndexedDB `lfw-learning-db` 中保存阅读/听读时长、阅读位置、
+锚定批注、AI 听读稿缓存和语音设置；这些数据默认只在本地使用，不会自动发送给 AI 或
+Analytics。`/learning` 提供统计、分组清除、JSON 导出/校验/合并导入和主动申请浏览器
+持久存储。清除站点数据、隐私模式回收、浏览器卸载或更换设备仍可能让数据丢失，因此重要
+记录应定期导出 `lfw-learning-backup-YYYY-MM-DD.json`。
+
+“原文朗读”和“AI 精华听读”都使用浏览器 Web Speech API。系统提供哪些中文 Voice、切到
+后台或锁屏后是否继续播放，由设备和浏览器决定。V5 不生成 MP3：`speechSynthesis` 不提供
+稳定、可下载的音频 Blob，录屏或 MediaRecorder 也不能可靠替代真正的 TTS Provider；AI
+听读稿可下载为 `.txt`，以后可交给外部 TTS。AI 听读稿按文章内容指纹和 Prompt 版本缓存在
+IndexedDB，只有用户点击生成或明确重新生成时才调用现有 DeepSeek 服务。
 
 ## 个性化清单
 

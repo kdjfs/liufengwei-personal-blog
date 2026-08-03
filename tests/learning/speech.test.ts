@@ -4,6 +4,7 @@ import {
   AI_LISTENING_PROMPT_VERSION,
   buildAudioScriptCacheKey,
   fingerprintText,
+  normalizeAIListeningScript,
 } from '../../src/lib/speech/ai-script.ts';
 import { SPEECH_RATES } from '../../src/lib/speech/speech-engine.ts';
 import { normalizeSpeechBlocks, segmentSpeechText } from '../../src/lib/speech/text-normalizer.ts';
@@ -47,4 +48,11 @@ test('AI listening cache key changes with article content or prompt version', ()
   );
   assert.notEqual(first, second);
   assert.match(first, /^mvcc:/);
+});
+
+test('AI listening text removes markdown tables and fenced code before speech', () => {
+  const script = normalizeAIListeningScript(
+    '# 核心\n\n- MVCC 保留多个版本。\n\n| 列 | 值 |\n| --- | --- |\n| A | B |\n\n```sql\nSELECT * FROM users;\n```\n\n最后回顾。',
+  );
+  assert.equal(script, '核心\nMVCC 保留多个版本。\n最后回顾。');
 });

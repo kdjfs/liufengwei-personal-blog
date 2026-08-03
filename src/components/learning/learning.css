@@ -5,6 +5,18 @@
   margin: 24px auto 0;
 }
 
+.focus-reading .site-header,
+.focus-reading .article-cover,
+.focus-reading .article-footer,
+.focus-reading .annotation-drawer-trigger,
+.focus-reading .ai-assistant {
+  display: none !important;
+}
+
+.focus-reading .article-hero {
+  padding-top: 38px;
+}
+
 .learning-bar,
 .continue-reading {
   display: flex;
@@ -376,7 +388,7 @@
 
 .annotation-drawer-trigger {
   position: fixed;
-  z-index: 82;
+  z-index: var(--z-annotation-trigger);
   right: 18px;
   top: 46%;
   display: grid;
@@ -404,7 +416,7 @@
 .annotation-popover,
 .annotation-drawer {
   position: fixed;
-  z-index: 125;
+  z-index: var(--z-annotation);
   border: 1px solid var(--line-strong);
   background: color-mix(in srgb, var(--surface) 97%, transparent);
   box-shadow: var(--shadow-lg);
@@ -524,7 +536,7 @@
 .listening-panel,
 .listening-mini {
   position: fixed;
-  z-index: 115;
+  z-index: var(--z-player);
   border: 1px solid var(--line-strong);
   background: color-mix(in srgb, var(--surface) 97%, transparent);
   box-shadow: var(--shadow-lg);

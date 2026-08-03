@@ -13,6 +13,7 @@ interface Props {
 export default function ArticleLearningBar({ articleSlug, title, category }: Props) {
   const [record, setRecord] = useState<ArticleProgress>();
   const [error, setError] = useState('');
+  const [focusMode, setFocusMode] = useState(false);
   const sessionRef = useRef<ReadingSession | undefined>(undefined);
 
   useEffect(() => {
@@ -35,6 +36,18 @@ export default function ArticleLearningBar({ articleSlug, title, category }: Pro
       if (session) void session.stop();
     };
   }, [articleSlug, category, title]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('focus-reading', focusMode);
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFocusMode(false);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      document.documentElement.classList.remove('focus-reading');
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [focusMode]);
 
   if (error) return <p className="learning-inline-error">{error}</p>;
   if (!record)
@@ -64,6 +77,13 @@ export default function ArticleLearningBar({ articleSlug, title, category }: Pro
           }
         >
           听文章
+        </button>
+        <button
+          type="button"
+          aria-pressed={focusMode}
+          onClick={() => setFocusMode((value) => !value)}
+        >
+          {focusMode ? '退出专注' : '专注阅读'}
         </button>
         <button
           type="button"

@@ -22,13 +22,17 @@ export interface PetCoordinates {
 
 const EDGE_GAP = 20;
 const SAFE_TOP = 96;
+const BOTTOM_CONTROL_CLEARANCE = 102;
 
 function limits(viewport: PetViewport) {
   return {
     minX: EDGE_GAP,
     maxX: Math.max(EDGE_GAP, viewport.width - viewport.petSize - EDGE_GAP),
-    minY: Math.min(SAFE_TOP, Math.max(EDGE_GAP, viewport.height - viewport.petSize - EDGE_GAP)),
-    maxY: Math.max(EDGE_GAP, viewport.height - viewport.petSize - EDGE_GAP),
+    minY: Math.min(
+      SAFE_TOP,
+      Math.max(EDGE_GAP, viewport.height - viewport.petSize - BOTTOM_CONTROL_CLEARANCE),
+    ),
+    maxY: Math.max(EDGE_GAP, viewport.height - viewport.petSize - BOTTOM_CONTROL_CLEARANCE),
   };
 }
 

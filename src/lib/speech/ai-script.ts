@@ -21,3 +21,31 @@ export function buildAudioScriptCacheKey(
 ): string {
   return `${articleSlug}:${fingerprint}:${promptVersion}`;
 }
+
+export function normalizeAIListeningScript(raw: string): string {
+  const lines = raw.replace(/\r\n?/g, '\n').split('\n');
+  const result: string[] = [];
+  let skipCode = false;
+  for (const line of lines) {
+    const fence = line.trim().match(/^```\s*([\w-]*)/);
+    if (fence) {
+      if (skipCode) skipCode = false;
+      else if (!['', 'text', 'markdown', 'md'].includes(fence[1]?.toLowerCase() ?? '')) {
+        skipCode = true;
+      }
+      continue;
+    }
+    if (skipCode || /^\s*\|.*\|\s*$/.test(line) || /^\s*[-:| ]{5,}\s*$/.test(line)) continue;
+    const spoken = line
+      .replace(/^\s{0,3}#{1,6}\s+/, '')
+      .replace(/^\s*[-*+]\s+/, '')
+      .replace(/^\s*\d+[.)]\s+/, '')
+      .replace(/[*_~`]/g, '')
+      .trim();
+    if (spoken) result.push(spoken);
+  }
+  return result
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}

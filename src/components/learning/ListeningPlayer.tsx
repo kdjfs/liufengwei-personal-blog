@@ -7,6 +7,7 @@ import {
   AI_LISTENING_PROMPT_VERSION,
   buildAudioScriptCacheKey,
   fingerprintText,
+  normalizeAIListeningScript,
 } from '@/lib/speech/ai-script';
 import { extractArticleSpeech } from '@/lib/speech/article-speech';
 import {
@@ -68,17 +69,27 @@ export default function ListeningPlayer({ articleSlug, articleTitle }: Props) {
     const handleLeave = () => {
       if (engine.getState().articleSlug === articleSlug) engine.pause();
     };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
     window.addEventListener('lfw:speech:open', handleOpen);
+    window.addEventListener('keydown', handleKey);
     document.addEventListener('astro:before-swap', handleLeave);
     return () => {
       unsubscribe();
       window.speechSynthesis?.removeEventListener('voiceschanged', readVoices);
       window.removeEventListener('lfw:speech:open', handleOpen);
+      window.removeEventListener('keydown', handleKey);
       document.removeEventListener('astro:before-swap', handleLeave);
       abortRef.current?.abort();
       handleLeave();
     };
   }, [articleSlug, engine, loadOriginal]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('listening-panel-open', visible && open);
+    return () => document.documentElement.classList.remove('listening-panel-open');
+  }, [open, visible]);
 
   const loadAIScript = async (regenerate = false) => {
     const prose = document.querySelector<HTMLElement>('[data-ai-article] .prose');
@@ -124,7 +135,7 @@ export default function ListeningPlayer({ articleSlug, articleTitle }: Props) {
         },
         controller.signal,
       );
-      const cleaned = script.replace(/^```(?:text|markdown)?|```$/gim, '').trim();
+      const cleaned = normalizeAIListeningScript(script);
       if (!cleaned) throw new Error('AI 没有返回有效听读稿');
       const now = new Date().toISOString();
       await getLearningDatabase().put('audioScripts', {

@@ -1,14 +1,14 @@
 .ai-assistant {
   --ai-panel-width: 420px;
   position: relative;
-  z-index: 140;
+  z-index: var(--z-ai);
 }
 
 .ai-trigger {
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 141;
+  z-index: calc(var(--z-ai) + 1);
   width: 82px;
   height: 82px;
   display: grid;
@@ -72,6 +72,11 @@
   pointer-events: none;
 }
 
+.listening-panel-open .ai-trigger {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .ai-pet-visual,
 .ai-pet-visual img {
   width: 82px;
@@ -110,7 +115,7 @@
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 142;
+  z-index: calc(var(--z-ai) + 2);
   width: min(var(--ai-panel-width), calc(100vw - 40px));
   height: min(650px, 78dvh);
   min-height: 480px;
@@ -900,7 +905,7 @@
   .ai-scrim {
     position: fixed;
     inset: 0;
-    z-index: 141;
+    z-index: calc(var(--z-ai) + 1);
     display: block;
     border: 0;
     background: rgba(3, 4, 10, 0.58);
