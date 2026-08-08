@@ -1,4 +1,4 @@
-import { CHAT_LIMITS, truncateUnicode, type CurrentPageContext } from '@/lib/ai/chat-contract';
+import { CHAT_LIMITS, type CurrentPageContext, truncateUnicode } from '@/lib/ai/chat-contract';
 
 function truncate(value: string, maxChars: number): string {
   return truncateUnicode(value.replace(/\s+/g, ' ').trim(), maxChars);

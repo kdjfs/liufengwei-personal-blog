@@ -27,8 +27,12 @@ const quickLinks = [
   { label: '时间线', note: '沿时间回看成长', href: '/timeline' },
 ];
 
-export default function SearchCommand() {
-  const [open, setOpen] = useState(false);
+interface SearchCommandProps {
+  initialOpen?: boolean;
+}
+
+export default function SearchCommand({ initialOpen = false }: SearchCommandProps) {
+  const [open, setOpen] = useState(initialOpen);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [message, setMessage] = useState('输入关键词，搜索文章、分类、标签与系列');

@@ -35,8 +35,8 @@ function friendlyError(error: unknown): string {
   return error.requestId ? `${message}\n\n请求 ID：${error.requestId}` : message;
 }
 
-export function useAIAssistant() {
-  const [isOpen, setIsOpen] = useState(false);
+export function useAIAssistant(initialOpen = false) {
+  const [isOpen, setIsOpen] = useState(initialOpen);
   const [mode, setMode] = useState<ChatMode>('fast');
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);

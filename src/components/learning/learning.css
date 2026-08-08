@@ -280,7 +280,7 @@
 }
 
 .learning-control-card.is-danger > button {
-  color: var(--danger, #d64b62);
+  color: var(--danger, #b93650);
 }
 
 .learning-check,

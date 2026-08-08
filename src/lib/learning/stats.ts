@@ -18,6 +18,10 @@ export interface LearningSummary {
   recent: ArticleProgress[];
 }
 
+export function createEmptyLearningSummary(now = new Date()): LearningSummary {
+  return summarizeLearning([], 0, now);
+}
+
 export function localDateKey(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

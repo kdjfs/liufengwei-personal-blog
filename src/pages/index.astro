@@ -41,7 +41,7 @@ const pageCount = Math.max(1, Math.ceil(posts.length / 12));
     <ProfileRail stats={profileStats} currentPath={Astro.url.pathname} />
 
     <div class="home-main">
-      <ContinueLearning client:idle />
+      <ContinueLearning client:visible />
 
       <section class="home-feed" aria-labelledby="home-articles-title" data-pagefind-body>
         <HomeDivider id="home-articles-title">文章</HomeDivider>
@@ -52,7 +52,7 @@ const pageCount = Math.max(1, Math.ceil(posts.length / 12));
                 post={post}
                 editorial
                 reverse={index % 2 === 1}
-                loading={index < 2 ? 'eager' : 'lazy'}
+                loading="lazy"
                 revealDelay={(index % 4) * 45}
               />
             ))
@@ -66,7 +66,7 @@ const pageCount = Math.max(1, Math.ceil(posts.length / 12));
         <div class="featured-category-grid home-category-grid">
           {
             categoryCards.map((item, index) => (
-              <FeaturedCategoryCard {...item} priority={index < 2} revealDelay={index * 35} />
+              <FeaturedCategoryCard {...item} revealDelay={index * 35} />
             ))
           }
         </div>

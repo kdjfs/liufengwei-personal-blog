@@ -3,9 +3,9 @@
   --lfw-surface: #fffdfd;
   --lfw-card: #ffffff;
   --lfw-text: #26222d;
-  --lfw-muted: #77717e;
-  --lfw-primary: #e9688c;
-  --lfw-primary-strong: #d94f78;
+  --lfw-muted: #6f6874;
+  --lfw-primary: #bd365f;
+  --lfw-primary-strong: #a92f57;
   --lfw-secondary: #8f82ff;
   --lfw-blue: #55add8;
   --lfw-mint: #72cdbb;
@@ -32,7 +32,7 @@
   --surface-soft: #f5f0f5;
   --text: var(--lfw-text);
   --text-soft: var(--lfw-muted);
-  --text-faint: #9a929e;
+  --text-faint: #6f6874;
   --line: var(--lfw-border);
   --line-strong: var(--lfw-border-strong);
   --violet: var(--lfw-primary);

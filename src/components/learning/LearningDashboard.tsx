@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getLearningDatabase } from '@/lib/learning/db';
 import {
+  createEmptyLearningSummary,
   formatLearningDuration,
   type LearningSummary,
   summarizeLearning,
@@ -14,8 +15,14 @@ function shortDate(value: string): string {
   );
 }
 
-export default function LearningDashboard() {
-  const [summary, setSummary] = useState<LearningSummary>();
+interface Props {
+  initialSummary?: LearningSummary;
+}
+
+export default function LearningDashboard({
+  initialSummary = createEmptyLearningSummary(),
+}: Props) {
+  const [summary, setSummary] = useState<LearningSummary>(initialSummary);
   const [error, setError] = useState('');
   const load = useCallback(async () => {
     try {
@@ -38,13 +45,6 @@ export default function LearningDashboard() {
         {error}
       </p>
     );
-  if (!summary)
-    return (
-      <p className="learning-empty" role="status">
-        正在读取本地学习记忆…
-      </p>
-    );
-
   const maxDay = Math.max(
     1,
     ...summary.last7Days.map((day) => day.readSeconds + day.listenSeconds),

@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import {
   CHAT_LIMITS,
+  type ChatRequestPayload,
   truncateUnicode,
   unicodeLength,
-  type ChatRequestPayload,
 } from '../src/lib/ai/chat-contract.ts';
 import { SYSTEM_PROMPT } from './_system-prompt.ts';
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AIChatPanel } from './AIChatPanel';
+import assistantStyles from './ai-assistant.css?inline';
 import {
   clampPetPosition,
   normalizePetY,
@@ -12,7 +13,6 @@ import {
   snapPetEdge,
 } from './pet-position';
 import { useAIAssistant } from './use-ai-assistant';
-import './ai-assistant.css';
 
 const PET_SIZE = 82;
 
@@ -20,8 +20,12 @@ function viewport(): PetViewport {
   return { width: window.innerWidth, height: window.innerHeight, petSize: PET_SIZE };
 }
 
-export default function AIAssistant() {
-  const assistant = useAIAssistant();
+interface AIAssistantProps {
+  initialOpen?: boolean;
+}
+
+export default function AIAssistant({ initialOpen = false }: AIAssistantProps) {
+  const assistant = useAIAssistant(initialOpen);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const wasOpen = useRef(false);
@@ -40,9 +44,21 @@ export default function AIAssistant() {
   >(undefined);
   const [position, setPosition] = useState<PetCoordinates>({ edge: 'right', x: 0, y: 0 });
   const [ready, setReady] = useState(false);
+  const [stylesReady, setStylesReady] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [justReplied, setJustReplied] = useState(false);
   const [petImage, setPetImage] = useState('/mascot/ali.webp');
+
+  useEffect(() => {
+    const id = 'lfw-ai-assistant-styles';
+    if (!document.getElementById(id)) {
+      const style = document.createElement('style');
+      style.id = id;
+      style.textContent = assistantStyles;
+      document.head.append(style);
+    }
+    setStylesReady(true);
+  }, []);
 
   useEffect(() => {
     const restore = () => {
@@ -165,6 +181,7 @@ export default function AIAssistant() {
     <div
       className={`ai-assistant ${assistant.isOpen ? 'is-open' : ''} ${dragging ? 'is-dragging' : ''} ${assistant.isStreaming ? 'is-thinking' : ''} ${justReplied ? 'has-replied' : ''}`}
       data-edge={position.edge}
+      style={stylesReady ? undefined : { visibility: 'hidden' }}
     >
       <button
         ref={triggerRef}
@@ -188,6 +205,8 @@ export default function AIAssistant() {
             width="82"
             height="82"
             alt=""
+            loading="lazy"
+            decoding="async"
             draggable={false}
             onError={() => setPetImage('/avatar.webp')}
           />
