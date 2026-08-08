@@ -1,98 +1,3 @@
-body {
-  background:
-    radial-gradient(
-      circle at 12% 0%,
-      color-mix(in srgb, var(--lfw-mint) 8%, transparent),
-      transparent 25rem
-    ),
-    radial-gradient(
-      circle at 88% 10%,
-      color-mix(in srgb, var(--lfw-primary) 7%, transparent),
-      transparent 28rem
-    ),
-    var(--lfw-bg);
-}
-
-html {
-  overflow-x: clip;
-}
-
-/* Header */
-.site-header {
-  min-height: var(--lfw-header-height);
-  border-color: var(--lfw-border);
-  background: var(--lfw-header-bg);
-  box-shadow: 0 7px 24px rgba(65, 48, 73, 0.045);
-  backdrop-filter: blur(18px) saturate(125%);
-}
-
-.site-header.scrolled {
-  background: var(--lfw-header-bg);
-  box-shadow: 0 9px 28px rgba(65, 48, 73, 0.09);
-}
-
-.nav-wrap {
-  width: min(var(--lfw-content-max), calc(100vw - 48px));
-  min-height: var(--lfw-header-height);
-}
-
-.brand {
-  gap: 4px;
-  color: var(--lfw-text);
-  font-size: 1.32rem;
-  font-weight: 850;
-  letter-spacing: -0.05em;
-}
-
-.brand i {
-  color: var(--lfw-primary);
-  font-size: 0.68rem;
-  font-style: normal;
-  transform: translateY(-7px);
-}
-
-.desktop-nav {
-  gap: clamp(16px, 2.2vw, 30px);
-}
-
-.nav-link {
-  padding-block: 22px 19px;
-  color: color-mix(in srgb, var(--lfw-text) 66%, transparent);
-  font-size: 0.86rem;
-}
-
-.nav-link::after {
-  bottom: 12px;
-  background: var(--lfw-active-gradient);
-}
-
-.nav-link:hover,
-.nav-link.active {
-  color: var(--lfw-primary-strong);
-}
-
-.icon-button,
-.menu-button {
-  border-color: color-mix(in srgb, var(--lfw-border-strong) 76%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--lfw-card) 60%, transparent);
-}
-
-.icon-button svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.8;
-}
-
-.github-link svg {
-  fill: currentColor;
-  stroke: none;
-}
-
 /* Homepage shell */
 .home-shell {
   width: min(var(--lfw-content-max), calc(100vw - 48px));
@@ -101,7 +6,7 @@ html {
   align-items: start;
   gap: 36px;
   margin-inline: auto;
-  padding: 24px 0 64px;
+  padding: 40px 0 64px;
 }
 
 .home-main {
@@ -109,54 +14,6 @@ html {
   display: flex;
   flex-direction: column;
   gap: 24px;
-}
-
-.home-welcome {
-  min-height: 104px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 32px;
-  padding: 20px 28px;
-  overflow: hidden;
-  border: 1px solid var(--lfw-border);
-  border-radius: var(--lfw-radius);
-  background:
-    linear-gradient(105deg, color-mix(in srgb, var(--lfw-mint) 9%, transparent), transparent 42%),
-    linear-gradient(
-      285deg,
-      color-mix(in srgb, var(--lfw-primary) 10%, transparent),
-      transparent 48%
-    ),
-    var(--lfw-surface);
-  box-shadow: var(--lfw-shadow-card);
-}
-
-.home-welcome p,
-.home-welcome h1 {
-  margin: 0;
-}
-
-.home-welcome p,
-.home-welcome > span {
-  color: var(--lfw-muted);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-}
-
-.home-welcome h1 {
-  margin-top: 6px;
-  font-size: clamp(1.25rem, 2vw, 1.72rem);
-  line-height: 1.25;
-  letter-spacing: -0.035em;
-}
-
-.home-welcome > span {
-  flex: none;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--lfw-card) 72%, transparent);
 }
 
 .home-feed,
@@ -914,7 +771,7 @@ html {
 }
 
 @media (min-width: 1024px) and (max-width: 1279px) {
-  :root {
+  .page-home {
     --lfw-sidebar-width: 252px;
   }
 
@@ -1015,34 +872,12 @@ html {
 }
 
 @media (max-width: 767px) {
-  html {
-    scrollbar-gutter: auto;
-  }
-
-  body {
-    min-width: 0;
-  }
-
-  .nav-wrap,
   .home-shell {
     width: min(100% - 28px, var(--lfw-content-max));
   }
 
   .home-shell {
-    padding-top: 16px;
-  }
-
-  .home-welcome {
-    min-height: 92px;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 9px;
-    padding: 17px 18px;
-  }
-
-  .home-welcome > span {
-    padding: 0;
-    background: transparent;
+    padding-top: 28px;
   }
 
   .profile-rail {
@@ -1216,34 +1051,15 @@ html {
   .home-corner-grid a {
     min-height: 126px;
   }
-
-  .ai-trigger,
-  .ai-trigger[style] {
-    top: auto !important;
-    right: 0 !important;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
-    left: auto !important;
-    width: 54px;
-    height: 54px;
-    opacity: 0.86;
-  }
-
-  .ai-pet-visual,
-  .ai-pet-visual img {
-    width: 54px;
-    height: 54px;
-  }
 }
 
 @media (max-width: 390px) {
-  .nav-wrap,
   .home-shell {
     width: calc(100% - 24px);
   }
 
   .profile-name-wrap > p,
-  .profile-socials,
-  .home-welcome p {
+  .profile-socials {
     display: none;
   }
 
