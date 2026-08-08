@@ -46,17 +46,29 @@ test('core routes have no console errors, broken images, or horizontal overflow'
       const response = await page.goto(route.path, { waitUntil: 'networkidle' });
       expect(response?.status(), `${route.path} at ${viewport.width}px`).toBe(route.status);
 
-      const diagnostics = await page.evaluate(() => ({
-        brokenImages: Array.from(document.images)
-          .filter((image) => image.complete && image.naturalWidth === 0)
-          .map((image) => image.currentSrc || image.src),
-        documentWidth: document.documentElement.scrollWidth,
-        viewportWidth: document.documentElement.clientWidth,
-      }));
+      const diagnostics = await page.evaluate(async () => {
+        const images = Array.from(document.images);
+        const imageUrls = [...new Set(images.map((image) => image.currentSrc || image.src))];
+        const imageResponses = await Promise.all(
+          imageUrls.map(async (url) => ({ url, ok: (await fetch(url, { cache: 'no-store' })).ok })),
+        );
+        return {
+          brokenImages: images
+            .filter((image) => image.complete && image.naturalWidth === 0)
+            .map((image) => image.currentSrc || image.src),
+          missingImageAssets: imageResponses.filter((response) => !response.ok),
+          documentWidth: document.documentElement.scrollWidth,
+          viewportWidth: document.documentElement.clientWidth,
+        };
+      });
 
       expect(consoleErrors, `${route.path} console at ${viewport.width}px`).toEqual([]);
       expect(pageErrors, `${route.path} page errors at ${viewport.width}px`).toEqual([]);
       expect(diagnostics.brokenImages, `${route.path} images at ${viewport.width}px`).toEqual([]);
+      expect(
+        diagnostics.missingImageAssets,
+        `${route.path} image responses at ${viewport.width}px`,
+      ).toEqual([]);
       expect(
         diagnostics.documentWidth,
         `${route.path} overflow at ${viewport.width}px`,
