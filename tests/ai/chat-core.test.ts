@@ -36,6 +36,21 @@ test('parseChatRequest accepts the standardized browser contract', () => {
   assert.equal(parsed.messages[0]?.content, '解释 Vue3 Diff');
 });
 
+test('parseChatRequest enforces selection boundaries by Unicode code point', () => {
+  assert.doesNotThrow(() =>
+    parseChatRequest({
+      ...validBody,
+      selection: { text: '🙂'.repeat(3_000), annotationNote: '批注🙂'.repeat(2_500) },
+    }),
+  );
+  assert.throws(() =>
+    parseChatRequest({
+      ...validBody,
+      selection: { text: '🙂'.repeat(3_001) },
+    }),
+  );
+});
+
 test('selection context is validated and placed ahead of the current article and retrieval', () => {
   const parsed = parseChatRequest({
     ...validBody,

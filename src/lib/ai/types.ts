@@ -60,46 +60,11 @@ export interface KnowledgeIndex {
   chunks: KnowledgeChunk[];
 }
 
-export type ChatMode = 'fast' | 'deep';
-
-export interface ChatMessageInput {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-export interface ChatContextSource {
-  id: string;
-  title: string;
-  url: string;
-  category: string;
-  excerpt: string;
-}
-
-export interface CurrentPageContext {
-  title: string;
-  url: string;
-  description?: string;
-  category?: string;
-  tags?: string[];
-  content?: string;
-  activeHeading?: string;
-  readingProgress?: number;
-}
-
-export interface SelectionContext {
-  text: string;
-  headingId?: string;
-  headingText?: string;
-  surroundingText?: string;
-  articleSlug?: string;
-  annotationNote?: string;
-}
-
-export interface ChatRequestPayload {
-  mode: ChatMode;
-  messages: ChatMessageInput[];
-  context: ChatContextSource[];
-  structuredFacts?: string;
-  currentPage?: CurrentPageContext;
-  selection?: SelectionContext;
-}
+export type {
+  ChatContextSource,
+  ChatMessageInput,
+  ChatMode,
+  ChatRequestPayload,
+  CurrentPageContext,
+  SelectionContext,
+} from './chat-contract';

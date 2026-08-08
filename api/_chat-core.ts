@@ -1,70 +1,133 @@
 import { z } from 'zod';
-import type { ChatRequestPayload } from '../src/lib/ai/types.ts';
+import {
+  CHAT_LIMITS,
+  truncateUnicode,
+  unicodeLength,
+  type ChatRequestPayload,
+} from '../src/lib/ai/chat-contract.ts';
 import { SYSTEM_PROMPT } from './_system-prompt.ts';
 
 const messageSchema = z
   .object({
     role: z.enum(['user', 'assistant']),
-    content: z.string().trim().min(1).max(4000),
+    content: z
+      .string()
+      .trim()
+      .min(1)
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.messageContent),
   })
   .strict();
 
 const contextSchema = z
   .object({
-    id: z.string().min(1).max(160),
-    title: z.string().min(1).max(160),
+    id: z
+      .string()
+      .min(1)
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.contextId),
+    title: z
+      .string()
+      .min(1)
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.contextTitle),
     url: z
       .string()
       .regex(/^\/(?!\/)[^\s]*$/)
-      .max(300),
-    category: z.string().min(1).max(60),
-    excerpt: z.string().trim().min(1).max(1800),
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.contextUrl),
+    category: z
+      .string()
+      .min(1)
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.contextCategory),
+    excerpt: z
+      .string()
+      .trim()
+      .min(1)
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.contextExcerpt),
   })
   .strict();
 
 const currentPageSchema = z
   .object({
-    title: z.string().min(1).max(180),
+    title: z
+      .string()
+      .min(1)
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.currentPageTitle),
     url: z
       .string()
       .regex(/^\/(?!\/)[^\s]*$/)
-      .max(300),
-    description: z.string().max(300).optional(),
-    category: z.string().max(60).optional(),
-    tags: z.array(z.string().max(40)).max(8).optional(),
-    content: z.string().max(8000).optional(),
-    activeHeading: z.string().max(300).optional(),
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.currentPageUrl),
+    description: z
+      .string()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.currentPageDescription)
+      .optional(),
+    category: z
+      .string()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.currentPageCategory)
+      .optional(),
+    tags: z
+      .array(z.string().refine((value) => unicodeLength(value) <= CHAT_LIMITS.currentPageTag))
+      .max(CHAT_LIMITS.currentPageTags)
+      .optional(),
+    content: z
+      .string()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.currentPageContent)
+      .optional(),
+    activeHeading: z
+      .string()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.currentPageActiveHeading)
+      .optional(),
     readingProgress: z.number().min(0).max(100).optional(),
   })
   .strict();
 
 const selectionSchema = z
   .object({
-    text: z.string().trim().min(1).max(3000),
-    headingId: z.string().max(240).optional(),
-    headingText: z.string().max(500).optional(),
-    surroundingText: z.string().max(2000).optional(),
-    articleSlug: z.string().max(160).optional(),
-    annotationNote: z.string().max(10000).optional(),
+    text: z
+      .string()
+      .trim()
+      .min(1)
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.selectionText),
+    headingId: z
+      .string()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.selectionHeadingId)
+      .optional(),
+    headingText: z
+      .string()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.selectionHeadingText)
+      .optional(),
+    surroundingText: z
+      .string()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.selectionSurroundingText)
+      .optional(),
+    articleSlug: z
+      .string()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.selectionArticleSlug)
+      .optional(),
+    annotationNote: z
+      .string()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.annotationNote)
+      .optional(),
   })
   .strict();
 
 const chatRequestSchema = z
   .object({
     mode: z.enum(['fast', 'deep']).default('fast'),
-    messages: z.array(messageSchema).min(1).max(12),
-    context: z.array(contextSchema).max(4).default([]),
-    structuredFacts: z.string().trim().max(6000).optional(),
+    messages: z.array(messageSchema).min(1).max(CHAT_LIMITS.messages),
+    context: z.array(contextSchema).max(CHAT_LIMITS.contextSources).default([]),
+    structuredFacts: z
+      .string()
+      .trim()
+      .refine((value) => unicodeLength(value) <= CHAT_LIMITS.structuredFacts)
+      .optional(),
     currentPage: currentPageSchema.optional(),
     selection: selectionSchema.optional(),
   })
   .strict()
   .superRefine((value, context) => {
     const messageChars = value.messages.reduce(
-      (total, message) => total + message.content.length,
+      (total, message) => total + unicodeLength(message.content),
       0,
     );
-    if (messageChars > 16_000) {
+    if (messageChars > CHAT_LIMITS.totalMessageContent) {
       context.addIssue({ code: 'custom', message: 'Conversation is too long', path: ['messages'] });
     }
     if (value.messages.at(-1)?.role !== 'user') {
@@ -102,7 +165,7 @@ export class AIConfigurationError extends Error {
 }
 
 function truncate(value: string, maxChars: number): string {
-  return Array.from(value).slice(0, maxChars).join('').trim();
+  return truncateUnicode(value, maxChars).trim();
 }
 
 function buildBlogContext(input: ChatRequestPayload): string {

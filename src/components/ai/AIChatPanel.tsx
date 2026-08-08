@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { truncateUnicode, unicodeLength } from '@/lib/ai/chat-contract';
 import type { ChatMode, SelectionContext } from '@/lib/ai/types';
 import { AIComposer } from './AIComposer';
 import { AIMessageList } from './AIMessageList';
@@ -119,8 +120,8 @@ export const AIChatPanel = forwardRef<HTMLElement, Props>(function AIChatPanel(
           <div>
             <span>正在追问</span>
             <p>
-              “{selection.text.slice(0, 180)}
-              {selection.text.length > 180 ? '…' : ''}”
+              “{truncateUnicode(selection.text, 180)}
+              {unicodeLength(selection.text) > 180 ? '…' : ''}”
             </p>
           </div>
           <button type="button" onClick={onClearSelection} aria-label="清除选区上下文">

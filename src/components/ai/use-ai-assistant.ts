@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { fitChatRequest, fitSelectionContext } from '@/lib/ai/chat-contract';
 import { retrieveKnowledge } from '@/lib/ai/retrieval';
 import type { ChatMode, KnowledgeItem, SelectionContext } from '@/lib/ai/types';
 import { AIChatClientError, streamAIResponse } from './chat-client';
@@ -127,7 +128,7 @@ export function useAIAssistant() {
       let received = '';
       try {
         await streamAIResponse(
-          {
+          fitChatRequest({
             mode,
             messages: [
               ...messages
@@ -140,7 +141,7 @@ export function useAIAssistant() {
             structuredFacts: retrieval?.facts,
             currentPage,
             selection: activeSelection,
-          },
+          }),
           (delta) => {
             received += delta;
             setMessages((current) =>
@@ -200,13 +201,7 @@ export function useAIAssistant() {
     const handleSelectionQuestion = (event: Event) => {
       const detail = (event as CustomEvent<SelectionContext>).detail;
       if (!detail?.text) return;
-      const safeSelection: SelectionContext = {
-        ...detail,
-        text: Array.from(detail.text).slice(0, 3000).join(''),
-        surroundingText: detail.surroundingText
-          ? Array.from(detail.surroundingText).slice(0, 2000).join('')
-          : undefined,
-      };
+      const safeSelection = fitSelectionContext(detail);
       setSelection(safeSelection);
       setIsOpen(true);
       void sendMessage(

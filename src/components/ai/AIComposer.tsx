@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { CHAT_LIMITS, truncateUnicode, unicodeLength } from '@/lib/ai/chat-contract';
 
 interface Props {
   disabled: boolean;
@@ -33,12 +34,11 @@ export function AIComposer({ disabled, onSend }: Props) {
           ref={textareaRef}
           id="lfw-ai-input"
           rows={1}
-          maxLength={2000}
           value={value}
           disabled={disabled}
           placeholder={disabled ? '正在生成回答…' : '问一篇文章、一个项目或技术问题…'}
           onChange={(event) => {
-            setValue(event.target.value);
+            setValue(truncateUnicode(event.target.value, CHAT_LIMITS.messageContent));
             event.currentTarget.style.height = 'auto';
             event.currentTarget.style.height = `${Math.min(event.currentTarget.scrollHeight, 120)}px`;
           }}
@@ -55,7 +55,9 @@ export function AIComposer({ disabled, onSend }: Props) {
       </div>
       <div className="ai-composer-meta" aria-hidden="true">
         <span>ENTER 发送 · SHIFT + ENTER 换行</span>
-        <span>{value.length}/2000</span>
+        <span>
+          {unicodeLength(value)}/{CHAT_LIMITS.messageContent}
+        </span>
       </div>
     </form>
   );
