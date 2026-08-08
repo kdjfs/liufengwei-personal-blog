@@ -1,145 +1,189 @@
-# LFW Space 架构说明
+# LFW Space v1.0 Architecture
 
-这份文档解释 V1 为什么这样设计，以及未来增加动态能力时哪些边界需要继续保持。目标不是罗列名词，而是让项目作者能够在面试或维护时讲清楚每个决定。
+本文描述 v1.0.0 的真实代码边界。核心原则是“静态内容默认零运行时服务，交互能力局部增强，私密学习数据本地优先，模型密钥只存在服务端”。
 
-## 为什么选择 Astro
+## 1. System boundary
 
-LFW Space 的主要访问场景是“读内容”，而不是“操作一个需要长期保持客户端状态的应用”。Astro 默认输出 HTML，只对标记了客户端指令的组件发送运行时代码，很适合内容站。
+LFW Space 由三个运行环境组成：
 
-如果使用传统 SPA，文章正文也会跟随应用一起水合，浏览器需要下载、解析和执行框架代码才能完成一个本质上静态的任务。Astro 让博客先是一组可靠文档，再按需增加交互。
+1. **Build time**：Astro Content Collections 读取 Markdown / MDX，完成 schema、slug、Markdown AST、图片、页面、Pagefind 与 AI knowledge 产物。
+2. **Browser runtime**：静态 HTML/CSS 为基础；React Islands 和原生模块只负责搜索、AI、学习、目录、选区、听读等交互。
+3. **Serverless runtime**：Vercel `/api/chat` 和 `/api/ai-health`。前者作为 DeepSeek 流式代理，后者只报告配置状态，不泄露 Secret。
 
-## SSG 的工作方式
+没有独立 Node 服务、数据库、Redis、账号、评论或批注同步。
 
-生产构建时，Astro 会读取 `src/content/blog/`，校验 frontmatter，为动态路由计算所有 slug，然后把首页、列表、文章、分类、标签和归档生成静态 HTML。
+## 2. Build-time architecture
 
-```text
-Markdown / MDX
-      ↓  Content Collection + Zod
-Astro 构建期渲染
-      ├─ dist/blog/xxx/index.html
-      ├─ dist/categories/...
-      ├─ sitemap / RSS
-      └─ Pagefind 搜索索引
+```mermaid
+flowchart LR
+  Files["src/content/blog Markdown / MDX"] --> Prepare["content:prepare"]
+  Prepare --> Collections["Astro Content Collections + Zod"]
+  Collections --> Slug["stable slug + taxonomy + reading time"]
+  Collections --> Markdown["GFM / math / callout / code meta / Mermaid marker"]
+  Slug --> Pages["Astro static routes"]
+  Markdown --> Pages
+  Covers["Astro assets"] --> Images["responsive WebP/JPEG + 1200x630 social"]
+  Images --> Pages
+  Pages --> Dist["dist: HTML / CSS / JS / RSS / sitemap / robots"]
+  Dist --> Pagefind["Pagefind static index"]
+  Collections --> Knowledge["ai-knowledge.json: metadata + heading chunks"]
 ```
 
-部署到 Vercel 后，请求直接命中静态文件与 CDN，不需要 Node 进程为每次访问重新拼页面。它降低了运行成本，也减少了故障面。
+### Content Collections and stable slug
 
-## Islands Architecture
+`src/content.config.ts` 定义文章数据契约；构建只包含非草稿文章。`scripts/content` 可以补齐缺失 Frontmatter，但不会覆盖已有元数据、代码或正文。URL slug 由标准化逻辑稳定生成，文章在分类目录间移动不会无意改变公开路径。
 
-Astro 组件默认只在服务端或构建期运行。项目只有两个 React Island：
+### Markdown pipeline
 
-- `SearchCommand.tsx` 使用 `client:load`，因为它必须从页面加载起监听 `Ctrl/Cmd + K`。
-- `HeroVisual.tsx` 使用 `client:idle`，因为它只是增强视觉，优先级低于文字和按钮。
+- remark-gfm：表格、任务列表等 GFM。
+- remark-math + rehype-katex：数学语法；KaTeX CSS 只由文章增强入口加载。
+- remark-callouts：语义化提示块。
+- remark-code-meta：代码标题和元数据。
+- remark-mermaid：构建期标记 Mermaid 源码；渲染库在含图文章的浏览器端动态导入。
+- rehype-slug + autolink headings：稳定目录锚点。
 
-主题切换、移动导航、阅读进度、代码复制使用很小的原生脚本。文章卡片、目录、项目列表都不需要客户端状态，因此不使用 React。
+### Generated artifacts
 
-### React Island 的边界
+`dist`、Pagefind 索引、Astro 类型和 `api/chat.mjs` 都是可再生输出。`content:prepare` 和 `build` 前后的 `git diff --exit-code` 防止生成步骤悄悄修改源码；`ai:function:check` 校验已提交 Function bundle 与共享源码一致。
 
-适合 React Island 的情况：复杂焦点管理、频繁状态更新、可复用交互 Widget、WebGL 生命周期管理。
+## 3. Browser runtime
 
-不适合的情况：文章正文、静态卡片、普通链接、页脚、构建期可以完成的筛选与统计。判断标准不是“React 能不能做”，而是“读者是否需要为这段功能下载 React”。
-
-## 为什么文章主体不使用 React
-
-正文由 Markdown AST 在构建期转换为 HTML，浏览器无需 hydration。收益包括：
-
-1. 首屏可直接阅读；
-2. 搜索引擎和 Pagefind 能获得完整正文；
-3. Markdown 插件可以在统一构建管线中处理；
-4. 文章不会因客户端脚本错误而消失；
-5. 后续迁移框架时，内容源仍然独立。
-
-## Content Collections 与 Zod Schema
-
-`src/content.config.ts` 定义博客集合，使用 `glob` loader 读取 Markdown 和 MDX。Zod 对以下字段做构建期校验：标题、摘要、发布日期、更新日期、分类、标签、封面标识、草稿状态和精选状态。
-
-Schema 是“内容 API”。页面只能消费通过校验的条目；字段变化应该先修改 Schema，再修改 CLI 与展示组件，避免各处悄悄形成不同约定。
-
-## Markdown 管线
-
-- Shiki：构建期代码高亮，按 Light / Dark 主题输出 CSS Variables。
-- remark-gfm：表格、删除线、任务列表等 GFM 语法。
-- remark-math + rehype-katex：数学公式。
-- 自定义 `remark-callouts`：识别 `[!NOTE]` 等块引用。
-- 自定义 `remark-mermaid`：把 Mermaid 代码块变为安全占位节点。
-- rehype-slug + rehype-autolink-headings：稳定标题锚点与 TOC。
-
-Mermaid 本体不会进入普通页面的首屏包。文章包含图表节点时，布局脚本才执行 `import('mermaid')` 并渲染。
-
-## Pagefind 搜索
-
-`pnpm build` 先让 Astro 输出 `dist`，再由 Pagefind 扫描最终 HTML 并生成静态索引。索引可以搜索标题、摘要、正文、分类和标签，不需要数据库或搜索服务。
-
-命令面板先动态导入 `/pagefind/pagefind.js`，再按输入加载索引块。开发环境没有生产索引时，页面快捷导航和主题切换仍然可用，并给出清楚提示。
-
-## View Transitions
-
-`BaseLayout.astro` 放置 Astro `ClientRouter`，让站内导航保留原生链接语义，同时得到短促的页面过渡。没有 JavaScript或浏览器不支持时，链接退化为普通导航。
-
-所有动效都受 `prefers-reduced-motion` 约束。用户要求减少动态效果时，过渡时长会被压缩，WebGL 会直接跳过。
-
-## WebGL 动态加载与降级
-
-Hero 的文字、背景网格和 CTA 都是静态 HTML / CSS。`HeroVisual` 在浏览器空闲时才挂载，然后检查：
-
-- 是否开启 `prefers-reduced-motion`；
-- 是否是窄屏移动设备；
-- `deviceMemory` 是否显示为低内存设备；
-- 浏览器是否能正常创建 WebGL renderer。
-
-通过检查后才动态下载本站约 3 KB 的原生 WebGL 渲染模块。画布只绘制少量点，限制 DPR，并在组件卸载时释放 shader、buffer、program 和事件监听器。V1 没有为了简单点阵引入完整 Three.js；未来 Hero 若确实需要 3D 场景，再在相同边界内替换渲染模块。
-
-## Theme
-
-主题有 Light、Dark、System 三态。用户选择保存在 `localStorage`，它只属于设备本地偏好，不需要后端。
-
-`BaseLayout` 在 `<head>` 内用一小段同步脚本在 CSS 绘制前设置 class，避免深色用户先看到白色闪屏。System 模式会监听系统变化。
-
-## SEO
-
-统一布局负责 title template、description、canonical、OpenGraph 和 Twitter Card。文章页补充发布时间与更新时间。`@astrojs/sitemap` 生成 sitemap，`@astrojs/rss` 生成 RSS，`robots.txt` 指向 sitemap。
-
-当前没有伪造社交分享图。未来可新增独立的 OG Image 生成模块，输入仍来自 Content Collection Schema。
-
-## 性能策略
-
-- 文章和列表构建期输出，避免整页 hydration。
-- React 只用于两个交互岛；WebGL 渲染模块与 Mermaid 动态加载。
-- 使用系统字体，避免额外字体请求。
-- 抽象封面由 CSS 生成，无外部图片请求和 CLS。
-- 后续加入真实图片时统一经过 `astro:assets`，声明宽高、生成响应式尺寸并默认懒加载。
-- 动画主要使用 transform / opacity，并提供 reduced-motion 分支。
-- Pagefind 索引按需加载，不进入初始 JS。
-
-Lighthouse 的 90+ 是发布前目标，不是一次构建后的永久保证。每次加入图片、第三方脚本或统计服务都应重新测试。
-
-## 可访问性
-
-使用语义化 header、nav、main、article、aside、footer；提供跳转主要内容链接、清晰的 `focus-visible`、ARIA 标签和键盘快捷键。移动导航与命令面板使用真实按钮。颜色由设计令牌统一管理，Light 与 Dark 都保持正文对比度。
-
-## Vercel 部署流程
-
-1. 把仓库导入 Vercel。
-2. Framework Preset 选择 Astro（通常会自动识别）。
-3. Install Command 使用 `pnpm install --frozen-lockfile`。
-4. Build Command 使用 `pnpm build`。
-5. Output Directory 使用 `dist`。
-6. 将 `src/config/site.ts` 和 `astro.config.mjs` 的站点 URL 改为正式域名后重新部署。
-
-V1 没有运行时环境变量，也没有 Serverless Function。
-
-## 未来演进到 Node + MySQL + Redis
-
-动态能力不应直接塞进当前静态页面。建议演进为：
-
-```text
-Astro Web（内容与展示）
-        │ HTTPS API
-Node API（鉴权、评论、统计、业务规则）
-        ├─ MySQL：用户、评论、点赞、浏览事实
-        └─ Redis：热点缓存、排行榜、限流、Session
+```mermaid
+flowchart TD
+  HTML["Static HTML + CSS"] --> Global["theme / nav / reveal"]
+  HTML --> Search["Deferred Search"]
+  HTML --> AI["Deferred LFW AI"]
+  Article["Article route only"] --> Enhancements["progress / TOC / code / lightbox / selection"]
+  Enhancements --> Mermaid["dynamic Mermaid import when needed"]
+  Article --> LearningBar["React learning bar"]
+  Learning["/learning"] --> Dashboard["React dashboard, client:visible"]
+  LearningBar --> DB["IndexedDB"]
+  Dashboard --> DB
+  AI --> Retrieval["static AI knowledge fetch"]
 ```
 
-Node 框架到 V3 再根据约束选择：复杂模块与团队协作偏 NestJS；追求轻量和吞吐可选 Fastify；已有 Express 生态依赖时再选 Express。MySQL 是事实来源，Redis 不能成为唯一存储。
+### Island boundaries
 
-文章仍保留在 Git + Content Collections。即使未来管理后台写文章，也应该通过明确的内容发布流程生成或同步 Markdown，而不是让公开页面完全依赖数据库。
+- `DeferredSearch.astro`：只在首次打开搜索时加载搜索 UI 和 Pagefind。
+- `DeferredAIAssistant.astro`：首屏只输出轻量宠物触发器；点击、键盘或划线问 AI 时加载完整 React 面板。
+- `ArticleLearningBar.tsx`：文章页读取与更新当前文章的本地学习状态。
+- `LearningDashboard.tsx`：学习页在可见时 hydration；服务端先输出稳定骨架以避免布局偏移。
+- `ContinueLearning.tsx`：首页下方可见时 hydration。
+
+文章正文、文章卡片、分类、标签、项目和关于页面不依赖 React 才能阅读。
+
+### Page-specific enhancement split
+
+`BaseLayout.astro` 只保留全局 reveal。`ArticleEnhancements.astro` 和 `article-enhancements.ts` 仅在文章路由执行阅读进度、目录、代码复制、图片灯箱、Mermaid、选择工具与语音控制。这样首页、项目、关于和分类页不会下载文章专属逻辑或 KaTeX 样式。
+
+## 4. AI request flow
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant B as Browser AI Island
+  participant R as Retrieval 2.0
+  participant F as Vercel /api/chat
+  participant D as DeepSeek V4 Pro
+  U->>B: question / selected text / mode
+  B->>R: classify intent and retrieve context
+  R-->>B: structured facts + ranked chunks + sources
+  B->>B: fit payload with Unicode-safe shared contract
+  B->>F: POST JSON
+  F->>F: origin, size, schema, rate and concurrency checks
+  F->>D: fixed HTTPS endpoint + server-only key + streaming request
+  D-->>F: SSE events
+  F-->>B: streamed SSE without buffering
+  B-->>U: incremental answer + site sources
+```
+
+### Shared chat contract
+
+`src/lib/ai/chat-contract.ts` 是客户端、Vercel Handler 和测试的共同请求契约。所有字符串限制按 Unicode code point 计算，不会从 surrogate pair 中间截断 emoji。它限制消息数、单条/总消息内容、当前页面、检索上下文、划线片段和批注长度，并在发送前按同一规则压缩 payload。
+
+### Vercel Function boundary
+
+Handler 只接受 JSON POST：
+
+- 校验同源 / 配置域名、Content-Type 与 64 KiB 请求体。
+- Zod 解析共享字段；无效 JSON、契约错误、超限分别返回稳定错误码。
+- 固定 `api.deepseek.com/anthropic` 与 `deepseek-v4-pro`，浏览器不能注入模型、Base URL 或 System Prompt。
+- Key 只从 Vercel 环境变量读取；日志移除可能的 Key 片段。
+- 实例内速率限制、最大并发、55 s 上游超时和断开传播用于控制滥用与资源占用。
+- 成功响应保持 `text/event-stream`、`no-store` 与禁用代理缓冲。
+
+实例内限流不等于全局配额；流量增长后应由 Vercel Firewall 或外部共享限流承担全局策略。
+
+## 5. Retrieval 2.0
+
+AI knowledge 由公开 Content Collections 构建，分为：
+
+- **Metadata Query**：分类、标签、系列、文章数量和完整列表属于确定性事实，检索层生成结构化答案上下文，避免让模型猜数字。
+- **Chunk Retrieval**：文章按 heading 拆分，保存标题、分类、URL、heading 和 excerpt；问题只带排名靠前的片段进入模型。
+- **Mixed-language lexical search**：`Intl.Segmenter`、中文 bigram fallback、英文归一化和小型同义词表共同处理中文、英文与混合查询。
+- **Source traceability**：召回项保留真实站内 URL，UI 展示来源。
+
+v1.0 不使用向量数据库，因为 52 篇公开文章可在构建期生成小型静态知识集，确定性元数据与词法召回更简单、可检查、无额外隐私/运维成本。未来可在保持 request/context contract 不变的前提下加入 embedding + lexical hybrid rerank。
+
+## 6. Learning data flow
+
+```mermaid
+sequenceDiagram
+  participant A as Article UI
+  participant T as Reading tracker
+  participant DB as IndexedDB lfw-learning-db
+  participant L as Learning dashboard
+  participant S as Web Speech API
+  A->>T: visible + focused reading/listening events
+  T->>DB: duration, progress, completion
+  A->>DB: anchored annotation / AI listening transcript
+  A->>S: original or AI transcript segments
+  DB-->>L: local metrics and records
+  L->>DB: import, merge, clear, persistence request
+  L-->>A: records remain available on next visit
+```
+
+### IndexedDB model and privacy
+
+IndexedDB 保存文章记录、批注、听读稿缓存与偏好。阅读计时只在页面可见、窗口聚焦且达到有效交互条件时累积，降低把后台挂机误算为学习的概率。批注用文章 slug、文本上下文和锚点定位；内容变化后可通过上下文恢复，但不是跨版本绝对稳定的 CRDT。
+
+数据默认 Local Only。AI 只有在用户主动提问、选择文字或生成听读稿时才收到明确构建的上下文；学习数据库不会被批量上传。JSON 备份在导入前校验版本和结构。
+
+### Speech
+
+`speechSynthesis` 分段播放原文或 AI 听读稿，语音列表、速率和进度在客户端管理。该 API 不产生可靠的音频 Blob，因此 v1.0 不承诺 MP3、后台持续播放或跨设备一致 Voice。
+
+## 7. Search and query behavior
+
+Pagefind 在 `astro build` 后扫描 `dist`，只索引带 `data-pagefind-body` 的公开页面。搜索无需服务端和数据库，静态索引由 CDN 缓存。AI Retrieval 与 Pagefind 使用不同产物：前者面向结构化 AI 上下文，后者面向用户全文导航，两者都来源于同一公开内容集合。
+
+## 8. SEO and discoverability
+
+`SEOHead.astro` 从单一站点配置生成绝对 canonical、社交元信息、RSS link 和 JSON-LD。Astro Assets 在构建期从真实封面裁剪 1200×630 JPEG。站点页包含 WebSite / Person；文章页包含 BlogPosting / BreadcrumbList；404 使用 `noindex, nofollow`。Astro sitemap 排除 404，RSS、robots 和 sitemap 均指向生产 origin。
+
+## 9. Performance model
+
+性能预算按路由初始依赖而非所有动态 chunk 计算：
+
+- Home：初始 JS + CSS gzip ≤ 35 KiB。
+- Article：初始 JS + CSS gzip ≤ 45 KiB。
+- Learning：初始 JS + CSS gzip ≤ 35 KiB。
+
+Mermaid/Cytoscape、KaTeX 和完整 AI 面板具有价值但不应成为所有页面的首屏成本。大型 Mermaid chunk 的构建 warning 被保留用于可见性；它通过动态 import 与普通路由隔离，不能简单通过删除功能或调高 warning 假装解决。
+
+## 10. Deployment and security
+
+GitHub Actions 使用 Node 22、pnpm 10.24、frozen lockfile 和 Playwright Chromium，顺序执行内容、测试、类型、lint、格式、AI bundle、build、bundle、SEO 与 E2E。CI 不读取真实 AI Secret。
+
+Vercel 部署 `dist` 并运行根目录 Functions。`vercel.json` 配置 HSTS、CSP、`nosniff`、frame deny、referrer policy、permissions policy、COOP 和 `/_astro` immutable cache。CSP 保留 Astro 当前内联初始化所需的 `unsafe-inline`，并在实际页面回归中验证 AI、Pagefind 与 Islands。
+
+## 11. Future Node / MySQL / Redis boundary
+
+只有出现跨设备账号、同步学习数据、多人评论、严格全局配额或管理后台时，才引入持久后端：
+
+- Node API：认证、同步协议、权限、后台任务。
+- MySQL/PostgreSQL：用户、文章业务状态、批注同步与审计记录；Markdown 仍保留在 Git，避免把写作源迁进数据库。
+- Redis：全局限流、短期缓存、队列协调，不作为真实业务数据唯一来源。
+- Retrieval：向量索引作为可再生派生产物，Metadata Query 继续走确定性数据库/构建事实。
+
+该演进应保持静态阅读路径可用，让后端故障不会使公开文章不可访问。
