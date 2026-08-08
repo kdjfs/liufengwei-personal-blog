@@ -1,6 +1,9 @@
 ---
 import LearningDashboard from '@/components/learning/LearningDashboard';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { createEmptyLearningSummary } from '@/lib/learning/stats';
+
+const initialSummary = createEmptyLearningSummary();
 ---
 
 <BaseLayout title="学习面板" description="仅保存在当前浏览器中的个人阅读、听读与批注学习记录。">
@@ -10,6 +13,6 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
     <p>记住读过什么、读到哪里、听了多久，以及留下的每一条理解。</p>
   </header>
   <div class="container-wide learning-page-content">
-    <LearningDashboard client:load />
+    <LearningDashboard client:load initialSummary={initialSummary} />
   </div>
 </BaseLayout>

@@ -1,0 +1,50 @@
+<lfw-deferred-search data-search-root></lfw-deferred-search>
+
+<script>
+  class DeferredSearch extends HTMLElement {
+    private loading = false;
+
+    connectedCallback() {
+      document.addEventListener('click', this.handleClick);
+      document.addEventListener('keydown', this.handleKeyDown);
+    }
+
+    disconnectedCallback() {
+      this.removeActivationListeners();
+    }
+
+    private removeActivationListeners = () => {
+      document.removeEventListener('click', this.handleClick);
+      document.removeEventListener('keydown', this.handleKeyDown);
+    };
+
+    private handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest('[data-open-search]')) return;
+      event.preventDefault();
+      void this.activate();
+    };
+
+    private handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return;
+      event.preventDefault();
+      void this.activate();
+    };
+
+    private async activate() {
+      if (this.loading) return;
+      this.loading = true;
+      this.removeActivationListeners();
+      const [{ createElement }, { createRoot }, { default: SearchCommand }] = await Promise.all([
+        import('react'),
+        import('react-dom/client'),
+        import('./SearchCommand'),
+      ]);
+      createRoot(this).render(createElement(SearchCommand, { initialOpen: true }));
+    }
+  }
+
+  if (!customElements.get('lfw-deferred-search')) {
+    customElements.define('lfw-deferred-search', DeferredSearch);
+  }
+</script>

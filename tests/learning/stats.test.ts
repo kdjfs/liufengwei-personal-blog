@@ -1,7 +1,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createArticleProgress } from '../../src/lib/learning/reading-tracker.ts';
-import { summarizeLearning } from '../../src/lib/learning/stats.ts';
+import { createEmptyLearningSummary, summarizeLearning } from '../../src/lib/learning/stats.ts';
+
+test('empty learning summary reserves the complete dashboard structure for hydration', () => {
+  const summary = createEmptyLearningSummary(new Date('2026-08-09T12:00:00+08:00'));
+
+  assert.equal(summary.last7Days.length, 7);
+  assert.equal(summary.last7Days[0]?.date, '2026-08-03');
+  assert.equal(summary.last7Days[6]?.date, '2026-08-09');
+  assert.equal(summary.totalReadSeconds, 0);
+  assert.deepEqual(summary.recent, []);
+  assert.deepEqual(summary.byCategory, []);
+});
 
 test('learning summary derives totals, completion, today, seven days, and categories from real records', () => {
   const first = {

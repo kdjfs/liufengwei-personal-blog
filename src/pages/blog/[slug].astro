@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
 import PostCard from '@/components/blog/PostCard.astro';
+import ArticleEnhancements from '@/components/blog/ArticleEnhancements.astro';
 import TableOfContents from '@/components/blog/TableOfContents.astro';
 import ArticleLearningBar from '@/components/learning/ArticleLearningBar';
 import AnnotationManager from '@/components/learning/AnnotationManager';
@@ -15,6 +16,7 @@ import {
   getRelatedPosts,
 } from '@/utils/posts';
 import { getBlogCover } from '@/utils/blog-cover';
+import 'katex/dist/katex.min.css';
 
 export async function getStaticPaths() {
   const posts = getPublishedPosts(await getCollection('blog'));
@@ -39,9 +41,14 @@ const cover = getBlogCover(post.data.slug, post.data.cover);
 <BaseLayout
   title={post.data.title}
   description={post.data.description}
+  image={cover.image}
+  imageAlt={`${post.data.title}文章封面`}
   type="article"
+  canonical={post.data.canonical}
   publishedTime={post.data.publishDate}
   updatedTime={post.data.updatedDate}
+  category={post.data.category}
+  tags={post.data.tags}
 >
   <div class="reading-progress" data-reading-progress aria-hidden="true"></div>
   <article
@@ -175,4 +182,5 @@ const cover = getBlogCover(post.data.slug, post.data.cover);
       )
     }
   </footer>
+  <ArticleEnhancements />
 </BaseLayout>

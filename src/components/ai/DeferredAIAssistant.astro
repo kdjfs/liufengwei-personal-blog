@@ -1,0 +1,99 @@
+<lfw-deferred-ai>
+  <button class="deferred-ai-trigger" type="button" aria-label="打开 LFW AI 助手">
+    <img
+      src="/mascot/ali.webp"
+      width="64"
+      height="64"
+      alt=""
+      loading="lazy"
+      decoding="async"
+      draggable="false"
+    />
+    <span>问 AI</span>
+  </button>
+</lfw-deferred-ai>
+
+<style>
+  lfw-deferred-ai {
+    position: fixed;
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    z-index: 90;
+  }
+
+  .deferred-ai-trigger {
+    display: grid;
+    width: 68px;
+    border: 0;
+    background: transparent;
+    color: var(--lfw-text);
+    cursor: pointer;
+    filter: drop-shadow(0 10px 16px rgba(34, 24, 39, 0.2));
+    font: 700 0.7rem/1.2 var(--font-sans);
+    place-items: center;
+  }
+
+  .deferred-ai-trigger img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+  }
+
+  .deferred-ai-trigger span {
+    margin-top: -2px;
+    padding: 3px 8px;
+    border: 1px solid var(--lfw-border);
+    border-radius: 999px;
+    background: var(--lfw-card);
+  }
+</style>
+
+<script>
+  import type { SelectionContext } from '@/lib/ai/types';
+
+  class DeferredAIAssistant extends HTMLElement {
+    private loading = false;
+    private pendingSelection?: SelectionContext;
+
+    connectedCallback() {
+      this.querySelector('button')?.addEventListener('click', this.handleClick);
+      window.addEventListener('lfw:ai:ask-selection', this.handleSelection);
+    }
+
+    disconnectedCallback() {
+      this.removeActivationListeners();
+    }
+
+    private removeActivationListeners = () => {
+      this.querySelector('button')?.removeEventListener('click', this.handleClick);
+      window.removeEventListener('lfw:ai:ask-selection', this.handleSelection);
+    };
+
+    private handleClick = () => {
+      void this.activate(true);
+    };
+
+    private handleSelection = (event: Event) => {
+      this.pendingSelection = (event as CustomEvent<SelectionContext>).detail;
+      void this.activate(false);
+    };
+
+    private async activate(initialOpen: boolean) {
+      if (this.loading) return;
+      this.loading = true;
+      this.removeActivationListeners();
+      const [{ createElement }, { createRoot }, { default: AIAssistant }] = await Promise.all([
+        import('react'),
+        import('react-dom/client'),
+        import('./AIAssistant'),
+      ]);
+      createRoot(this).render(
+        createElement(AIAssistant, { initialOpen, initialSelection: this.pendingSelection }),
+      );
+    }
+  }
+
+  if (!customElements.get('lfw-deferred-ai')) {
+    customElements.define('lfw-deferred-ai', DeferredAIAssistant);
+  }
+</script>

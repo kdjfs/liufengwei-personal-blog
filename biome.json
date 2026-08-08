@@ -7,7 +7,9 @@
       "!.astro",
       "!node_modules",
       "!public/pagefind",
-      "!api/chat.mjs"
+      "!api/chat.mjs",
+      "!playwright-report",
+      "!test-results"
     ]
   },
   "formatter": {

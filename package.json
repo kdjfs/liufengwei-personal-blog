@@ -1,6 +1,6 @@
 {
   "name": "liufengwei-personal-blog",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.24.0",
@@ -21,15 +21,26 @@
     "lint:fix": "biome check --write .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "e2e": "playwright test",
+    "test:e2e": "pnpm e2e",
+    "analyze": "pnpm bundle:report",
+    "bundle:report": "node scripts/bundle-report.mjs",
+    "screenshots:capture": "node scripts/capture-screenshots.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "quality": "pnpm content:check && pnpm test && pnpm typecheck && pnpm lint && pnpm format:check && pnpm ai:function:check",
     "test:content": "node --test scripts/content/*.test.mjs",
     "test:ai": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/ai/*.test.ts",
     "test:learning": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/learning/*.test.ts",
     "test:home": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/home/*.test.ts",
-    "test": "pnpm test:content && pnpm test:ai && pnpm test:learning && pnpm test:home",
+    "test:seo": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/seo/*.test.ts",
+    "test:release-config": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/release/*.test.ts",
+    "test": "pnpm test:content && pnpm test:ai && pnpm test:learning && pnpm test:home && pnpm test:seo && pnpm test:release-config",
     "ai:probe": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-probe.mjs",
     "ai:probe:prod": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-probe.mjs --production",
     "ai:inspect": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-inspect.ts",
     "ai:function:build": "node scripts/build-ai-function.mjs",
+    "ai:function:check": "node scripts/build-ai-function.mjs --check",
+    "seo:check": "node scripts/seo-check.mjs",
     "content:new": "node scripts/content/index.mjs new",
     "content:list": "node scripts/content/index.mjs list",
     "content:check": "node scripts/content/index.mjs check",
@@ -48,7 +59,7 @@
     "astro": "7.1.6",
     "github-slugger": "2.0.0",
     "katex": "0.18.1",
-    "mermaid": "11.16.0",
+    "mermaid": "11.16.1",
     "pagefind": "1.5.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -65,6 +76,7 @@
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@biomejs/biome": "2.5.6",
+    "@playwright/test": "1.62.1",
     "@types/node": "26.1.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
@@ -82,6 +94,10 @@
     "vercel": "^58.4.4"
   },
   "pnpm": {
+    "overrides": {
+      "dompurify@<=3.4.12": "3.4.13",
+      "nanoid@<3.3.17": "3.3.17"
+    },
     "onlyBuiltDependencies": [
       "esbuild"
     ]

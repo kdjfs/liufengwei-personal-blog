@@ -810,7 +810,9 @@ a {
 
 .profile-stats a {
   min-width: 0;
+  min-height: 44px;
   display: grid;
+  place-content: center;
   gap: 1px;
   text-align: center;
 }

@@ -9,11 +9,10 @@ interface Props {
   category: FeaturedCategory;
   count: number;
   latestPosts?: BlogEntry[];
-  priority?: boolean;
   revealDelay?: number;
 }
 
-const { category, count, latestPosts = [], priority = false, revealDelay = 0 } = Astro.props;
+const { category, count, latestPosts = [], revealDelay = 0 } = Astro.props;
 const cover = getBlogCover(category.name, category.cover);
 const href = `/categories/${encodeURIComponent(category.name)}`;
 ---
@@ -31,7 +30,7 @@ const href = `/categories/${encodeURIComponent(category.name)}`;
         alt=""
         widths={[480, 720, 960]}
         sizes="(max-width: 767px) 92vw, 45vw"
-        loading={priority ? 'eager' : 'lazy'}
+        loading="lazy"
         format="webp"
       />
       <span class="featured-category-shade" aria-hidden="true"></span>

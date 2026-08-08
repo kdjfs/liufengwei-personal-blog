@@ -1,174 +1,166 @@
 # LFW Space
 
-> 刘凤伟的数字花园 —— 记录技术、项目、思考与成长。
-> 在线浏览：https://liufengwei-personal-blog.vercel.app/
-> LFW Space 是一个内容优先的个人博客、项目作品集与数字花园。它不是套用现成主题的换皮项目：视觉语言、组件边界、内容模型与交互均围绕长期维护重新设计。
+> AI Native Personal Digital Garden & Learning OS
 
-> 首页预览截图占位：项目稳定部署后，将真实桌面端与移动端截图放入 `docs/` 并在这里展示。
+[Production](https://liufengwei-personal-blog.vercel.app/) · [Architecture](docs/ARCHITECTURE.md) · [Performance](docs/PERFORMANCE.md) · [Release checklist](docs/RELEASE-CHECKLIST.md)
 
-## 技术栈
+LFW Space 是刘凤伟的个人技术博客、AI 数字花园与本地优先学习系统。内容以 Markdown / MDX 为唯一事实来源，经 Astro 静态生成并由 Pagefind 建立全文索引；需要交互的 AI、检索、阅读记忆和语音能力以局部 Island 或延迟加载模块加入。
 
-- Astro 7 + TypeScript，SSG 静态输出。
-- React 19 Islands，用于命令面板、Hero WebGL 生命周期与 LFW AI。
-- Tailwind CSS 4 + CSS Variables 设计令牌。
-- Markdown / MDX + Content Collections + Zod。
-- Shiki、GFM、KaTeX、Mermaid、Callout。
-- Pagefind 无后端全文搜索。
-- Astro Client Router、原生 WebGL 渐进增强。
-- Biome、Prettier、pnpm。
+## Screenshots
 
-## 已实现
+| Desktop                                                  | Mobile                                                 |
+| -------------------------------------------------------- | ------------------------------------------------------ |
+| ![LFW Space desktop home](docs/images/home-desktop.webp) | ![LFW Space mobile home](docs/images/home-mobile.webp) |
 
-- 原创深色 / 浅色视觉系统，System 模式与无闪烁初始化。
-- 首页 Hero、精选与最近文章、主题、项目、时间线、关于预览。
-- 文章列表、详情、分类、标签、归档、项目、时间线、关于、404。
-- 文章目录、阅读进度、字数与阅读时间、代码复制、上一篇 / 下一篇、相关文章。
-- `Ctrl/Cmd + K` 命令面板和 Pagefind 全文搜索。
-- RSS、sitemap、robots、canonical、OpenGraph、Twitter Card、favicon。
-- `prefers-reduced-motion`、移动端与低性能设备 WebGL 降级。
-- DeepSeek V4 Pro 流式对话、文章感知、静态知识检索与真实站内来源。
-- AI Retrieval 2.0：结构化 Metadata 查询、按 Heading 的内容分块与中英混合词法检索；不使用向量数据库。
+| Article-aware AI                                   | Learning OS                                                |
+| -------------------------------------------------- | ---------------------------------------------------------- |
+| ![LFW AI assistant](docs/images/ai-assistant.webp) | ![LFW Space learning dashboard](docs/images/learning.webp) |
 
-## 项目结构
+更多：[文章页](docs/images/article.webp)。截图由 `pnpm screenshots:capture` 从生产构建生成。
 
-```text
-src/
-├─ components/       静态组件与局部交互 Islands
-├─ config/           站点级单一配置入口
-├─ content/blog/     Markdown / MDX 文章
-├─ data/             项目、主题与时间线数据
-├─ layouts/          SEO、导航、主题和页面增强脚本
-├─ pages/            Astro 文件路由
-├─ plugins/          Callout 与 Mermaid 的 Markdown 插件
-├─ styles/           Design System 与全局排版
-└─ utils/            文章排序、阅读时间、相关推荐
-scripts/             新文章 CLI
-api/                 Vercel Functions（服务端 AI 代理）
-docs/                架构、Roadmap 与旧站审计
-public/              favicon、robots 等静态资源
+## Features
+
+- Koharu-inspired original home：沉浸式封面、双层浮动波浪、响应式内容编排，并支持 `prefers-reduced-motion`。
+- Astro SSG：文章、分类、标签、系列、项目、时间线、归档、RSS、sitemap 与 404 全部静态输出。
+- Zero-friction Markdown：内容脚本自动补齐 Frontmatter，稳定 slug 不依赖文件移动；Content Collections 在构建期校验。
+- Pagefind：生产构建后生成无后端全文搜索，搜索 UI 首次交互时加载。
+- LFW AI：DeepSeek V4 Pro、SSE Streaming、快速/深度思考、当前文章上下文与划线问 AI。
+- AI Retrieval 2.0：Metadata Query、Heading Chunk Retrieval、中英混合词法检索与可追溯站内来源，不依赖向量数据库。
+- Personal Learning OS：IndexedDB 阅读/听读时长、进度、已读状态、锚定批注、JSON 导入导出与本地语音播放。
+- Production SEO：canonical、Open Graph、Twitter Card、1200×630 分享图、WebSite / Person / BlogPosting / BreadcrumbList JSON-LD、RSS、robots 与 sitemap。
+- Quality gates：Node 22、pnpm 10.24、95 项逻辑测试、Playwright 关键流程与响应式矩阵、SEO/Bundle 检查和 GitHub Actions。
+
+## Architecture
+
+```mermaid
+flowchart TD
+  Content["Markdown / MDX"] --> Collections["Astro Content Collections"]
+  Collections --> Build["Astro static build"]
+  Build --> HTML["Static HTML + responsive assets"]
+  Build --> Search["Pagefind index"]
+  Build --> Knowledge["AI knowledge metadata + chunks"]
+  HTML --> Browser["Browser"]
+  Search --> Browser
+  Knowledge --> AI["LFW AI island"]
+  Browser --> Memory["IndexedDB learning memory"]
+  AI --> Function["Vercel /api/chat"]
+  Function --> DeepSeek["DeepSeek V4 Pro SSE"]
 ```
 
-## 本地启动
+静态内容不为 AI 或学习功能支付全站 hydration 成本。通用脚本只处理导航、主题和 reveal；文章目录、代码工具、图片灯箱、Mermaid、划线与听读只进入文章页。完整边界和数据流见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
-需要 Node.js 22.12+ 与 pnpm 10+。
+## Tech stack
+
+- Astro 7、TypeScript 6、React 19 Islands
+- Tailwind CSS 4、CSS Variables、Astro Assets / Sharp
+- Markdown / MDX、Zod、Shiki、GFM、KaTeX、Mermaid
+- Pagefind、Vercel Functions、DeepSeek Anthropic-compatible API、SSE
+- IndexedDB、Web Speech API
+- Node.js 22、pnpm 10.24、Node Test Runner、Playwright、Biome、Prettier
+
+## AI
+
+浏览器只发送共享契约允许的消息、模式、文章上下文和可选划线片段。`src/lib/ai/chat-contract.ts` 使用 Unicode code point 计数和截断，客户端与服务端共享相同限制；`pnpm ai:function:check` 保证生成的 Vercel Function 与源码没有漂移。
+
+`/api/chat` 在服务端校验来源、Content-Type、64 KiB 请求体、字段长度、速率与并发，读取服务器环境变量后调用固定的 DeepSeek HTTPS 端点。Key、Base URL、模型和 System Prompt 都不能由浏览器覆盖。CI 的 AI E2E 使用 mocked SSE，真实模型只在发布前人工验证。
+
+Retrieval 2.0 将确定性的分类/标签/系列计数作为结构化事实，将文章按 heading 切块用于技术问题召回。更多说明与本地检查命令见 [docs/AI-RETRIEVAL.md](docs/AI-RETRIEVAL.md)。
+
+## Learning OS
+
+文章阅读、听读、已读状态和批注保存在当前浏览器的 IndexedDB `lfw-learning-db`。这些数据默认不会上传给 AI、Analytics 或第三方；清除站点数据或更换设备仍可能造成丢失，因此学习面板提供 JSON 导出、校验和合并导入。
+
+原文朗读与 AI 精华听读使用浏览器 Web Speech API。Voice、后台播放和锁屏行为取决于设备；项目不伪装生成可下载 MP3，AI 听读稿可下载为文本。
+
+## Content pipeline
+
+最快的写作路径：
+
+1. 将 Markdown 放到 `src/content/blog/<分类>/`。
+2. 运行 `pnpm dev`；`content:prepare` 会补齐缺失 Frontmatter 并监听新增文章。
+3. 将 `draft` 改为 `false` 后运行 `pnpm content:check`。
+
+也可以通过 CLI 创建：
 
 ```bash
-pnpm install
+pnpm content:new -- --title "文章标题" --category "前端" --tags "Astro,TypeScript" --description "至少十个字符的摘要"
+```
+
+常用命令包括 `content:new`、`content:import`、`content:list`、`content:stats`、`content:prepare` 和 `content:check`。内容准备会保留已有元数据、代码块与正文。
+
+## Performance
+
+2026-08-09 的本地 Lighthouse 生产构建结果：Home Mobile 98、Article Mobile 98、Learning Mobile 99；三个桌面页面均为 100。移动 LCP 分别为 2.30 s、2.37 s、2.05 s，CLS 均不超过 0.050，TBT 均为 0 ms。环境、前后对照、传输拆分和 Bundle budget 见 [docs/PERFORMANCE.md](docs/PERFORMANCE.md)。
+
+主要策略：
+
+- 首页、搜索和 AI 的非关键代码延迟到可见或首次交互。
+- KaTeX、Mermaid、目录、代码工具和选区能力只进入文章路径。
+- Astro 响应式图片声明尺寸，首屏图片按需 eager，其余 lazy。
+- Bundle 报告分别限制首页、文章和学习页初始 JS/CSS；大型 Mermaid/Cytoscape chunk 保持动态加载。
+
+## SEO
+
+`SEOHead.astro` 统一生成绝对 canonical、Open Graph、Twitter Card 和真实 1200×630 JPEG。站点页输出 WebSite + Person；文章页追加 BlogPosting 和“首页 → 分类 → 文章”BreadcrumbList。404 明确 `noindex, nofollow`，构建检查会验证 118 个页面、分享图尺寸、RSS、robots 与 sitemap 中不存在 localhost 或 404。
+
+## Development
+
+要求 Node.js 22.12+ 与 pnpm 10.24：
+
+```bash
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-开发服务器默认地址为 `http://localhost:4321`。
-
-### AI 完整联调
-
-普通内容开发继续使用 `pnpm dev`。完整 AI 联调直接运行：
+生产预览：
 
 ```bash
+pnpm build
+pnpm preview
+```
+
+AI 本地联调：
+
+```bash
+Copy-Item .env.example .env.local
 pnpm dev:ai
 ```
 
-该命令不需要 Vercel CLI 或登录，会同时启动 `http://localhost:4321` 的 Astro Dev 和
-`http://127.0.0.1:8787/api/chat` 的原生 Node Local AI Gateway。Gateway 直接复用
-`api/_chat-handler.ts` 的共享 Handler，不会维护第二份 DeepSeek 请求实现。生产部署由构建脚本
-从同一源码生成自包含的 `api/chat.mjs`，避免 Vercel Node Runtime 的多文件 TypeScript 装载差异。
+`pnpm dev:ai` 同时启动 Astro 与复用生产 Handler 的本地 AI Gateway；不会维护第二套上游请求实现。
 
-在项目根目录创建不会被 Git 跟踪的 `.env.local`，从 `.env.example` 复制配置，并把
-`DEEPSEEK_API_KEY=replace_me` 中的 `replace_me` 替换为你在 DeepSeek 控制台新建的 Key。
-不要把 Key 写进源码、README、测试或提交记录。`pnpm dev:ai` 会在启动前拒绝缺失、占位符
-或包含非 ASCII Header 字符的 Key。共享 Handler 在非 Vercel 环境保留
-`ANTHROPIC_AUTH_TOKEN` fallback；Local Gateway 和 Vercel 生产环境都要求
-`DEEPSEEK_API_KEY`。
+## Environment variables
 
-连接问题可先运行 `pnpm ai:probe` 直接验证 DeepSeek，再用生产域名运行
-`pnpm ai:probe:prod` 验证已部署的 Streaming Function。两个探针都不会输出 API Key。
+| Variable            | Purpose                                     | Boundary        |
+| ------------------- | ------------------------------------------- | --------------- |
+| `DEEPSEEK_API_KEY`  | DeepSeek 密钥                               | 仅 Server，必需 |
+| `DEEPSEEK_BASE_URL` | 固定为 `https://api.deepseek.com/anthropic` | 仅 Server       |
+| `DEEPSEEK_MODEL`    | 固定为 `deepseek-v4-pro`                    | 仅 Server       |
+| `SITE_URL`          | canonical / origin allowlist                | Build + Server  |
 
-在 Vercel 项目的 **Settings → Environment Variables** 中添加相同变量后重新部署。
-快速模式使用 `deepseek-v4-pro` 并关闭 thinking；深度思考模式仍使用 Pro，开启 thinking
-且设置最大 effort。浏览器只能选择这两个服务端模式，不能传入模型名、Base URL 或 System Prompt。
+从 `.env.example` 创建未跟踪的 `.env.local`，将 `replace_me` 换成真实 Key。不要把 Secret 写入源码、文档、测试或 Git 历史。Vercel 环境变量修改后需要重新部署。
 
-## 最快发布文章
-
-1. 把 Markdown 放进 `src/content/blog/<分类>/`，例如 `src/content/blog/面经/腾讯前端一面.md`。
-2. 运行 `pnpm dev`；项目会自动补齐 Frontmatter，并在开发中继续监听新文件。
-3. 确认页面后提交并推送到 Git，已绑定的部署平台会按仓库配置发布。
-
-需要精细控制时仍可使用 `pnpm content:new`、`pnpm content:import` 和 `pnpm content:check`。
-
-## 创建文章
+## Quality commands
 
 ```bash
-pnpm new:post
+pnpm quality             # content + 95 tests + typecheck + lint + format + AI bundle drift
+pnpm build               # 118 static pages + Pagefind index
+pnpm seo:check           # metadata / JSON-LD / social images / RSS / sitemap / robots
+pnpm analyze             # route-level initial JS/CSS budget
+pnpm test:e2e            # mocked AI flows + 7 viewports × 9 routes
+pnpm release:check       # complete sequential release gate
+pnpm screenshots:capture # regenerate compressed README screenshots from dist
 ```
 
-按提示输入标题、分类、标签与摘要。脚本会在 `src/content/blog/` 创建合法 Markdown 文件，并默认设置 `draft: true`。写完后改成 `draft: false` 即可进入生产构建。
+## Deployment and release
 
-也可以在自动化场景中传参：
+Vercel 使用 `pnpm install --frozen-lockfile`、`pnpm build` 和 `dist` 输出。站点仍为静态部署；只有 `/api/chat` 与 `/api/ai-health` 是 Serverless Functions。`vercel.json` 设置 HSTS、CSP、MIME sniffing、frame、referrer、permissions、COOP 与不可变构建资源缓存头。
 
-```bash
-pnpm new:post -- --title "文章标题" --category "前端" --tags "Astro,TypeScript" --description "至少十个字符的文章摘要" --slug "custom-slug"
-```
+推荐发布流程：release branch → Pull Request → GitHub Actions green → merge main → wait for Vercel production → browser/AI smoke → annotated tag → GitHub Release。逐项清单见 [docs/RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md)。
 
-## 常用命令
+## Roadmap
 
-```bash
-pnpm dev           # 开发
-pnpm dev:ai        # Astro + Local AI Gateway，无需 Vercel 登录
-pnpm ai:probe      # 安全直连 DeepSeek 探针
-pnpm ai:probe:prod # 生产 /api/chat Streaming 探针
-pnpm typecheck     # Astro + TypeScript 检查
-pnpm lint          # Biome 检查
-pnpm format:check  # 格式检查
-pnpm build         # 静态构建并生成 Pagefind 索引
-pnpm preview       # 预览生产构建
-pnpm content:prepare # 补齐原始 Markdown 的 Frontmatter
-```
+v1.0 保持无账号、无评论、无独立 Node/MySQL/Redis 服务。后续优先方向是 Article Theme Unification、混合向量召回（保留现有 Retrieval contract）以及可选的跨设备学习同步。演进边界见 [docs/ROADMAP.md](docs/ROADMAP.md)。
 
-## 常用修改入口
+## License and assets
 
-- 站点名称、作者、正式域名、GitHub：`src/config/site.ts`
-- 项目列表：`src/data/projects.ts`
-- 时间线：`src/data/timeline.ts`
-- 首页主题：`src/data/topics.ts`
-- 主题色与布局令牌：`src/styles/global.css` 顶部的 CSS Variables
-- Hero 背景：静态层在 `src/styles/global.css`，WebGL 层在 `src/components/interactive/HeroVisual.tsx`
-- 头像：当前是 `.avatar-frame` CSS 占位；替换方式见“个性化清单”
-- AI 宠物：将合法拥有使用权的宠物图片替换为 `public/mascot/ali.webp`（建议透明 WebP）
-
-## Personal Learning OS
-
-文章页会在当前浏览器的 IndexedDB `lfw-learning-db` 中保存阅读/听读时长、阅读位置、
-锚定批注、AI 听读稿缓存和语音设置；这些数据默认只在本地使用，不会自动发送给 AI 或
-Analytics。`/learning` 提供统计、分组清除、JSON 导出/校验/合并导入和主动申请浏览器
-持久存储。清除站点数据、隐私模式回收、浏览器卸载或更换设备仍可能让数据丢失，因此重要
-记录应定期导出 `lfw-learning-backup-YYYY-MM-DD.json`。
-
-“原文朗读”和“AI 精华听读”都使用浏览器 Web Speech API。系统提供哪些中文 Voice、切到
-后台或锁屏后是否继续播放，由设备和浏览器决定。V5 不生成 MP3：`speechSynthesis` 不提供
-稳定、可下载的音频 Blob，录屏或 MediaRecorder 也不能可靠替代真正的 TTS Provider；AI
-听读稿可下载为 `.txt`，以后可交给外部 TTS。AI 听读稿按文章内容指纹和 Prompt 版本缓存在
-IndexedDB，只有用户点击生成或明确重新生成时才调用现有 DeepSeek 服务。
-
-## 个性化清单
-
-1. 把 `src/config/site.ts` 的 GitHub 与正式 URL 改成真实值。
-2. 用真实项目替换 `src/data/projects.ts` 的 TODO 项。
-3. 用真实节点替换 `src/data/timeline.ts` 的 TODO 项。
-4. 在 `public/` 放入头像（例如 `avatar.webp`），把 `.avatar-frame` 的占位元素换成声明宽高的 `<Image />` 或 `<img>`。
-5. 补充 `about.astro` 的真实介绍，避免夸大或伪造经历。
-6. 部署后截取真实预览图，替换 README 的截图占位。
-
-## 架构特点
-
-文章主体完全不使用 React hydration。搜索从生产构建生成的静态索引按需读取；Hero 的轻量 WebGL 模块只在桌面、允许动画且设备条件合适时动态下载。完整设计理由见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
-
-旧 Gemini 博客的审计与迁移决定见 [docs/legacy-audit.md](docs/legacy-audit.md)。后续版本边界见 [docs/ROADMAP.md](docs/ROADMAP.md)。
-
-## 部署到 Vercel
-
-将 Git 仓库导入 Vercel，使用 `pnpm install --frozen-lockfile` 安装、`pnpm build` 构建，输出目录为 `dist`。发布前务必把 `astro.config.mjs`、`src/config/site.ts` 和 `public/robots.txt` 中的占位域名统一替换为正式域名。
-
-站点仍保持 Astro SSG；仅 `/api/chat` 和无模型调用的 `/api/ai-health` 由 root Vercel
-Function 处理，不需要数据库、Redis 或独立 Node 服务。
-部署时在 Vercel 环境变量中配置 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、
-`DEEPSEEK_MODEL` 与 `SITE_URL`。当前代码级限流是无外部存储的 serverless 实例内限流；
-若将来需要严格的全局配额，应在 Vercel Firewall 中增加项目级 Rate Limit 规则。
+本仓库当前没有 LICENSE，代码许可仍由项目所有者决定。不要据此推定开源授权。图片来源、所有者提交记录与 astro-koharu 视觉参考见 [docs/ASSET-SOURCES.md](docs/ASSET-SOURCES.md)。

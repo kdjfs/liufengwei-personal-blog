@@ -9,3 +9,5 @@ dist/
 !.env.example
 .DS_Store
 public/pagefind/
+playwright-report/
+test-results/

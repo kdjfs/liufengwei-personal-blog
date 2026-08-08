@@ -1,6 +1,7 @@
 import { getCollection } from 'astro:content';
 import rss from '@astrojs/rss';
 import { siteConfig } from '@/config/site';
+import { PRODUCTION_SITE_URL } from '@/lib/seo';
 import { getPostSlug, getPublishedPosts } from '@/utils/posts';
 
 export async function GET(context: { site?: URL }) {
@@ -8,7 +9,7 @@ export async function GET(context: { site?: URL }) {
   return rss({
     title: siteConfig.name,
     description: siteConfig.description,
-    site: context.site ?? new URL('http://localhost:4321'),
+    site: context.site?.protocol === 'https:' ? context.site : new URL(PRODUCTION_SITE_URL),
     items: posts.map((post) => ({
       title: post.data.title,
       description: post.data.description,

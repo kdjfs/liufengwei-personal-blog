@@ -13,6 +13,7 @@ import { siteConfig } from '@/config/site';
     sizes="100vw"
     loading="eager"
     fetchpriority="high"
+    decoding="sync"
     format="webp"
   />
   <div class="home-cover-shade" aria-hidden="true"></div>
@@ -22,12 +23,22 @@ import { siteConfig } from '@/config/site';
     <p class="home-cover-quote">= 把学习写成可以反复抵达的路径 =</p>
     <p class="home-cover-topics">FRONTEND · AI AGENT · LEARNING</p>
   </div>
-  <svg class="home-cover-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
-    <path
-      class="home-cover-wave-back"
-      d="M0,44 C228,82 386,25 620,52 C862,80 1058,108 1440,42 L1440,120 L0,120 Z"></path>
-    <path
-      class="home-cover-wave-front"
-      d="M0,70 C236,35 420,108 670,78 C910,49 1135,43 1440,79 L1440,120 L0,120 Z"></path>
+  <svg class="home-cover-wave" viewBox="0 0 180 34" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <path
+        id="home-cover-gentle-wave"
+        d="M-220,17 C-190,5 -160,5 -130,17 S-70,29 -40,17 S20,5 50,17 S110,29 140,17 S200,5 230,17 S290,29 320,17 S380,5 410,17 L410,36 L-220,36 Z"
+      ></path>
+    </defs>
+    <use
+      class="home-cover-wave-layer home-cover-wave-back"
+      href="#home-cover-gentle-wave"
+      x="0"
+      y="-2"></use>
+    <use
+      class="home-cover-wave-layer home-cover-wave-front"
+      href="#home-cover-gentle-wave"
+      x="0"
+      y="4"></use>
   </svg>
 </section>

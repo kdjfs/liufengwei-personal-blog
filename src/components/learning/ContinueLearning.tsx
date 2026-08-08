@@ -2,21 +2,28 @@ import { useEffect, useState } from 'react';
 import { getLearningDatabase } from '@/lib/learning/db';
 import { formatLearningDuration } from '@/lib/learning/stats';
 import type { ArticleProgress } from '@/lib/learning/types';
-import './learning.css';
+import learningStyles from './learning.css?inline';
 
 export default function ContinueLearning() {
   const [records, setRecords] = useState<ArticleProgress[]>([]);
   useEffect(() => {
     getLearningDatabase()
       .getAll('articleProgress')
-      .then((items) =>
-        setRecords(
-          items
-            .filter((item) => item.lastProgress > 0 && item.lastProgress < 100)
-            .sort((left, right) => right.lastReadAt.localeCompare(left.lastReadAt))
-            .slice(0, 3),
-        ),
-      )
+      .then((items) => {
+        const nextRecords = items
+          .filter((item) => item.lastProgress > 0 && item.lastProgress < 100)
+          .sort((left, right) => right.lastReadAt.localeCompare(left.lastReadAt))
+          .slice(0, 3);
+        if (nextRecords.length === 0) return;
+        const styleId = 'lfw-learning-styles';
+        if (!document.getElementById(styleId)) {
+          const style = document.createElement('style');
+          style.id = styleId;
+          style.textContent = learningStyles;
+          document.head.append(style);
+        }
+        setRecords(nextRecords);
+      })
       .catch(() => undefined);
   }, []);
 

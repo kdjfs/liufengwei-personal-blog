@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { fitChatRequest, fitSelectionContext } from '@/lib/ai/chat-contract';
 import { retrieveKnowledge } from '@/lib/ai/retrieval';
 import type { ChatMode, KnowledgeItem, SelectionContext } from '@/lib/ai/types';
 import { AIChatClientError, streamAIResponse } from './chat-client';
@@ -34,8 +35,8 @@ function friendlyError(error: unknown): string {
   return error.requestId ? `${message}\n\n请求 ID：${error.requestId}` : message;
 }
 
-export function useAIAssistant() {
-  const [isOpen, setIsOpen] = useState(false);
+export function useAIAssistant(initialOpen = false, initialSelection?: SelectionContext) {
+  const [isOpen, setIsOpen] = useState(initialOpen);
   const [mode, setMode] = useState<ChatMode>('fast');
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -44,6 +45,7 @@ export function useAIAssistant() {
   const [selection, setSelection] = useState<SelectionContext>();
   const abortRef = useRef<AbortController | undefined>(undefined);
   const streamingRef = useRef(false);
+  const initialSelectionHandledRef = useRef(false);
 
   useEffect(() => {
     const syncPage = () => setArticlePage(isArticlePage());
@@ -127,7 +129,7 @@ export function useAIAssistant() {
       let received = '';
       try {
         await streamAIResponse(
-          {
+          fitChatRequest({
             mode,
             messages: [
               ...messages
@@ -140,7 +142,7 @@ export function useAIAssistant() {
             structuredFacts: retrieval?.facts,
             currentPage,
             selection: activeSelection,
-          },
+          }),
           (delta) => {
             received += delta;
             setMessages((current) =>
@@ -200,13 +202,7 @@ export function useAIAssistant() {
     const handleSelectionQuestion = (event: Event) => {
       const detail = (event as CustomEvent<SelectionContext>).detail;
       if (!detail?.text) return;
-      const safeSelection: SelectionContext = {
-        ...detail,
-        text: Array.from(detail.text).slice(0, 3000).join(''),
-        surroundingText: detail.surroundingText
-          ? Array.from(detail.surroundingText).slice(0, 2000).join('')
-          : undefined,
-      };
+      const safeSelection = fitSelectionContext(detail);
       setSelection(safeSelection);
       setIsOpen(true);
       void sendMessage(
@@ -217,8 +213,14 @@ export function useAIAssistant() {
       );
     };
     window.addEventListener('lfw:ai:ask-selection', handleSelectionQuestion);
+    if (initialSelection && !initialSelectionHandledRef.current) {
+      initialSelectionHandledRef.current = true;
+      handleSelectionQuestion(
+        new CustomEvent('lfw:ai:ask-selection', { detail: initialSelection }),
+      );
+    }
     return () => window.removeEventListener('lfw:ai:ask-selection', handleSelectionQuestion);
-  }, [sendMessage]);
+  }, [initialSelection, sendMessage]);
 
   const clearMessages = useCallback(() => {
     abortRef.current?.abort();
