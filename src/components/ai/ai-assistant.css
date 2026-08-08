@@ -897,9 +897,21 @@
 }
 
 @media (max-width: 680px) {
-  .ai-trigger {
-    right: 16px;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  .ai-trigger,
+  .ai-trigger[style] {
+    top: auto !important;
+    right: 8px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    left: auto !important;
+    width: 58px;
+    height: 58px;
+    opacity: 0.9;
+  }
+
+  .ai-pet-visual,
+  .ai-pet-visual img {
+    width: 58px;
+    height: 58px;
   }
 
   .ai-scrim {

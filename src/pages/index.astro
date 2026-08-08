@@ -4,6 +4,7 @@ import PostCard from '@/components/blog/PostCard.astro';
 import FeaturedCategoryCard from '@/components/categories/FeaturedCategoryCard.astro';
 import HomeCorner from '@/components/home/HomeCorner.astro';
 import HomeDivider from '@/components/home/HomeDivider.astro';
+import Hero from '@/components/home/Hero.astro';
 import HomePagination from '@/components/home/HomePagination.astro';
 import ContinueLearning from '@/components/learning/ContinueLearning';
 import ProfileRail from '@/components/profile/ProfileRail.astro';
@@ -11,9 +12,11 @@ import { featuredCategories } from '@/config/categories';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { selectHomePosts } from '@/utils/home-feed';
 import { getPublishedPosts } from '@/utils/posts';
+import '@/styles/home-cover.css';
+import '@/styles/home.css';
 
 const posts = getPublishedPosts(await getCollection('blog'));
-const homePosts = selectHomePosts(posts, 10);
+const homePosts = selectHomePosts(posts, 12);
 const categoryCards = featuredCategories.map((category) => {
   const categoryPosts = posts.filter((post) => post.data.category === category.name);
   return {
@@ -32,18 +35,12 @@ const pageCount = Math.max(1, Math.ceil(posts.length / 12));
 ---
 
 <BaseLayout>
+  <Hero />
+
   <div class="home-shell">
     <ProfileRail stats={profileStats} currentPath={Astro.url.pathname} />
 
     <div class="home-main">
-      <header class="home-welcome" aria-labelledby="home-title">
-        <div>
-          <p>LFW SPACE · 刘凤伟的数字花园</p>
-          <h1 id="home-title">把学习写成可以反复抵达的路径。</h1>
-        </div>
-        <span>前端 / AI Agent / Learning</span>
-      </header>
-
       <ContinueLearning client:idle />
 
       <section class="home-feed" aria-labelledby="home-articles-title" data-pagefind-body>

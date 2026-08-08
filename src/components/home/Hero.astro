@@ -1,35 +1,33 @@
 ---
-import HeroVisual from '@/components/interactive/HeroVisual';
-import { githubUrl } from '@/config/profile';
+import { Image } from 'astro:assets';
+import homeCover from '@/assets/blog-covers/15.png';
 import { siteConfig } from '@/config/site';
 ---
 
-<section class="hero">
-  <div class="hero-grid" aria-hidden="true"></div>
-  <HeroVisual client:idle />
-  <div class="container-wide hero-content">
-    <div class="hero-copy">
-      <p class="hero-kicker"><span></span> DIGITAL GARDEN · 2026</p>
-      <h1>
-        <span>LFW</span>
-        <span class="outline">SPACE</span>
-      </h1>
-      <p class="hero-subtitle">{siteConfig.subtitle}</p>
-      <p class="hero-statement">Building things for the web.</p>
-      <p class="hero-description">记录技术、项目、思考与成长。</p>
-      <div class="hero-actions">
-        <a class="button primary" href="/blog">开始阅读 <span>↗</span></a>
-        <a class="button secondary" href="/projects">查看项目</a>
-        <a class="button text" href={githubUrl} target="_blank" rel="noopener noreferrer"
-          >GitHub ↗</a
-        >
-      </div>
-    </div>
-    <aside class="hero-coordinate" aria-label="站点状态">
-      <span>31.2304° N</span>
-      <span>121.4737° E</span>
-      <span class="online"><i></i> GARDEN ONLINE</span>
-    </aside>
+<section class="home-cover" aria-labelledby="home-cover-title">
+  <Image
+    class="home-cover-image"
+    src={homeCover}
+    alt=""
+    widths={[480, 800, 1080, 1440, 1920]}
+    sizes="100vw"
+    loading="eager"
+    fetchpriority="high"
+    format="webp"
+  />
+  <div class="home-cover-shade" aria-hidden="true"></div>
+  <div class="home-cover-content">
+    <p class="home-cover-brand">{siteConfig.name}</p>
+    <h1 id="home-cover-title">{siteConfig.subtitle}</h1>
+    <p class="home-cover-quote">= 把学习写成可以反复抵达的路径 =</p>
+    <p class="home-cover-topics">FRONTEND · AI AGENT · LEARNING</p>
   </div>
-  <div class="hero-orbit" aria-hidden="true"><span></span></div>
+  <svg class="home-cover-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+    <path
+      class="home-cover-wave-back"
+      d="M0,44 C228,82 386,25 620,52 C862,80 1058,108 1440,42 L1440,120 L0,120 Z"></path>
+    <path
+      class="home-cover-wave-front"
+      d="M0,70 C236,35 420,108 670,78 C910,49 1135,43 1440,79 L1440,120 L0,120 Z"></path>
+  </svg>
 </section>

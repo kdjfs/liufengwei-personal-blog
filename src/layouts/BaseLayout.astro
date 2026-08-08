@@ -5,9 +5,9 @@ import Header from '@/components/common/Header.astro';
 import AIAssistant from '@/components/ai/AIAssistant';
 import SearchCommand from '@/components/interactive/SearchCommand';
 import { siteConfig } from '@/config/site';
+import { getPageChrome } from '@/utils/page-context';
 import '@/styles/global.css';
 import '@/styles/theme.css';
-import '@/styles/home.css';
 import 'katex/dist/katex.min.css';
 
 interface Props {
@@ -33,6 +33,7 @@ const pageTitle = title
 const siteUrl = Astro.site ?? new URL('http://localhost:4321');
 const canonical = new URL(Astro.url.pathname, siteUrl);
 const ogImage = image ? new URL(image, siteUrl) : undefined;
+const pageChrome = getPageChrome(Astro.url.pathname);
 ---
 
 <!doctype html>
@@ -80,10 +81,10 @@ const ogImage = image ? new URL(image, siteUrl) : undefined;
     </script>
     <ClientRouter />
   </head>
-  <body>
+  <body class={pageChrome.bodyClass}>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <div class="site-shell">
-      <Header currentPath={Astro.url.pathname} />
+      <Header currentPath={Astro.url.pathname} variant={pageChrome.headerVariant} />
       <SearchCommand client:load />
       <main id="main-content">
         <slot />
