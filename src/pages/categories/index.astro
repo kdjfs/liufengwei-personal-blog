@@ -14,7 +14,7 @@ const fixedNames = new Set(featuredCategories.map((category) => category.name));
 const categoryCards = featuredCategories.map((category) => ({
   category,
   count: summaryMap.get(category.name)?.count ?? 0,
-  tags: summaryMap.get(category.name)?.tags ?? [],
+  latestPosts: posts.filter((post) => post.data.category === category.name).slice(0, 5),
 }));
 const otherCategories = summaries.filter((category) => !fixedNames.has(category.name));
 ---

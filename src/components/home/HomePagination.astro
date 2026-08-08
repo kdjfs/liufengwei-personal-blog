@@ -1,0 +1,38 @@
+---
+interface Props {
+  pageCount: number;
+}
+
+const { pageCount } = Astro.props;
+const visiblePages = Array.from({ length: Math.min(pageCount, 3) }, (_, index) => index + 1);
+---
+
+{
+  pageCount > 1 && (
+    <nav class="home-pagination" aria-label="首页文章分页">
+      <span class="disabled" aria-hidden="true">
+        ‹
+      </span>
+      {visiblePages.map((page) =>
+        page === 1 ? (
+          <span class="active" aria-current="page">
+            1
+          </span>
+        ) : (
+          <a href={`/blog/${page}`} aria-label={`第 ${page} 页`}>
+            {page}
+          </a>
+        ),
+      )}
+      {pageCount > 4 && <span class="ellipsis">…</span>}
+      {pageCount > 3 && (
+        <a href={`/blog/${pageCount}`} aria-label={`第 ${pageCount} 页`}>
+          {pageCount}
+        </a>
+      )}
+      <a href="/blog/2" aria-label="下一页">
+        ›
+      </a>
+    </nav>
+  )
+}

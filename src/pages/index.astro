@@ -2,32 +2,25 @@
 import { getCollection } from 'astro:content';
 import PostCard from '@/components/blog/PostCard.astro';
 import FeaturedCategoryCard from '@/components/categories/FeaturedCategoryCard.astro';
-import Hero from '@/components/home/Hero.astro';
+import HomeCorner from '@/components/home/HomeCorner.astro';
+import HomeDivider from '@/components/home/HomeDivider.astro';
+import HomePagination from '@/components/home/HomePagination.astro';
 import ContinueLearning from '@/components/learning/ContinueLearning';
 import ProfileRail from '@/components/profile/ProfileRail.astro';
-import ProjectCard from '@/components/projects/ProjectCard.astro';
 import { featuredCategories } from '@/config/categories';
-import { profile } from '@/config/profile';
-import { projects } from '@/data/projects';
-import { timeline } from '@/data/timeline';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { selectHomePosts } from '@/utils/home-feed';
 import { getPublishedPosts } from '@/utils/posts';
 
 const posts = getPublishedPosts(await getCollection('blog'));
-const featuredPosts = posts.filter((post) => post.data.featured).slice(0, 2);
-const latestPosts = posts.slice(0, 3);
-const featuredProject = projects.find((project) => project.featured) ?? projects[0];
+const homePosts = selectHomePosts(posts, 10);
 const categoryCards = featuredCategories.map((category) => {
   const categoryPosts = posts.filter((post) => post.data.category === category.name);
-  const tagCounts = new Map<string, number>();
-  for (const post of categoryPosts) {
-    for (const tag of post.data.tags) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-  }
-  const tags = [...tagCounts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh-CN'))
-    .slice(0, 3)
-    .map(([tag]) => tag);
-  return { category, count: categoryPosts.length, tags };
+  return {
+    category,
+    count: categoryPosts.length,
+    latestPosts: categoryPosts.slice(0, 5),
+  };
 });
 const profileStats = {
   articles: posts.length,
@@ -35,145 +28,54 @@ const profileStats = {
   tags: new Set(posts.flatMap((post) => post.data.tags)).size,
   series: new Set(posts.map((post) => post.data.series).filter(Boolean)).size,
 };
+const pageCount = Math.max(1, Math.ceil(posts.length / 12));
 ---
 
 <BaseLayout>
-  <div class="home-portfolio-grid">
-    <Hero />
-    <ProfileRail stats={profileStats} />
+  <div class="home-shell">
+    <ProfileRail stats={profileStats} currentPath={Astro.url.pathname} />
 
-    <div class="home-content">
-      <ContinueLearning client:idle />
-      <section class="section container-wide" aria-labelledby="featured-title" data-reveal>
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">01 · FEATURED WRITING</p>
-            <h2 id="featured-title">精选文章</h2>
-            <p>从源码学习到工程实践，保留值得再次打开的长期内容。</p>
-          </div>
-          <a class="section-link" href="/blog"
-            ><span>浏览全部文章</span><i aria-hidden="true">→</i></a
-          >
+    <div class="home-main">
+      <header class="home-welcome" aria-labelledby="home-title">
+        <div>
+          <p>LFW SPACE · 刘凤伟的数字花园</p>
+          <h1 id="home-title">把学习写成可以反复抵达的路径。</h1>
         </div>
-        <div class="post-grid featured-grid">
+        <span>前端 / AI Agent / Learning</span>
+      </header>
+
+      <ContinueLearning client:idle />
+
+      <section class="home-feed" aria-labelledby="home-articles-title" data-pagefind-body>
+        <HomeDivider id="home-articles-title">文章</HomeDivider>
+        <div class="home-post-list">
           {
-            featuredPosts.map((post, index) => (
+            homePosts.map((post, index) => (
               <PostCard
                 post={post}
-                featured={index === 0}
-                loading={index === 0 ? 'eager' : 'lazy'}
-                revealDelay={index * 60}
+                editorial
+                reverse={index % 2 === 1}
+                loading={index < 2 ? 'eager' : 'lazy'}
+                revealDelay={(index % 4) * 45}
               />
             ))
           }
         </div>
+        <HomePagination pageCount={pageCount} />
       </section>
 
-      <section class="home-band section" data-reveal>
-        <div class="container-wide">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">02 · LATEST WRITING</p>
-              <h2>最近文章</h2>
-            </div>
-            <a class="section-link" href="/archive"
-              ><span>按时间归档</span><i aria-hidden="true">→</i></a
-            >
-          </div>
-          <div class="post-grid">
-            {
-              latestPosts.map((post, index) => (
-                <PostCard post={post} transitionSuffix="latest" revealDelay={index * 60} />
-              ))
-            }
-          </div>
-        </div>
-      </section>
-
-      <section class="section container-wide" aria-labelledby="topics-title" data-reveal>
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">03 · FEATURED CATEGORIES</p>
-            <h2 id="topics-title">精选分类</h2>
-            <p>固定的信息架构，内容数量随着文章发布实时更新。</p>
-          </div>
-          <a class="section-link" href="/categories"
-            ><span>全部分类</span><i aria-hidden="true">→</i></a
-          >
-        </div>
-        <div class="featured-category-grid">
+      <section class="home-categories" aria-labelledby="home-categories-title">
+        <HomeDivider id="home-categories-title">精选分类</HomeDivider>
+        <div class="featured-category-grid home-category-grid">
           {
             categoryCards.map((item, index) => (
-              <FeaturedCategoryCard {...item} revealDelay={index * 45} />
+              <FeaturedCategoryCard {...item} priority={index < 2} revealDelay={index * 35} />
             ))
           }
         </div>
       </section>
 
-      <section class="home-band section" data-reveal>
-        <div class="container-wide">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">04 · FEATURED PROJECTS</p>
-              <h2>Projects</h2>
-              <p>用背景、职责与技术决策讲清楚做过的项目。</p>
-            </div>
-            <a class="section-link" href="/projects"
-              ><span>完整作品集</span><i aria-hidden="true">→</i></a
-            >
-          </div>
-          <div class="project-grid">
-            <ProjectCard project={featuredProject} large />
-          </div>
-        </div>
-      </section>
-
-      <section class="section container-wide" data-reveal>
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">05 · TIMELINE</p>
-            <h2>Growth Log</h2>
-          </div>
-          <a class="section-link" href="/timeline"
-            ><span>查看时间线</span><i aria-hidden="true">→</i></a
-          >
-        </div>
-        <div class="timeline-preview">
-          {
-            timeline.slice(0, 3).map((item) => (
-              <article class="timeline-row">
-                <time>{item.date}</time>
-                <div>
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
-                </div>
-              </article>
-            ))
-          }
-        </div>
-      </section>
-
-      <section class="home-band section" data-reveal>
-        <div class="container-wide about-preview home-about-preview">
-          <img
-            class="about-avatar"
-            src={profile.avatar}
-            width="640"
-            height="640"
-            alt={`${profile.name}的头像`}
-            loading="lazy"
-          />
-          <div class="about-copy">
-            <p class="eyebrow">06 · ABOUT</p>
-            <h2>你好，我是刘凤伟。</h2>
-            <p>
-              广东金融学院数学与应用数学专业学生，持续学习和实践前端开发，关注
-              Vue、React、工程化以及 AI Agent 应用开发。LFW Space 用于记录技术、项目和成长。
-            </p>
-            <a class="button secondary" href="/about">了解更多 →</a>
-          </div>
-        </div>
-      </section>
+      <HomeCorner />
     </div>
   </div>
 </BaseLayout>

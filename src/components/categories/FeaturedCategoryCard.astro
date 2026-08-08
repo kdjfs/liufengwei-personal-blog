@@ -1,25 +1,26 @@
 ---
 import { Image } from 'astro:assets';
 import type { FeaturedCategory } from '@/config/categories';
+import type { BlogEntry } from '@/utils/posts';
+import { getPostSlug } from '@/utils/posts';
 import { getBlogCover } from '@/utils/blog-cover';
 
 interface Props {
   category: FeaturedCategory;
   count: number;
-  tags?: string[];
+  latestPosts?: BlogEntry[];
   priority?: boolean;
   revealDelay?: number;
 }
 
-const { category, count, tags = [], priority = false, revealDelay = 0 } = Astro.props;
+const { category, count, latestPosts = [], priority = false, revealDelay = 0 } = Astro.props;
 const cover = getBlogCover(category.name, category.cover);
 const href = `/categories/${encodeURIComponent(category.name)}`;
 ---
 
-<a
+<article
   class="featured-category-card"
-  href={href}
-  aria-label={`浏览${category.name}分类，${count}篇文章`}
+  aria-label={`${category.name}分类，${count}篇文章`}
   data-reveal
   style={`--reveal-delay: ${revealDelay}ms`}
 >
@@ -28,29 +29,38 @@ const href = `/categories/${encodeURIComponent(category.name)}`;
       <Image
         src={cover.image}
         alt=""
-        widths={[360, 540, 720]}
-        sizes="(max-width: 680px) 92vw, (max-width: 1100px) 44vw, 300px"
+        widths={[480, 720, 960]}
+        sizes="(max-width: 767px) 92vw, 45vw"
         loading={priority ? 'eager' : 'lazy'}
         format="webp"
       />
       <span class="featured-category-shade" aria-hidden="true"></span>
       <span class="featured-category-front-copy">
-        <span class="featured-category-index">CATEGORY</span>
         <strong>{category.name}</strong>
-        <span>{count} ARTICLES</span>
+        <span>{count} 篇文章</span>
       </span>
+      <a class="featured-category-front-link" href={href} aria-label={`进入${category.name}分类`}
+      ></a>
     </span>
+
     <span class="featured-category-face featured-category-back">
-      <span class="featured-category-index">EXPLORE TOPIC</span>
-      <strong>{category.name}</strong>
-      <span class="featured-category-description">{category.description}</span>
-      <span class="featured-category-count">{count} ARTICLES</span>
+      <span class="featured-category-ribbon">{category.name}</span>
+      <strong>最新文章</strong>
       {
-        tags.length > 0 && (
-          <span class="featured-category-tags">{tags.slice(0, 3).join(' / ')}</span>
+        latestPosts.length > 0 ? (
+          <span class="featured-category-posts">
+            {latestPosts.map((post) => (
+              <a href={`/blog/${getPostSlug(post)}`}>{post.data.title}</a>
+            ))}
+          </span>
+        ) : (
+          <span class="featured-category-empty">内容正在生长中</span>
         )
       }
-      <span class="featured-category-action">Explore <i aria-hidden="true">→</i></span>
+      <span class="featured-category-footer">
+        <span>{count} 篇文章</span>
+        <a href={href}>more...</a>
+      </span>
     </span>
   </span>
-</a>
+</article>

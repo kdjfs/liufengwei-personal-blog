@@ -1,0 +1,48 @@
+---
+const items = [
+  {
+    eyebrow: 'PROJECTS',
+    title: '把想法做成作品',
+    description: '查看真实项目、职责与技术决策。',
+    href: '/projects',
+    icon: '⌘',
+  },
+  {
+    eyebrow: 'TIMELINE',
+    title: '沿时间看见成长',
+    description: '从学习节点到实践经历的连续记录。',
+    href: '/timeline',
+    icon: '↗',
+  },
+  {
+    eyebrow: 'ABOUT',
+    title: '认识刘凤伟',
+    description: '方向、经历、奖项，以及保持联系。',
+    href: '/about',
+    icon: '◎',
+  },
+];
+---
+
+<section class="home-corner" aria-labelledby="home-corner-title">
+  <div class="home-divider compact">
+    <span aria-hidden="true"></span>
+    <h2 id="home-corner-title">LFW CORNER</h2>
+    <span aria-hidden="true"></span>
+  </div>
+  <div class="home-corner-grid">
+    {
+      items.map((item) => (
+        <a href={item.href}>
+          <span class="corner-icon" aria-hidden="true">
+            {item.icon}
+          </span>
+          <small>{item.eyebrow}</small>
+          <strong>{item.title}</strong>
+          <p>{item.description}</p>
+          <i aria-hidden="true">more...</i>
+        </a>
+      ))
+    }
+  </div>
+</section>

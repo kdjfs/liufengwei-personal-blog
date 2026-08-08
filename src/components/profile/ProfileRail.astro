@@ -1,6 +1,8 @@
 ---
+import SidebarIcon from './SidebarIcon.astro';
 import SocialIcon from './SocialIcon.astro';
 import { profile } from '@/config/profile';
+import { siteConfig } from '@/config/site';
 
 interface Props {
   stats: {
@@ -9,15 +11,18 @@ interface Props {
     tags: number;
     series: number;
   };
+  currentPath?: string;
 }
 
-const { stats } = Astro.props;
+const { stats, currentPath = '/' } = Astro.props;
 const statItems = [
   { value: stats.articles, label: '文章', href: '/blog' },
   { value: stats.categories, label: '分类', href: '/categories' },
   { value: stats.tags, label: '标签', href: '/tags' },
-  { value: stats.series, label: '系列', href: '/series' },
 ];
+const navIcons = ['home', 'writing', 'learning', 'projects', 'timeline', 'about'] as const;
+const isActive = (href: string) =>
+  href === '/' ? currentPath === '/' : currentPath === href || currentPath.startsWith(`${href}/`);
 ---
 
 <aside class="profile-rail" aria-labelledby="profile-name">
@@ -70,12 +75,26 @@ const statItems = [
     }
   </div>
 
-  <section class="profile-experience" aria-labelledby="profile-experience-title">
-    <div class="profile-section-title">
-      <span>EXPERIENCE</span>
-      <a href="/about"><span>ALL</span> <i aria-hidden="true">↗</i></a>
-    </div>
-    <h3 id="profile-experience-title" class="sr-only">实习与项目经历</h3>
+  <nav class="sidebar-nav" aria-label="首页侧栏导航">
+    {
+      siteConfig.nav.map((item, index) => (
+        <a
+          href={item.href}
+          class:list={{ active: isActive(item.href) }}
+          aria-current={isActive(item.href) ? 'page' : undefined}
+        >
+          <SidebarIcon name={navIcons[index]} />
+          <span>{item.label}</span>
+        </a>
+      ))
+    }
+  </nav>
+
+  <details class="profile-experience" open>
+    <summary class="profile-section-title">
+      <span>经历</span>
+      <small>最近 {profile.experiences.length} 段</small>
+    </summary>
     <ol>
       {
         profile.experiences.map((experience) => (
@@ -87,5 +106,6 @@ const statItems = [
         ))
       }
     </ol>
-  </section>
+    <a class="experience-more" href="/about">完整经历 →</a>
+  </details>
 </aside>

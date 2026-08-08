@@ -1,0 +1,84 @@
+:root {
+  --lfw-bg: #fbfafc;
+  --lfw-surface: #fffdfd;
+  --lfw-card: #ffffff;
+  --lfw-text: #26222d;
+  --lfw-muted: #77717e;
+  --lfw-primary: #e9688c;
+  --lfw-primary-strong: #d94f78;
+  --lfw-secondary: #8f82ff;
+  --lfw-blue: #55add8;
+  --lfw-mint: #72cdbb;
+  --lfw-border: rgba(88, 70, 99, 0.12);
+  --lfw-border-strong: rgba(88, 70, 99, 0.2);
+  --lfw-header-bg: linear-gradient(
+    112deg,
+    rgba(221, 249, 243, 0.9),
+    rgba(240, 232, 255, 0.9) 52%,
+    rgba(255, 232, 241, 0.9)
+  );
+  --lfw-active-gradient: linear-gradient(118deg, #f47d9b 0%, #ef8a83 48%, #9a88f4 100%);
+  --lfw-more-gradient: linear-gradient(110deg, #ed6e9b, #f39a80);
+  --lfw-shadow-card: 0 8px 28px rgba(83, 61, 91, 0.09);
+  --lfw-shadow-hover: 0 16px 38px rgba(83, 61, 91, 0.16);
+  --lfw-radius: 16px;
+  --lfw-header-height: 68px;
+  --lfw-sidebar-width: 296px;
+  --lfw-content-max: 1420px;
+
+  --bg: var(--lfw-bg);
+  --bg-elevated: rgba(255, 253, 253, 0.84);
+  --surface: var(--lfw-surface);
+  --surface-soft: #f5f0f5;
+  --text: var(--lfw-text);
+  --text-soft: var(--lfw-muted);
+  --text-faint: #9a929e;
+  --line: var(--lfw-border);
+  --line-strong: var(--lfw-border-strong);
+  --violet: var(--lfw-primary);
+  --violet-bright: var(--lfw-secondary);
+  --cyan: var(--lfw-blue);
+  --blue: var(--lfw-secondary);
+  --glow: rgba(233, 104, 140, 0.12);
+  --shadow: var(--lfw-shadow-hover);
+}
+
+.dark {
+  --lfw-bg: #15141c;
+  --lfw-surface: #1a1922;
+  --lfw-card: #1c1b25;
+  --lfw-text: #f4edf2;
+  --lfw-muted: #b5aeb9;
+  --lfw-primary: #f18bad;
+  --lfw-primary-strong: #ff9abb;
+  --lfw-secondary: #a99cff;
+  --lfw-blue: #73c8ee;
+  --lfw-mint: #78d7c1;
+  --lfw-border: rgba(244, 225, 239, 0.1);
+  --lfw-border-strong: rgba(244, 225, 239, 0.18);
+  --lfw-header-bg: linear-gradient(
+    112deg,
+    rgba(23, 43, 45, 0.94),
+    rgba(35, 29, 52, 0.94) 52%,
+    rgba(50, 27, 41, 0.94)
+  );
+  --lfw-active-gradient: linear-gradient(118deg, #d8668d, #ce716f 48%, #7666d6 100%);
+  --lfw-shadow-card: 0 9px 28px rgba(0, 0, 0, 0.23);
+  --lfw-shadow-hover: 0 18px 44px rgba(0, 0, 0, 0.38);
+
+  --bg: var(--lfw-bg);
+  --bg-elevated: rgba(26, 25, 34, 0.86);
+  --surface: var(--lfw-surface);
+  --surface-soft: #24222e;
+  --text: var(--lfw-text);
+  --text-soft: var(--lfw-muted);
+  --text-faint: #8f8794;
+  --line: var(--lfw-border);
+  --line-strong: var(--lfw-border-strong);
+  --violet: var(--lfw-primary);
+  --violet-bright: var(--lfw-secondary);
+  --cyan: var(--lfw-blue);
+  --blue: var(--lfw-secondary);
+  --glow: rgba(241, 139, 173, 0.13);
+  --shadow: var(--lfw-shadow-hover);
+}

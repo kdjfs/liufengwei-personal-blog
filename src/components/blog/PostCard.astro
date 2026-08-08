@@ -25,6 +25,7 @@ const {
 } = Astro.props;
 const stats = getReadingStats(post.body ?? '');
 const slug = getPostSlug(post);
+const href = `/blog/${slug}`;
 const transitionSlug = transitionSuffix ? `${slug}-${transitionSuffix}` : slug;
 const cover = getBlogCover(slug, post.data.cover);
 ---
@@ -36,7 +37,7 @@ const cover = getBlogCover(slug, post.data.cover);
 >
   <a
     class="post-cover"
-    href={`/blog/${slug}`}
+    href={href}
     aria-label={`阅读《${post.data.title}》`}
     transition:name={`article-cover-${transitionSlug}`}
   >
@@ -44,32 +45,40 @@ const cover = getBlogCover(slug, post.data.cover);
       src={cover.image}
       alt={`${post.data.title}文章封面`}
       widths={[480, 720, 960, 1280]}
-      sizes={editorial ? '(max-width: 680px) 94vw, 42vw' : '(max-width: 680px) 94vw, 36vw'}
+      sizes={editorial ? '(max-width: 767px) 94vw, 47vw' : '(max-width: 767px) 94vw, 36vw'}
       loading={loading}
       fetchpriority={loading === 'eager' ? 'high' : 'auto'}
       format="webp"
     />
     <span class="post-cover-overlay" aria-hidden="true"></span>
   </a>
+
   <div class="post-card-body">
     <div class="post-meta">
-      <a href={`/categories/${encodeURIComponent(post.data.category)}`}>{post.data.category}</a>
-      <span>{formatDate(post.data.publishDate)}</span>
-      <span>{stats.minutes} 分钟</span>
+      <a href={`/categories/${encodeURIComponent(post.data.category)}`}>
+        <span aria-hidden="true">⚑</span>{post.data.category}
+      </a>
+      <span class="post-meta-details">
+        <time datetime={post.data.publishDate.toISOString()}
+          >{formatDate(post.data.publishDate)}</time
+        >
+        <span>{stats.words} 字</span>
+        <span>{stats.minutes} 分钟</span>
+      </span>
     </div>
     <h3 transition:name={`article-title-${transitionSlug}`}>
-      <a href={`/blog/${slug}`}>{post.data.title}</a>
+      <a href={href}>{post.data.title}</a>
     </h3>
     <p>{post.data.description}</p>
-    <div class="tag-row">
+    <div class="tag-row" aria-label="文章标签">
       {
         post.data.tags
-          .slice(0, 3)
+          .slice(0, 4)
           .map((tag) => <a href={`/tags/${encodeURIComponent(tag)}`}>#{tag}</a>)
       }
     </div>
-    <a class="post-read-more" href={`/blog/${slug}`} aria-label={`继续阅读《${post.data.title}》`}>
-      Read article <i aria-hidden="true">→</i>
+    <a class="post-read-more" href={href} aria-label={`继续阅读《${post.data.title}》`}>
+      more...
     </a>
   </div>
 </article>
