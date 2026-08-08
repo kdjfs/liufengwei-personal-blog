@@ -56,6 +56,10 @@ export function createSeoGraph(input: SeoGraphInput): SeoGraph {
   const graph: JsonLdObject[] = [website, person];
 
   if (input.article) {
+    const categoryName = input.article.category ?? '文章';
+    const categoryUrl = input.article.category
+      ? toAbsoluteUrl(`/categories/${encodeURIComponent(input.article.category)}`).href
+      : toAbsoluteUrl('/blog').href;
     graph.push(
       {
         '@type': 'BlogPosting',
@@ -77,7 +81,7 @@ export function createSeoGraph(input: SeoGraphInput): SeoGraph {
         '@id': `${input.canonical.href}#breadcrumb`,
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: '首页', item: site.href },
-          { '@type': 'ListItem', position: 2, name: '文章', item: toAbsoluteUrl('/blog').href },
+          { '@type': 'ListItem', position: 2, name: categoryName, item: categoryUrl },
           { '@type': 'ListItem', position: 3, name: input.title, item: input.canonical.href },
         ],
       },

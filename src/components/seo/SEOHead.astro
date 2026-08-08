@@ -83,6 +83,7 @@ const schema = createSeoGraph({
 <meta property="og:image:alt" content={resolvedImageAlt} />
 {publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
 {updatedTime && <meta property="article:modified_time" content={updatedTime.toISOString()} />}
+{type === 'article' && <meta property="article:author" content={siteConfig.author} />}
 {category && <meta property="article:section" content={category} />}
 {tags?.map((tag) => <meta property="article:tag" content={tag} />)}
 

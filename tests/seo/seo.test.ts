@@ -51,6 +51,12 @@ test('article pages add complete BlogPosting and BreadcrumbList data', () => {
   assert.ok(breadcrumb);
   assert.equal(Array.isArray(breadcrumb?.itemListElement), true);
   assert.equal((breadcrumb.itemListElement as unknown[]).length, 3);
+  assert.deepEqual((breadcrumb.itemListElement as Array<Record<string, unknown>>)[1], {
+    '@type': 'ListItem',
+    position: 2,
+    name: '工程',
+    item: 'https://liufengwei-personal-blog.vercel.app/categories/%E5%B7%A5%E7%A8%8B',
+  });
 });
 
 test('JSON-LD serialization cannot terminate its script element', () => {

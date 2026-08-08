@@ -22,6 +22,7 @@ run(pnpm, ['typecheck']);
 run(pnpm, ['lint']);
 run(pnpm, ['format:check']);
 run(pnpm, ['ai:function:check']);
+run(pnpm, ['audit', '--prod']);
 run(pnpm, ['build']);
 assertClean('build');
 run(pnpm, ['bundle:report']);

@@ -29,7 +29,7 @@ export const projects: Project[] = [
     name: 'LFW Space',
     eyebrow: 'DIGITAL GARDEN / PORTFOLIO',
     description: '面向长期维护的个人技术博客、数字花园与开发者作品集。',
-    techStack: ['Astro', 'TypeScript', 'React', 'Pagefind', 'WebGL'],
+    techStack: ['Astro', 'TypeScript', 'React', 'Pagefind', 'DeepSeek'],
     github: 'https://github.com/kdjfs/liufengwei-personal-blog',
     status: '持续维护',
     cover: 'aurora',
@@ -41,7 +41,7 @@ export const projects: Project[] = [
     myWork: [
       '设计并实现稳定 Slug、Content Collections Schema 与批量内容导入工具。',
       '搭建分类、标签、系列、归档和 Pagefind 搜索，完善长文章阅读体验。',
-      '维护 LFW SPACE 的 Typography、Grid、Purple / Cyan 与 WebGL 视觉语言。',
+      '维护 LFW Space 的 Typography、Grid、深浅主题与响应式视觉语言。',
     ],
     highlights: [
       { title: '内容管线', description: '提供创建、检查、统计、列表与批量导入命令。' },

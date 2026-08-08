@@ -1,6 +1,6 @@
 {
   "name": "liufengwei-personal-blog",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.24.0",
@@ -22,8 +22,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "e2e": "playwright test",
+    "test:e2e": "pnpm e2e",
+    "analyze": "pnpm bundle:report",
     "bundle:report": "node scripts/bundle-report.mjs",
+    "screenshots:capture": "node scripts/capture-screenshots.mjs",
     "release:check": "node scripts/release-check.mjs",
+    "quality": "pnpm content:check && pnpm test && pnpm typecheck && pnpm lint && pnpm format:check && pnpm ai:function:check",
     "test:content": "node --test scripts/content/*.test.mjs",
     "test:ai": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/ai/*.test.ts",
     "test:learning": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/learning/*.test.ts",
@@ -55,7 +59,7 @@
     "astro": "7.1.6",
     "github-slugger": "2.0.0",
     "katex": "0.18.1",
-    "mermaid": "11.16.0",
+    "mermaid": "11.16.1",
     "pagefind": "1.5.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -90,6 +94,10 @@
     "vercel": "^58.4.4"
   },
   "pnpm": {
+    "overrides": {
+      "dompurify@<=3.4.12": "3.4.13",
+      "nanoid@<3.3.17": "3.3.17"
+    },
     "onlyBuiltDependencies": [
       "esbuild"
     ]

@@ -21,6 +21,13 @@ async function selectFirstParagraph(page: Page): Promise<string> {
 test('home navigation, search, and theme controls remain interactive', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: '刘凤伟的数字花园' })).toBeVisible();
+  await expect(page.locator('.home-cover-image')).toHaveJSProperty('complete', true);
+  expect(
+    await page
+      .locator('.home-cover-image')
+      .evaluate((image: HTMLImageElement) => image.naturalWidth),
+  ).toBeGreaterThan(0);
+  await expect(page.locator('.post-card').first()).toBeVisible();
 
   await page.getByRole('button', { name: '打开搜索' }).click();
   await expect(page.getByRole('dialog', { name: '搜索与快捷操作' })).toBeVisible();
@@ -39,6 +46,10 @@ test('home navigation, search, and theme controls remain interactive', async ({ 
       page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '学习' }),
     ).toHaveAttribute('href', '/learning');
   }
+
+  await page.goto('/blog/');
+  await expect(page.getByRole('heading', { level: 1, name: '文章' })).toBeVisible();
+  await expect(page.locator('.post-card').first()).toBeVisible();
 });
 
 test('selection Ask AI sends the shared contract and renders mocked SSE', async ({ page }) => {
@@ -62,6 +73,12 @@ test('selection Ask AI sends the shared contract and renders mocked SSE', async 
   });
 
   await page.goto(articlePath);
+  await expect(page.locator('[data-article]')).toBeVisible();
+  if ((page.viewportSize()?.width ?? 0) < 900) {
+    await expect(page.getByRole('button', { name: '目录', exact: true })).toBeVisible();
+  } else {
+    await expect(page.getByRole('navigation', { name: '文章目录' })).toBeVisible();
+  }
   const selectedText = await selectFirstParagraph(page);
   await page.getByRole('button', { name: '基于选中文字问 AI' }).click();
   await expect(page.locator('#lfw-ai-panel')).toBeVisible();
