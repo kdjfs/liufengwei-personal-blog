@@ -41,9 +41,14 @@ const cover = getBlogCover(post.data.slug, post.data.cover);
 <BaseLayout
   title={post.data.title}
   description={post.data.description}
+  image={cover.image}
+  imageAlt={`${post.data.title}文章封面`}
   type="article"
+  canonical={post.data.canonical}
   publishedTime={post.data.publishDate}
   updatedTime={post.data.updatedDate}
+  category={post.data.category}
+  tags={post.data.tags}
 >
   <div class="reading-progress" data-reading-progress aria-hidden="true"></div>
   <article

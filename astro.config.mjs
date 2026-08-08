@@ -18,12 +18,12 @@ const site =
   process.env.SITE_URL ??
   (productionHost
     ? `${productionHost.startsWith('http') ? '' : 'https://'}${productionHost}`
-    : 'http://localhost:4321');
+    : 'https://liufengwei-personal-blog.vercel.app');
 
 export default defineConfig({
   site,
   output: 'static',
-  integrations: [react(), mdx(), sitemap()],
+  integrations: [react(), mdx(), sitemap({ filter: (page) => !page.endsWith('/404.html') })],
   vite: {
     plugins: [tailwindcss()],
   },

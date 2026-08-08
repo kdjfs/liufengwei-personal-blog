@@ -1,0 +1,95 @@
+---
+import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
+import defaultSocialImage from '@/assets/blog-covers/15.png';
+import { siteConfig } from '@/config/site';
+import { PRODUCTION_SITE_URL, createSeoGraph, serializeJsonLd, toAbsoluteUrl } from '@/lib/seo';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: ImageMetadata;
+  imageAlt?: string;
+  type?: 'website' | 'article';
+  canonical?: string;
+  publishedTime?: Date;
+  updatedTime?: Date;
+  category?: string;
+  tags?: string[];
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = siteConfig.description,
+  image = defaultSocialImage,
+  imageAlt,
+  type = 'website',
+  canonical: canonicalOverride,
+  publishedTime,
+  updatedTime,
+  category,
+  tags,
+  noindex = false,
+} = Astro.props;
+const pageTitle = title
+  ? siteConfig.titleTemplate.replace('%s', title)
+  : `${siteConfig.name} · ${siteConfig.subtitle}`;
+const configuredSite =
+  Astro.site?.protocol === 'https:' ? Astro.site : new URL(PRODUCTION_SITE_URL);
+const canonical = canonicalOverride
+  ? toAbsoluteUrl(canonicalOverride, configuredSite)
+  : toAbsoluteUrl(Astro.url.pathname, configuredSite);
+const socialImage = await getImage({
+  src: image,
+  width: 1200,
+  height: 630,
+  fit: 'cover',
+  format: 'jpg',
+  quality: 82,
+});
+const absoluteSocialImage = toAbsoluteUrl(socialImage.src, configuredSite);
+const resolvedImageAlt = imageAlt ?? `${siteConfig.name} 社交分享封面`;
+const schema = createSeoGraph({
+  canonical,
+  title: pageTitle,
+  description,
+  image: absoluteSocialImage,
+  article:
+    type === 'article' && publishedTime
+      ? { publishedTime, updatedTime, category, tags }
+      : undefined,
+});
+---
+
+<meta name="description" content={description} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+<link rel="canonical" href={canonical} />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="alternate" type="application/rss+xml" title="LFW Space RSS" href="/rss.xml" />
+<title>{pageTitle}</title>
+
+<meta property="og:type" content={type} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:site_name" content={siteConfig.name} />
+<meta property="og:locale" content="zh_CN" />
+<meta property="og:image" content={absoluteSocialImage} />
+<meta property="og:image:secure_url" content={absoluteSocialImage} />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={resolvedImageAlt} />
+{publishedTime && <meta property="article:published_time" content={publishedTime.toISOString()} />}
+{updatedTime && <meta property="article:modified_time" content={updatedTime.toISOString()} />}
+{category && <meta property="article:section" content={category} />}
+{tags?.map((tag) => <meta property="article:tag" content={tag} />)}
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={absoluteSocialImage} />
+<meta name="twitter:image:alt" content={resolvedImageAlt} />
+
+<script is:inline type="application/ld+json" set:html={serializeJsonLd(schema)} />
