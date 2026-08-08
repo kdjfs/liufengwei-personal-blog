@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { SelectionContext } from '@/lib/ai/types';
 import { AIChatPanel } from './AIChatPanel';
 import assistantStyles from './ai-assistant.css?inline';
 import {
@@ -22,10 +23,11 @@ function viewport(): PetViewport {
 
 interface AIAssistantProps {
   initialOpen?: boolean;
+  initialSelection?: SelectionContext;
 }
 
-export default function AIAssistant({ initialOpen = false }: AIAssistantProps) {
-  const assistant = useAIAssistant(initialOpen);
+export default function AIAssistant({ initialOpen = false, initialSelection }: AIAssistantProps) {
+  const assistant = useAIAssistant(initialOpen, initialSelection);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLElement>(null);
   const wasOpen = useRef(false);

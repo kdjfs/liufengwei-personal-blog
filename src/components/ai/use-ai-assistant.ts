@@ -35,7 +35,7 @@ function friendlyError(error: unknown): string {
   return error.requestId ? `${message}\n\n请求 ID：${error.requestId}` : message;
 }
 
-export function useAIAssistant(initialOpen = false) {
+export function useAIAssistant(initialOpen = false, initialSelection?: SelectionContext) {
   const [isOpen, setIsOpen] = useState(initialOpen);
   const [mode, setMode] = useState<ChatMode>('fast');
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
@@ -45,6 +45,7 @@ export function useAIAssistant(initialOpen = false) {
   const [selection, setSelection] = useState<SelectionContext>();
   const abortRef = useRef<AbortController | undefined>(undefined);
   const streamingRef = useRef(false);
+  const initialSelectionHandledRef = useRef(false);
 
   useEffect(() => {
     const syncPage = () => setArticlePage(isArticlePage());
@@ -212,8 +213,14 @@ export function useAIAssistant(initialOpen = false) {
       );
     };
     window.addEventListener('lfw:ai:ask-selection', handleSelectionQuestion);
+    if (initialSelection && !initialSelectionHandledRef.current) {
+      initialSelectionHandledRef.current = true;
+      handleSelectionQuestion(
+        new CustomEvent('lfw:ai:ask-selection', { detail: initialSelection }),
+      );
+    }
     return () => window.removeEventListener('lfw:ai:ask-selection', handleSelectionQuestion);
-  }, [sendMessage]);
+  }, [initialSelection, sendMessage]);
 
   const clearMessages = useCallback(() => {
     abortRef.current?.abort();

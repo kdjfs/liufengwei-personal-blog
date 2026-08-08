@@ -49,9 +49,11 @@
 </style>
 
 <script>
+  import type { SelectionContext } from '@/lib/ai/types';
+
   class DeferredAIAssistant extends HTMLElement {
     private loading = false;
-    private pendingSelection?: unknown;
+    private pendingSelection?: SelectionContext;
 
     connectedCallback() {
       this.querySelector('button')?.addEventListener('click', this.handleClick);
@@ -72,7 +74,7 @@
     };
 
     private handleSelection = (event: Event) => {
-      this.pendingSelection = (event as CustomEvent).detail;
+      this.pendingSelection = (event as CustomEvent<SelectionContext>).detail;
       void this.activate(false);
     };
 
@@ -85,13 +87,9 @@
         import('react-dom/client'),
         import('./AIAssistant'),
       ]);
-      createRoot(this).render(createElement(AIAssistant, { initialOpen }));
-      if (this.pendingSelection) {
-        const selection = this.pendingSelection;
-        window.setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('lfw:ai:ask-selection', { detail: selection }));
-        });
-      }
+      createRoot(this).render(
+        createElement(AIAssistant, { initialOpen, initialSelection: this.pendingSelection }),
+      );
     }
   }
 

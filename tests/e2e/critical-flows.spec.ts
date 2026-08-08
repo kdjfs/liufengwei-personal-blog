@@ -1,0 +1,97 @@
+import { expect, type Page, test } from '@playwright/test';
+
+const articlePath = '/blog/3-yue-20-san-wei-jia/';
+
+async function selectFirstParagraph(page: Page): Promise<string> {
+  await page.locator('.selection-toolbar').waitFor({ state: 'attached' });
+  const paragraph = page.locator('.prose p').first();
+  await expect(paragraph).toBeVisible();
+  await paragraph.scrollIntoViewIfNeeded();
+  return paragraph.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    element.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+    return selection?.toString().trim() ?? '';
+  });
+}
+
+test('home navigation, search, and theme controls remain interactive', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1, name: '刘凤伟的数字花园' })).toBeVisible();
+
+  await page.getByRole('button', { name: '打开搜索' }).click();
+  await expect(page.getByRole('dialog', { name: '搜索与快捷操作' })).toBeVisible();
+  await page.getByPlaceholder('搜索文章或输入页面名称…').fill('学习');
+  await expect(page.getByPlaceholder('搜索文章或输入页面名称…')).toHaveValue('学习');
+  await page.getByPlaceholder('搜索文章或输入页面名称…').press('Escape');
+
+  const root = page.locator('html');
+  await page.getByRole('button', { name: /主题：/ }).click();
+  await expect(root).not.toHaveAttribute('data-theme', 'system');
+  if ((page.viewportSize()?.width ?? 0) < 768) {
+    await page.getByRole('button', { name: '打开导航' }).click();
+    await expect(page.locator('#mobile-nav').getByRole('link', { name: '学习' })).toBeVisible();
+  } else {
+    await expect(
+      page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '学习' }),
+    ).toHaveAttribute('href', '/learning');
+  }
+});
+
+test('selection Ask AI sends the shared contract and renders mocked SSE', async ({ page }) => {
+  let requestPayload: Record<string, unknown> | undefined;
+  const forbiddenRequests: string[] = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (!['127.0.0.1', 'localhost'].includes(url.hostname)) forbiddenRequests.push(request.url());
+  });
+  await page.route('**/api/chat', async (route) => {
+    requestPayload = route.request().postDataJSON() as Record<string, unknown>;
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/event-stream; charset=utf-8',
+      body:
+        'event: content_block_delta\n' +
+        'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"这是模拟的 AI 回答。"}}\n\n' +
+        'event: message_stop\n' +
+        'data: {"type":"message_stop"}\n\n',
+    });
+  });
+
+  await page.goto(articlePath);
+  const selectedText = await selectFirstParagraph(page);
+  await page.getByRole('button', { name: '基于选中文字问 AI' }).click();
+  await expect(page.locator('#lfw-ai-panel')).toBeVisible();
+  await expect(page.getByText('这是模拟的 AI 回答。')).toBeVisible();
+
+  const selection = requestPayload?.selection as { text?: string } | undefined;
+  expect(selection?.text).toBe(selectedText);
+  expect(requestPayload?.mode).toBe('fast');
+  expect(forbiddenRequests).toEqual([]);
+});
+
+test('annotations and completed reading persist into the learning dashboard', async ({ page }) => {
+  await page.goto(articlePath);
+  await selectFirstParagraph(page);
+  await page.getByRole('button', { name: '为选中文字添加批注' }).click();
+  await page.getByLabel('我的理解').fill('E2E 本地批注');
+  await page.getByRole('button', { name: '保存批注' }).click();
+  await expect(page.getByRole('button', { name: /打开批注面板，共 1 条/ })).toBeVisible();
+
+  const markRead = page.getByRole('button', { name: '标记已读' });
+  await expect(markRead).toBeEnabled();
+  await markRead.click();
+  await expect(page.getByRole('button', { name: '已读完' })).toBeDisabled();
+
+  await page.goto('/learning/');
+  await expect(page.getByRole('heading', { level: 1, name: '学习面板' })).toBeVisible();
+  await expect(
+    page.locator('.learning-metrics article').filter({ hasText: '完成文章' }),
+  ).toContainText('1 篇');
+  await expect(
+    page.locator('.learning-metrics article').filter({ hasText: '本地批注' }),
+  ).toContainText('1 条');
+});
