@@ -1,3 +1,4 @@
+import { queueProgressMutation } from '../cloud/operations.ts';
 import { getLearningDatabase } from './db.ts';
 import {
   applyLearningTick,
@@ -56,6 +57,7 @@ export async function startReadingSession(
   if (!prose) throw new Error('当前页面没有可追踪的文章正文');
 
   const database = getLearningDatabase();
+  const deviceId = await database.getOrCreateDeviceId();
   const existing = await database.get('articleProgress', identity.articleSlug);
   const annotations = await database.getAll('annotations');
   let record: ArticleProgress = existing
@@ -63,8 +65,9 @@ export async function startReadingSession(
         ...existing,
         title: identity.title,
         category: identity.category,
-        annotationCount: annotations.filter((item) => item.articleSlug === identity.articleSlug)
-          .length,
+        annotationCount: annotations.filter(
+          (item) => item.articleSlug === identity.articleSlug && !item.deletedAt,
+        ).length,
       }
     : createArticleProgress(identity);
   let lastActivityAt = Date.now();
@@ -81,7 +84,7 @@ export async function startReadingSession(
     notify(record);
   };
   const persist = (snapshot = record) => {
-    const write = persistQueue.then(() => database.put('articleProgress', snapshot));
+    const write = persistQueue.then(() => queueProgressMutation(database, snapshot, deviceId));
     persistQueue = write.catch(() => undefined);
     return write;
   };

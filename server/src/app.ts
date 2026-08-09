@@ -5,6 +5,7 @@ import { liveHealthSchema, type ReadyHealth, readyHealthSchema } from '@lfw/cont
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import { type AuthHandler, registerAuthRoutes } from './auth-routes.ts';
 import type { ServerConfig } from './config.ts';
+import { registerSyncRoutes, type SyncRouteOptions } from './sync/routes.ts';
 
 const API_BODY_LIMIT_BYTES = 64 * 1024;
 
@@ -21,6 +22,7 @@ export interface BuildAppOptions {
   config: ServerConfig;
   probes: AppProbes;
   auth?: AuthHandler;
+  sync?: SyncRouteOptions;
   probeTimeoutMs?: number;
 }
 
@@ -83,6 +85,7 @@ export async function buildApp({
   config,
   probes,
   auth,
+  sync,
   probeTimeoutMs = 1_000,
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
@@ -103,6 +106,7 @@ export async function buildApp({
   });
   await app.register(helmet);
   if (auth) registerAuthRoutes(app, auth, config);
+  if (sync) registerSyncRoutes(app, sync, config);
 
   app.addHook('onSend', async (request, reply, payload) => {
     reply.header('X-LFW-Request-Id', request.id);

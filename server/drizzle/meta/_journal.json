@@ -8,6 +8,13 @@
       "when": 1786296972128,
       "tag": "0000_melodic_prowler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1786301986038,
+      "tag": "0001_nifty_redwing",
+      "breakpoints": true
     }
   ]
 }

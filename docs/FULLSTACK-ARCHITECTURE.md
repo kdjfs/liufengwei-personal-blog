@@ -4,7 +4,7 @@
 >
 > Date: 2026-08-10
 >
-> Implementation: Phase 0 complete; Phase 1 not yet claimed complete
+> Implementation: Phase 0 complete; Phase 1 API, data, auth, and sync baseline implemented
 
 ## 1. Objective
 

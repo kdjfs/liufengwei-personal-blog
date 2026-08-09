@@ -33,6 +33,56 @@ export interface Annotation {
   suffix: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string;
+  serverVersion?: number;
+}
+
+export interface LocalFavorite {
+  articleSlug: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+  serverVersion?: number;
+}
+
+export interface CloudArticleProgress {
+  articleSlug: string;
+  title: string;
+  category: string;
+  readSeconds: number;
+  listenSeconds: number;
+  maxProgress: number;
+  lastProgress: number;
+  lastHeadingId?: string;
+  lastScrollY: number;
+  firstReadAt: string;
+  lastReadAt: string;
+  completedAt?: string;
+}
+
+export interface QueuedSyncOperation {
+  operationId: string;
+  deviceId: string;
+  entityType: 'progress' | 'annotation' | 'favorite';
+  entityId: string;
+  operation: 'upsert' | 'delete';
+  payload: unknown;
+  createdAt: string;
+  attempts: number;
+  nextAttemptAt?: string;
+}
+
+export interface SyncMeta {
+  key: string;
+  value: unknown;
+  updatedAt: string;
+}
+
+export interface LocalSyncSnapshot {
+  progress: CloudArticleProgress[];
+  annotations: Annotation[];
+  favorites: LocalFavorite[];
+  cursor: string;
 }
 
 export interface AudioScript {

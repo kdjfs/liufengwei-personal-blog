@@ -229,3 +229,73 @@ test('auth routes use the configured API origin and preserve security cookies', 
   assert.match(String(response.headers['set-cookie']), /SameSite=Lax/);
   await app.close();
 });
+
+test('sync routes enforce origin, session, and shared request validation', async () => {
+  let userId: string | null = 'user-a';
+  let authCalls = 0;
+  let syncCalls = 0;
+  let observedUserId = '';
+  const app = await buildApp({
+    config: parseServerConfig(environment),
+    probes: probes(),
+    sync: {
+      async getUserId() {
+        authCalls += 1;
+        return userId;
+      },
+      service: {
+        async sync(currentUserId) {
+          syncCalls += 1;
+          observedUserId = currentUserId;
+          return {
+            results: [],
+            progress: [],
+            annotations: [],
+            favorites: [],
+            cursor: '2026-08-03T10:00:00.000Z',
+          };
+        },
+      },
+    },
+  });
+
+  const attacker = await app.inject({
+    method: 'POST',
+    url: '/api/v1/sync/batch',
+    headers: { origin: 'https://attacker.invalid', 'content-type': 'application/json' },
+    payload: { operations: [] },
+  });
+  assert.equal(attacker.statusCode, 403);
+  assert.equal(authCalls, 0);
+
+  userId = null;
+  const anonymous = await app.inject({
+    method: 'POST',
+    url: '/api/v1/sync/batch',
+    headers: { origin: environment.WEB_ORIGIN, 'content-type': 'application/json' },
+    payload: { operations: [] },
+  });
+  assert.equal(anonymous.statusCode, 401);
+
+  userId = 'user-a';
+  const invalid = await app.inject({
+    method: 'POST',
+    url: '/api/v1/sync/batch',
+    headers: { origin: environment.WEB_ORIGIN, 'content-type': 'application/json' },
+    payload: { operations: 'not-an-array' },
+  });
+  assert.equal(invalid.statusCode, 400);
+  assert.equal(invalid.json().error.code, 'VALIDATION_ERROR');
+  assert.equal(syncCalls, 0);
+
+  const accepted = await app.inject({
+    method: 'POST',
+    url: '/api/v1/sync/batch',
+    headers: { origin: environment.WEB_ORIGIN, 'content-type': 'application/json' },
+    payload: { operations: [] },
+  });
+  assert.equal(accepted.statusCode, 200);
+  assert.equal(observedUserId, 'user-a');
+  assert.equal(syncCalls, 1);
+  await app.close();
+});
