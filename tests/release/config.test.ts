@@ -53,6 +53,13 @@ test('Playwright E2E blocks service workers and mocks every AI request', async (
   assert.doesNotMatch(specs, /api\.deepseek\.com|DEEPSEEK_API_KEY|ANTHROPIC_AUTH_TOKEN/);
 });
 
+test('Astro maps Redis CLI fences to a bundled Shiki language', async () => {
+  const config = (await import('../../astro.config.mjs')).default;
+  const shikiConfig = config.markdown?.shikiConfig;
+
+  assert.equal(shikiConfig?.langAlias?.redis, 'shell');
+});
+
 test('release manifest pins v1 and patched production dependencies', async () => {
   const manifest = JSON.parse(await readFile('package.json', 'utf8')) as {
     version?: string;

@@ -33,6 +33,9 @@ export default defineConfig({
         light: 'github-light',
         dark: 'github-dark-default',
       },
+      langAlias: {
+        redis: 'shell',
+      },
       wrap: false,
     },
     processor: unified({
