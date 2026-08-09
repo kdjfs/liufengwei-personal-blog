@@ -12,28 +12,65 @@ const visible = headings.filter((heading) => heading.depth >= 2 && heading.depth
 {
   visible.length > 0 && (
     <>
-      <nav class="toc toc-desktop" aria-label="文章目录" data-toc>
-        <p>ON THIS PAGE</p>
-        <ol>
-          {visible.map((heading, index) => (
-            <li class:list={[`depth-${heading.depth}`, { nested: heading.depth > 2 }]}>
-              <a href={`#${heading.slug}`} data-toc-link={heading.slug}>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <span>{heading.text}</span>
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
+      <aside class="reading-rail">
+        <div class="reading-rail__tabs" aria-label="阅读工具">
+          <button type="button" data-reading-action="toc" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />
+            </svg>
+            <span>目录</span>
+          </button>
+          <button type="button" data-reading-action="annotations">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z" />
+              <path d="m14 7 3 3" />
+            </svg>
+            <span>批注</span>
+          </button>
+          <button type="button" data-reading-action="listening">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 14v-2a8 8 0 0 1 16 0v2" />
+              <path d="M4 14a2 2 0 0 1 2-2h1v7H6a2 2 0 0 1-2-2v-3ZM20 14a2 2 0 0 0-2-2h-1v7h1a2 2 0 0 0 2-2v-3Z" />
+            </svg>
+            <span>听读</span>
+          </button>
+        </div>
+        <nav class="toc toc-desktop" aria-label="文章目录" data-toc>
+          <p>
+            <>
+              <span>READING RAIL</span>
+              <strong>文章目录</strong>
+            </>
+          </p>
+          <ol>
+            {visible.map((heading, index) => (
+              <li class:list={[`depth-${heading.depth}`, { nested: heading.depth > 2 }]}>
+                <a href={`#${heading.slug}`} data-toc-link={heading.slug}>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <span>{heading.text}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      </aside>
 
       <div class="mobile-toc-bar" data-mobile-toc-bar>
         <p>
           <span>当前</span>
           <strong data-current-heading>{visible[0].text}</strong>
         </p>
-        <button type="button" data-toc-open aria-haspopup="dialog">
-          目录
-        </button>
+        <div class="mobile-reading-actions">
+          <button type="button" data-toc-open aria-haspopup="dialog">
+            目录
+          </button>
+          <button type="button" data-reading-action="annotations">
+            批注
+          </button>
+          <button type="button" data-reading-action="listening">
+            听读
+          </button>
+        </div>
       </div>
 
       <dialog class="mobile-toc-dialog" data-mobile-toc aria-labelledby="mobile-toc-title">

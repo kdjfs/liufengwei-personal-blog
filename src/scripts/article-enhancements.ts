@@ -125,6 +125,19 @@ const enhanceArticlePage = async () => {
     link.addEventListener('click', () => mobileToc?.close(), { signal });
   });
 
+  document.querySelectorAll<HTMLButtonElement>('[data-reading-action]').forEach((button) => {
+    button.addEventListener(
+      'click',
+      () => {
+        const action = button.dataset.readingAction;
+        if (action === 'toc') tocLinks[0]?.focus();
+        if (action === 'annotations') window.dispatchEvent(new Event('lfw:annotations:open'));
+        if (action === 'listening') window.dispatchEvent(new Event('lfw:speech:open'));
+      },
+      { signal },
+    );
+  });
+
   // Shiki keeps build-time token rendering; this enhancer only adds stable reader controls.
   enhanceCodeBlocks({
     signal,

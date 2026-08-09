@@ -53,10 +53,13 @@ export default function AnnotationManager({ articleSlug, articleTitle }: Props) 
       setDraft(undefined);
       setDrawerOpen(false);
     };
+    const handleOpen = () => setDrawerOpen(true);
     window.addEventListener('lfw:annotation:create', handleCreate);
+    window.addEventListener('lfw:annotations:open', handleOpen);
     window.addEventListener('keydown', handleKey);
     return () => {
       window.removeEventListener('lfw:annotation:create', handleCreate);
+      window.removeEventListener('lfw:annotations:open', handleOpen);
       window.removeEventListener('keydown', handleKey);
     };
   }, [articleSlug]);
