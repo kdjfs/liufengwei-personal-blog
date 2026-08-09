@@ -1,0 +1,342 @@
+.prose {
+  min-width: 0;
+  grid-column: 2;
+  grid-row: 1;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.25rem, 5vw, 4.5rem);
+  border: 1px solid var(--article-paper-border);
+  border-radius: 24px;
+  background: var(--article-paper);
+  box-shadow: var(--article-paper-shadow);
+  font-size: 1rem;
+  line-height: 1.86;
+}
+
+.article-layout:not(:has(.toc)) .prose {
+  grid-column: 1;
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  scroll-margin-top: 108px;
+  color: var(--text);
+  line-height: 1.35;
+  letter-spacing: -0.025em;
+}
+
+.prose h1 {
+  margin: 0 0 1em;
+  font-size: 2rem;
+}
+
+.prose h2 {
+  position: relative;
+  margin: 3.2em 0 1em;
+  padding: 0.25rem 0 0.5rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--violet) 17%, var(--line));
+  font-size: clamp(1.55rem, 3vw, 1.85rem);
+}
+
+.prose h2::before {
+  position: absolute;
+  top: 0.3rem;
+  bottom: 0.6rem;
+  left: 0;
+  width: 3px;
+  border-radius: 99px;
+  background: var(--lfw-active-gradient);
+  content: '';
+}
+
+.prose h3 {
+  margin: 2.5em 0 0.8em;
+  color: color-mix(in srgb, var(--text) 92%, var(--violet));
+  font-size: 1.35rem;
+}
+
+.prose h4 {
+  margin: 2em 0 0.7em;
+  font-size: 1.12rem;
+}
+
+.prose h5,
+.prose h6 {
+  margin: 1.8em 0 0.6em;
+  font-size: 1rem;
+}
+
+.prose :is(h2, h3, h4) > a {
+  color: inherit;
+}
+
+.prose p,
+.prose li {
+  color: color-mix(in srgb, var(--text) 83%, var(--text-soft));
+}
+
+.prose p {
+  margin: 1.1em 0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin: 0.42em 0;
+  padding-left: 0.2rem;
+}
+
+.prose li::marker {
+  color: var(--violet);
+  font-weight: 700;
+}
+
+.prose li > :is(ul, ol) {
+  margin-block: 0.5rem;
+}
+
+.prose a:not(:has(code)) {
+  color: var(--violet);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--violet) 30%, transparent);
+  text-underline-offset: 0.22em;
+}
+
+.prose a:not(:has(code)):hover {
+  text-decoration-color: currentColor;
+}
+
+.prose :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border: 1px solid color-mix(in srgb, var(--violet) 14%, var(--line));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--violet) 8%, var(--surface-soft));
+  color: color-mix(in srgb, var(--violet) 88%, var(--text));
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+}
+
+.prose blockquote {
+  position: relative;
+  margin: 2rem 0;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--violet) 16%, var(--line));
+  border-left: 4px solid var(--violet);
+  border-radius: 4px 14px 14px 4px;
+  background: color-mix(in srgb, var(--violet) 5%, var(--surface));
+  color: var(--text-soft);
+}
+
+.prose blockquote:not(.callout)::before {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.65rem;
+  color: color-mix(in srgb, var(--violet) 34%, transparent);
+  content: '“';
+  font-family: Georgia, serif;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.prose blockquote > :first-child {
+  margin-top: 0;
+}
+
+.prose blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.prose .callout {
+  --callout-color: var(--blue);
+  position: relative;
+  padding-left: 3rem;
+  border-color: color-mix(in srgb, var(--callout-color) 28%, var(--line));
+  border-left-color: var(--callout-color);
+  background: color-mix(in srgb, var(--callout-color) 7%, var(--surface));
+}
+
+.prose .callout::before {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  color: var(--callout-color);
+  content: '◆';
+  font-size: 0.7rem;
+}
+
+.prose .callout-tip {
+  --callout-color: var(--lfw-mint);
+}
+
+.prose .callout-important {
+  --callout-color: var(--violet);
+}
+
+.prose .callout-warning {
+  --callout-color: #dc9143;
+}
+
+.prose .callout-caution {
+  --callout-color: #d6536d;
+}
+
+.prose table {
+  width: 100%;
+  display: block;
+  margin: 2rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-spacing: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 0.88rem;
+  scrollbar-width: thin;
+}
+
+.prose th,
+.prose td {
+  min-width: 8rem;
+  padding: 0.8rem 0.9rem;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose th {
+  position: sticky;
+  top: 0;
+  background: color-mix(in srgb, var(--violet) 6%, var(--surface-soft));
+  color: var(--text);
+  font-weight: 700;
+}
+
+.prose tr:last-child td {
+  border-bottom: 0;
+}
+
+.prose :is(th, td):last-child {
+  border-right: 0;
+}
+
+.prose tbody tr:hover {
+  background: color-mix(in srgb, var(--violet) 4%, transparent);
+}
+
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 2.25rem auto;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface-soft);
+  box-shadow: 0 8px 28px rgba(78, 55, 82, 0.08);
+}
+
+.prose img[role='button'] {
+  cursor: zoom-in;
+}
+
+.prose img[role='button']:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 4px;
+}
+
+.prose .article-image {
+  margin: 2.25rem 0;
+}
+
+.prose .article-image img {
+  margin: 0 auto;
+}
+
+.prose .article-image figcaption {
+  margin-top: 0.65rem;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.prose details {
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--surface-soft));
+}
+
+.prose summary {
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  color: var(--text);
+  font-weight: 680;
+}
+
+.prose details[open] summary {
+  border-bottom: 1px solid var(--line);
+  background: var(--article-rose-soft);
+}
+
+.prose details > :not(summary) {
+  margin-inline: 1rem;
+}
+
+.prose hr {
+  height: 1px;
+  margin: 3rem 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+}
+
+.mermaid {
+  margin: 2rem 0;
+  padding: 1.25rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .prose {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 680px) {
+  .prose {
+    padding: 1.75rem 1.125rem;
+    border-radius: 18px;
+    font-size: 0.96rem;
+  }
+
+  .prose h2 {
+    margin-top: 2.7em;
+    font-size: 1.45rem;
+  }
+
+  .prose h3 {
+    font-size: 1.22rem;
+  }
+
+  .prose table {
+    max-width: 100%;
+  }
+}

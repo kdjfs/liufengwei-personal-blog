@@ -285,3 +285,9 @@ html.code-focus-open {
     border-radius: 14px;
   }
 }
+
+@media print {
+  .code-frame__header {
+    display: none !important;
+  }
+}
