@@ -20,6 +20,20 @@ test('reading tools reuse the existing annotation and listening experiences', as
   await page.keyboard.press('Escape');
 });
 
+test('annotation count is synchronized across desktop and mobile reading tools', async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    window.dispatchEvent(
+      new CustomEvent('lfw:annotations:changed', { detail: { articleSlug: 'current', count: 3 } }),
+    );
+  });
+
+  await expect(page.locator('[data-reading-annotation-count]')).toHaveCount(2);
+  await expect(page.locator('[data-reading-annotation-count]').first()).toHaveText('3');
+  await expect(page.locator('.annotation-drawer-trigger')).toBeHidden();
+});
+
 test('reading rail switches to compact mobile tools without page overflow', async ({ page }) => {
   const desktop = (page.viewportSize()?.width ?? 0) > 1024;
   if (desktop) {

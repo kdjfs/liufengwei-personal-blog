@@ -57,6 +57,21 @@ const STOP_ICON_SVG = `
     <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
   </svg>`;
 
+const ASK_ICON_SVG = `
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m12 3 1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2L12 3Z"/>
+    <path d="m18.5 13 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/>
+    <path d="M5 15v5M2.5 17.5h5"/>
+  </svg>`;
+
+const ANNOTATE_ICON_SVG = `
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/>
+    <path d="m14 7 3 3"/>
+  </svg>`;
+
 function createToolbar(): HTMLElement {
   const toolbar = document.createElement('div');
   toolbar.className = 'selection-toolbar';
@@ -77,11 +92,11 @@ function createToolbar(): HTMLElement {
     </button>
     <span class="sel-tb-divider" aria-hidden="true"></span>
     <button type="button" class="sel-tb-btn" data-action="ask" aria-label="基于选中文字问 AI">
-      <span class="sel-tb-icon" aria-hidden="true">AI</span>
+      <span class="sel-tb-icon">${ASK_ICON_SVG}</span>
       <span class="sel-tb-label">问 AI</span>
     </button>
     <button type="button" class="sel-tb-btn" data-action="annotate" aria-label="为选中文字添加批注">
-      <span class="sel-tb-icon" aria-hidden="true">✎</span>
+      <span class="sel-tb-icon">${ANNOTATE_ICON_SVG}</span>
       <span class="sel-tb-label">批注</span>
     </button>`;
 

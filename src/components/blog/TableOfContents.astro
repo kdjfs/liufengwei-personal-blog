@@ -25,7 +25,12 @@ const visible = headings.filter((heading) => heading.depth >= 2 && heading.depth
               <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z" />
               <path d="m14 7 3 3" />
             </svg>
-            <span>批注</span>
+            <span>
+              批注{' '}
+              <b data-reading-annotation-count aria-label="0 条批注">
+                0
+              </b>
+            </span>
           </button>
           <button type="button" data-reading-action="listening">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -65,7 +70,10 @@ const visible = headings.filter((heading) => heading.depth >= 2 && heading.depth
             目录
           </button>
           <button type="button" data-reading-action="annotations">
-            批注
+            批注{' '}
+            <b data-reading-annotation-count aria-label="0 条批注">
+              0
+            </b>
           </button>
           <button type="button" data-reading-action="listening">
             听读

@@ -191,6 +191,17 @@
   stroke-linejoin: round;
 }
 
+[data-reading-annotation-count] {
+  min-width: 1.1rem;
+  display: inline-grid;
+  place-items: center;
+  margin-left: 0.15rem;
+  padding: 0.08rem 0.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  font: 700 0.58rem/1.2 var(--font-mono);
+}
+
 .toc {
   max-height: calc(100dvh - 194px);
   overflow-x: hidden;

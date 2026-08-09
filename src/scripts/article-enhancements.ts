@@ -138,6 +138,22 @@ const enhanceArticlePage = async () => {
     );
   });
 
+  const annotationCounts = [
+    ...document.querySelectorAll<HTMLElement>('[data-reading-annotation-count]'),
+  ];
+  window.addEventListener(
+    'lfw:annotations:changed',
+    (event) => {
+      const detail = (event as CustomEvent<{ count?: number }>).detail;
+      const count = Math.max(0, Math.floor(detail?.count ?? 0));
+      annotationCounts.forEach((node) => {
+        node.textContent = String(count);
+        node.setAttribute('aria-label', `${count} 条批注`);
+      });
+    },
+    { signal },
+  );
+
   // Shiki keeps build-time token rendering; this enhancer only adds stable reader controls.
   enhanceCodeBlocks({
     signal,

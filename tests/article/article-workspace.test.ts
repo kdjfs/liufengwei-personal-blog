@@ -18,6 +18,7 @@ test('the desktop reading rail exposes existing TOC, annotation, and listening t
   assert.match(toc, /class="reading-rail"/);
   assert.match(toc, /data-reading-action="toc"/);
   assert.match(toc, /data-reading-action="annotations"/);
+  assert.match(toc, /data-reading-annotation-count/);
   assert.match(toc, /data-reading-action="listening"/);
 });
 
