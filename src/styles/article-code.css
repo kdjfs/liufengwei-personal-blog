@@ -16,6 +16,12 @@
   --code-frame-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+.prose > pre,
+.prose > .code-frame {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
+}
+
 .code-frame {
   position: relative;
   min-width: 0;
@@ -216,6 +222,7 @@
 }
 
 .code-frame.is-fullscreen {
+  content-visibility: visible;
   position: fixed;
   inset: 2rem;
   z-index: calc(var(--z-dialog) + 11);

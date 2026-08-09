@@ -9,6 +9,8 @@ const LANGUAGE_LABELS: Record<string, string> = {
   txt: 'TEXT',
 };
 
+const CODE_ENHANCEMENT_ROOT_MARGIN = '800px 0px';
+
 const ICONS = {
   copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>',
   check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>',
@@ -134,7 +136,7 @@ export function enhanceCodeBlocks({ signal, registerCleanup }: CodeEnhancerOptio
     { signal },
   );
 
-  blocks.forEach((pre) => {
+  const enhanceBlock = (pre: HTMLElement) => {
     if (pre.closest('.code-frame')) return;
     const code = pre.querySelector<HTMLElement>('code');
     const filename = pre.dataset.filename ?? code?.dataset.filename;
@@ -212,9 +214,25 @@ export function enhanceCodeBlocks({ signal, registerCleanup }: CodeEnhancerOptio
     pre.before(frame);
     frame.append(header, body);
     body.append(pre);
+  };
+
+  const remainingBlocks = blocks.filter((pre) => !pre.closest('.code-frame'));
+  const codeObserver = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting || signal.aborted) return;
+        observer.unobserve(entry.target);
+        enhanceBlock(entry.target as HTMLElement);
+      });
+    },
+    { rootMargin: CODE_ENHANCEMENT_ROOT_MARGIN },
+  );
+  remainingBlocks.forEach((pre) => {
+    codeObserver.observe(pre);
   });
 
   registerCleanup(() => {
+    codeObserver.disconnect();
     window.clearTimeout(copyTimer);
     closeFocus(false);
     backdrop.remove();

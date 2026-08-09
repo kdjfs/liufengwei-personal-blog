@@ -93,6 +93,7 @@ try {
     await lightArticle.setViewportSize({ width: 1440, height: 1400 });
     await gotoArticle(lightArticle);
     await captureViewport('01-light-article-header-toc', lightArticle);
+    await lightArticle.locator('.prose pre').first().scrollIntoViewIfNeeded();
     await captureElement('02-light-code-block-v2', lightArticle.locator('.code-frame').first());
     await lightArticle.close();
   }
@@ -100,6 +101,7 @@ try {
   if (wants('dark')) {
     const darkCode = await createPage({ dark: true });
     await gotoArticle(darkCode);
+    await darkCode.locator('.prose pre').first().scrollIntoViewIfNeeded();
     await captureElement('03-dark-code-block-v2', darkCode.locator('.code-frame').first());
     await darkCode.close();
   }

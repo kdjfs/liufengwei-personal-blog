@@ -59,6 +59,12 @@ These are local release measurements, not real-user monitoring or a promise abou
 
 Largest generated dynamic assets include Mermaid support (~646.6 KiB raw / 138.9 KiB gzip), Cytoscape (~424.6 / 133.6 KiB), KaTeX JS (~252.6 / 74.9 KiB) and the complete AI Assistant (~186.4 / 56.4 KiB). They are not all initial dependencies: Mermaid/Cytoscape loads only for Mermaid content, KaTeX is article-only, and the AI Assistant loads after explicit interaction.
 
+### v1.1 article reading update
+
+The v1.1 production build keeps every route within its existing budget. Compared with the v1.0 table above, Home is 24.6 KiB gzip (-2.2 KiB), Article is 39.2 KiB (+4.1 KiB), and Learning is 22.7 KiB (-2.1 KiB). The Article increase covers the Code Block V2 toolbar, reading rail, and dedicated Markdown styles without adding a runtime dependency.
+
+The 14k-word JavaScript article was measured with Lighthouse 13.4.1's mobile profile after a local production build: Performance 95, Accessibility 96, and SEO 100 (FCP 1.5 s, LCP 2.1 s, TBT 220 ms, CLS 0.045). Distant code blocks use viewport-driven enhancement and `content-visibility` so the full Shiki document does not become initial main-thread work.
+
 ## Changes that produced the result
 
 - Moved reading progress, TOC, code toolbar, lightbox, Mermaid, selection and speech into an article-only enhancement entry.

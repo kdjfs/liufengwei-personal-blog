@@ -4,6 +4,7 @@ const ARTICLE_PATH = '/blog/di-wu-zhang-vue3-he-xin-zhi-shi-cha-lou-bu-que/';
 
 test.beforeEach(async ({ page }) => {
   await page.goto(ARTICLE_PATH);
+  await page.locator('.prose pre').first().scrollIntoViewIfNeeded();
   await expect(page.locator('.code-frame').first()).toBeVisible();
 });
 

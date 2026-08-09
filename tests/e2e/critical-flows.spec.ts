@@ -96,7 +96,7 @@ test('annotations and completed reading persist into the learning dashboard', as
   await page.getByRole('button', { name: '为选中文字添加批注' }).click();
   await page.getByLabel('我的理解').fill('E2E 本地批注');
   await page.getByRole('button', { name: '保存批注' }).click();
-  await expect(page.getByRole('button', { name: /打开批注面板，共 1 条/ })).toBeVisible();
+  await expect(page.locator('[data-reading-annotation-count]:visible')).toHaveText('1');
 
   const markRead = page.getByRole('button', { name: '标记已读' });
   await expect(markRead).toBeEnabled();

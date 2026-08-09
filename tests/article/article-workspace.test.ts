@@ -30,3 +30,12 @@ test('article-specific layout and typography no longer live in global.css', asyn
   assert.doesNotMatch(globalCss, /^\.prose h2/m);
   assert.doesNotMatch(globalCss, /^\.toc /m);
 });
+
+test('large articles enhance distant code blocks only near the viewport', async () => {
+  const enhancer = await readFile('src/lib/article-code.ts', 'utf8');
+  const styles = await readFile('src/styles/article-code.css', 'utf8');
+  assert.match(enhancer, /CODE_ENHANCEMENT_ROOT_MARGIN/);
+  assert.match(enhancer, /new IntersectionObserver/);
+  assert.doesNotMatch(enhancer, /enhanceBlock\(blocks\[0\]\)/);
+  assert.match(styles, /content-visibility:\s*auto/);
+});
