@@ -4,18 +4,27 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:migrate": "node --disable-warning=ExperimentalWarning --experimental-strip-types src/db/migrate.ts",
+    "dev": "node --disable-warning=ExperimentalWarning --experimental-strip-types --watch src/index.ts",
+    "start": "node --disable-warning=ExperimentalWarning --experimental-strip-types src/index.ts",
     "test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/*.test.ts",
+    "test:integration": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/integration/*.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",
     "@fastify/helmet": "13.1.0",
     "@lfw/contracts": "workspace:*",
+    "drizzle-orm": "0.45.2",
     "fastify": "5.11.3",
+    "mysql2": "3.23.2",
+    "redis": "6.2.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "26.1.2",
+    "drizzle-kit": "0.31.10",
     "typescript": "6.0.3"
   }
 }
