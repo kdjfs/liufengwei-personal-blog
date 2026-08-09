@@ -1,3 +1,6 @@
+import { createAiCoordinator } from './ai/coordinator.ts';
+import { createDeepSeekProvider } from './ai/provider.ts';
+import { createAiRepository } from './ai/repository.ts';
 import { buildApp } from './app.ts';
 import { createAuth } from './auth.ts';
 import { parseServerConfig } from './config.ts';
@@ -8,12 +11,28 @@ const config = parseServerConfig(process.env);
 const infrastructure = createInfrastructure(config);
 const auth = createAuth(config, infrastructure.database);
 const syncService = createSyncService(infrastructure.database);
+const aiRepository = createAiRepository(infrastructure.database);
+const aiCoordinator = createAiCoordinator({
+  async eval(script, options) {
+    await infrastructure.ensureRedisConnection();
+    return infrastructure.redis.eval(script, options);
+  },
+});
 const app = await buildApp({
   config,
   probes: infrastructure.probes,
   auth,
   sync: {
     service: syncService,
+    async getUserId(headers) {
+      const session = await auth.api.getSession({ headers });
+      return session?.user.id ?? null;
+    },
+  },
+  ai: {
+    coordinator: aiCoordinator,
+    provider: createDeepSeekProvider(config),
+    repository: aiRepository,
     async getUserId(headers) {
       const session = await auth.api.getSession({ headers });
       return session?.user.id ?? null;

@@ -8,6 +8,7 @@ export interface Infrastructure {
   database: Database;
   mysqlPool: Pool;
   redis: RedisClientType;
+  ensureRedisConnection: () => Promise<void>;
   probes: AppProbes;
   close: () => Promise<void>;
 }
@@ -39,6 +40,7 @@ export function createInfrastructure(config: ServerConfig): Infrastructure {
     database,
     mysqlPool,
     redis,
+    ensureRedisConnection,
     probes: {
       mysql: {
         async check() {

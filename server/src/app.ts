@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import { liveHealthSchema, type ReadyHealth, readyHealthSchema } from '@lfw/contracts/health';
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
+import { type AiRouteOptions, registerAiRoutes } from './ai/routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './auth-routes.ts';
 import type { ServerConfig } from './config.ts';
 import { registerSyncRoutes, type SyncRouteOptions } from './sync/routes.ts';
@@ -23,6 +24,7 @@ export interface BuildAppOptions {
   probes: AppProbes;
   auth?: AuthHandler;
   sync?: SyncRouteOptions;
+  ai?: AiRouteOptions;
   probeTimeoutMs?: number;
 }
 
@@ -86,6 +88,7 @@ export async function buildApp({
   probes,
   auth,
   sync,
+  ai,
   probeTimeoutMs = 1_000,
 }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
@@ -107,6 +110,7 @@ export async function buildApp({
   await app.register(helmet);
   if (auth) registerAuthRoutes(app, auth, config);
   if (sync) registerSyncRoutes(app, sync, config);
+  if (ai) registerAiRoutes(app, ai, config);
 
   app.addHook('onSend', async (request, reply, payload) => {
     reply.header('X-LFW-Request-Id', request.id);
