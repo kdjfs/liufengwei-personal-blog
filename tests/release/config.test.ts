@@ -10,6 +10,7 @@ test('CI uses pinned runtimes, frozen installs, least privilege, and the release
   assert.match(workflow, /version: 10\.24\.0/);
   assert.match(workflow, /pnpm install --frozen-lockfile/);
   assert.match(workflow, /playwright install --with-deps chromium/);
+  assert.match(workflow, /pnpm fullstack:check/);
   assert.match(workflow, /pnpm release:check/);
   assert.match(workflow, /pull_request:\s*\r?\n\s+branches: \[main\]/);
   assert.doesNotMatch(workflow, /pull_request_target|DEEPSEEK_API_KEY|ANTHROPIC_AUTH_TOKEN/);

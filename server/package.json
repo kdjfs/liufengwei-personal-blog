@@ -1,0 +1,21 @@
+{
+  "name": "@lfw/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fastify/cors": "11.3.0",
+    "@fastify/helmet": "13.1.0",
+    "@lfw/contracts": "workspace:*",
+    "fastify": "5.11.3",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.2",
+    "typescript": "6.0.3"
+  }
+}
