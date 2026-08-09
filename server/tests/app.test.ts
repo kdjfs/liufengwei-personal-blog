@@ -6,6 +6,7 @@ import { parseServerConfig } from '../src/config.ts';
 const environment = {
   NODE_ENV: 'test',
   API_PORT: '8788',
+  API_ORIGIN: 'http://127.0.0.1:8788',
   DATABASE_URL: 'mysql://lfw:password@127.0.0.1:3306/lfw_test',
   REDIS_URL: 'redis://127.0.0.1:6379/1',
   WEB_ORIGIN: 'http://127.0.0.1:4321',
@@ -24,6 +25,7 @@ test('config accepts a complete test environment and normalizes URLs', () => {
 
   assert.equal(config.nodeEnv, 'test');
   assert.equal(config.port, 8788);
+  assert.equal(config.apiOrigin, environment.API_ORIGIN);
   assert.equal(config.webOrigin, 'http://127.0.0.1:4321');
   assert.equal(config.databaseUrl, environment.DATABASE_URL);
 });
@@ -43,12 +45,19 @@ test('config rejects weak production secrets, insecure origins, and partial OAut
       GITHUB_CLIENT_ID: 'client-only',
     }),
   );
+  assert.throws(() =>
+    parseServerConfig({
+      ...environment,
+      API_ORIGIN: 'http://127.0.0.1:8788/untrusted-path',
+    }),
+  );
 });
 
 test('config rejects example credentials in production without exposing their values', () => {
   const productionEnvironment = {
     ...environment,
     NODE_ENV: 'production',
+    API_ORIGIN: 'https://api.example.com',
     WEB_ORIGIN: 'https://www.example.com',
     DATABASE_URL: 'mysql://lfw:strong-database-password@db.internal:3306/lfw',
     REDIS_URL: 'rediss://cache.internal:6379/0',
@@ -178,5 +187,45 @@ test('unknown routes use the uniform error contract and the configured body limi
   assert.equal(response.statusCode, 404);
   assert.deepEqual(Object.keys(body.error).sort(), ['code', 'message', 'requestId']);
   assert.equal(body.error.code, 'NOT_FOUND');
+  await app.close();
+});
+
+test('auth routes use the configured API origin and preserve security cookies', async () => {
+  let observedUrl = '';
+  let observedBody = '';
+  const app = await buildApp({
+    config: parseServerConfig(environment),
+    probes: probes(),
+    auth: {
+      async handler(request) {
+        observedUrl = request.url;
+        observedBody = await request.text();
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 201,
+          headers: {
+            'content-type': 'application/json',
+            'set-cookie': 'lfw-space.session=test; Path=/; HttpOnly; SameSite=Lax',
+          },
+        });
+      },
+    },
+  });
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/auth/example?mode=test',
+    headers: {
+      host: 'attacker.invalid',
+      origin: environment.WEB_ORIGIN,
+      'content-type': 'application/json',
+    },
+    payload: { hello: 'world' },
+  });
+
+  assert.equal(response.statusCode, 201);
+  assert.equal(observedUrl, `${environment.API_ORIGIN}/api/auth/example?mode=test`);
+  assert.deepEqual(JSON.parse(observedBody), { hello: 'world' });
+  assert.match(String(response.headers['set-cookie']), /HttpOnly/);
+  assert.match(String(response.headers['set-cookie']), /SameSite=Lax/);
   await app.close();
 });

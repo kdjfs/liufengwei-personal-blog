@@ -1,10 +1,12 @@
 import { buildApp } from './app.ts';
+import { createAuth } from './auth.ts';
 import { parseServerConfig } from './config.ts';
 import { createInfrastructure } from './infrastructure.ts';
 
 const config = parseServerConfig(process.env);
 const infrastructure = createInfrastructure(config);
-const app = await buildApp({ config, probes: infrastructure.probes });
+const auth = createAuth(config, infrastructure.database);
+const app = await buildApp({ config, probes: infrastructure.probes, auth });
 
 let shuttingDown = false;
 async function shutdown(signal: NodeJS.Signals): Promise<void> {

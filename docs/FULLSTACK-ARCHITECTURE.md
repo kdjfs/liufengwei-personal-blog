@@ -157,7 +157,9 @@ Production responses never include stack traces or raw SQL/provider errors.
 ## 8. Environment and feature flags
 
 Tracked `.env.example` contains placeholders only. The API contract includes `NODE_ENV`, `API_PORT`,
-`DATABASE_URL`, `REDIS_URL`, `WEB_ORIGIN`, GitHub credentials, session secret and DeepSeek settings.
+`API_ORIGIN`, `DATABASE_URL`, `REDIS_URL`, `WEB_ORIGIN`, GitHub credentials, session secret and
+DeepSeek settings. `API_ORIGIN` is the path-free public API origin; the GitHub OAuth callback is
+`${API_ORIGIN}/api/auth/callback/github`.
 
 The browser uses a build-time `PUBLIC_CLOUD_API_URL` gate:
 

@@ -22,6 +22,7 @@ const environmentSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     API_PORT: z.coerce.number().int().min(1).max(65_535).default(8788),
+    API_ORIGIN: z.string().trim().url(),
     DATABASE_URL: z.string().trim().url(),
     REDIS_URL: z.string().trim().url(),
     WEB_ORIGIN: z.string().trim().url(),
@@ -56,6 +57,22 @@ const environmentSchema = z
         code: 'custom',
         path: ['WEB_ORIGIN'],
         message: 'Production Web origin must use HTTPS',
+      });
+    }
+
+    const api = new URL(value.API_ORIGIN);
+    if (api.origin !== value.API_ORIGIN.replace(/\/$/, '')) {
+      context.addIssue({
+        code: 'custom',
+        path: ['API_ORIGIN'],
+        message: 'API origin cannot contain a path',
+      });
+    }
+    if (value.NODE_ENV === 'production' && api.protocol !== 'https:') {
+      context.addIssue({
+        code: 'custom',
+        path: ['API_ORIGIN'],
+        message: 'Production API origin must use HTTPS',
       });
     }
 
@@ -106,6 +123,7 @@ const environmentSchema = z
 export interface ServerConfig {
   nodeEnv: 'development' | 'test' | 'production';
   port: number;
+  apiOrigin: string;
   databaseUrl: string;
   redisUrl: string;
   webOrigin: string;
@@ -131,6 +149,7 @@ export function parseServerConfig(environment: Record<string, string | undefined
   return {
     nodeEnv: value.NODE_ENV,
     port: value.API_PORT,
+    apiOrigin: new URL(value.API_ORIGIN).origin,
     databaseUrl: value.DATABASE_URL,
     redisUrl: value.REDIS_URL,
     webOrigin: new URL(value.WEB_ORIGIN).origin,
