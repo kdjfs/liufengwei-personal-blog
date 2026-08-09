@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./ai": "./src/ai.ts",
     "./health": "./src/health.ts",
     "./sync": "./src/sync.ts"
   },

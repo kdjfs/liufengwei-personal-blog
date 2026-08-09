@@ -1,73 +1,19 @@
-export const CHAT_LIMITS = {
-  messages: 12,
-  messageContent: 4_000,
-  totalMessageContent: 16_000,
-  contextSources: 4,
-  contextId: 160,
-  contextTitle: 160,
-  contextUrl: 300,
-  contextCategory: 60,
-  contextExcerpt: 1_800,
-  structuredFacts: 6_000,
-  currentPageTitle: 180,
-  currentPageUrl: 300,
-  currentPageDescription: 300,
-  currentPageCategory: 60,
-  currentPageTags: 8,
-  currentPageTag: 40,
-  currentPageContent: 8_000,
-  currentPageActiveHeading: 300,
-  selectionText: 3_000,
-  selectionHeadingId: 240,
-  selectionHeadingText: 500,
-  selectionSurroundingText: 2_000,
-  selectionArticleSlug: 160,
-  annotationNote: 10_000,
-} as const;
+import {
+  CHAT_LIMITS,
+  type ChatMessageInput,
+  type ChatRequestPayload,
+  type SelectionContext,
+} from '@lfw/contracts/ai';
 
-export type ChatMode = 'fast' | 'deep';
-
-export interface ChatMessageInput {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-export interface ChatContextSource {
-  id: string;
-  title: string;
-  url: string;
-  category: string;
-  excerpt: string;
-}
-
-export interface CurrentPageContext {
-  title: string;
-  url: string;
-  description?: string;
-  category?: string;
-  tags?: string[];
-  content?: string;
-  activeHeading?: string;
-  readingProgress?: number;
-}
-
-export interface SelectionContext {
-  text: string;
-  headingId?: string;
-  headingText?: string;
-  surroundingText?: string;
-  articleSlug?: string;
-  annotationNote?: string;
-}
-
-export interface ChatRequestPayload {
-  mode: ChatMode;
-  messages: ChatMessageInput[];
-  context: ChatContextSource[];
-  structuredFacts?: string;
-  currentPage?: CurrentPageContext;
-  selection?: SelectionContext;
-}
+export {
+  CHAT_LIMITS,
+  type ChatContextSource,
+  type ChatMessageInput,
+  type ChatMode,
+  type ChatRequestPayload,
+  type CurrentPageContext,
+  type SelectionContext,
+} from '@lfw/contracts/ai';
 
 export function unicodeLength(value: string): number {
   return Array.from(value).length;
@@ -154,5 +100,6 @@ export function fitChatRequest(payload: ChatRequestPayload): ChatRequestPayload 
         }
       : undefined,
     selection: payload.selection ? fitSelectionContext(payload.selection) : undefined,
+    cloud: payload.cloud,
   };
 }

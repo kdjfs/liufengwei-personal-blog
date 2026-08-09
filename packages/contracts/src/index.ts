@@ -1,4 +1,14 @@
 export {
+  aiChatRequestSchema,
+  CHAT_LIMITS,
+  type ChatContextSource,
+  type ChatMessageInput,
+  type ChatMode,
+  type ChatRequestPayload,
+  type CurrentPageContext,
+  type SelectionContext,
+} from './ai.ts';
+export {
   healthComponentSchema,
   type LiveHealth,
   liveHealthSchema,
