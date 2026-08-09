@@ -1,5 +1,9 @@
 # LFW Space v1.0 Architecture
 
+> 本文是当前已上线/已实现架构的事实基线。v2.0 的目标架构、迁移边界与阶段门禁见
+> [FULLSTACK-ARCHITECTURE.md](./FULLSTACK-ARCHITECTURE.md)。在对应阶段完成并通过测试前，
+> 本文中的“无独立 Node/MySQL/Redis/Auth”仍是生产现状，不能提前改写成已上线能力。
+
 本文描述 v1.0.0 的真实代码边界。核心原则是“静态内容默认零运行时服务，交互能力局部增强，私密学习数据本地优先，模型密钥只存在服务端”。
 
 ## 1. System boundary

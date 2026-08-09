@@ -1,4 +1,10 @@
-# LFW Space V2 Production Blog Specification
+# LFW Space V2 Production Blog Specification (SUPERSEDED)
+
+> **Superseded on 2026-08-10.** This early static-only proposal conflicts with the
+> approved LFW Space v2.0 Full-Stack AI Learning Cloud direction because it lists
+> Node.js, MySQL, Redis, and authentication as non-goals. It is retained as a
+> historical record only. The active specification is
+> [FULLSTACK-ARCHITECTURE.md](./FULLSTACK-ARCHITECTURE.md).
 
 > Status: Proposed
 >
