@@ -33,7 +33,7 @@ export default defineConfig({
         light: 'github-light',
         dark: 'github-dark-default',
       },
-      wrap: true,
+      wrap: false,
     },
     processor: unified({
       remarkPlugins: [remarkGfm, remarkMath, remarkCallouts, remarkCodeMeta, remarkMermaid],

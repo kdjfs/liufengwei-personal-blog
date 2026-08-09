@@ -19,7 +19,7 @@ interface TextEntry {
 }
 
 const EXCLUDED =
-  'pre, code, a, .katex, [data-mermaid-source], .code-toolbar, mark[data-annotation-highlight]';
+  'pre, code, a, .katex, [data-mermaid-source], .code-frame__header, mark[data-annotation-highlight]';
 
 function collectText(scope: HTMLElement): { text: string; entries: TextEntry[] } {
   const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);

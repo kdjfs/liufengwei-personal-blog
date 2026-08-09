@@ -6,7 +6,7 @@ const HEADING_SELECTOR = 'h2, h3, h4, h5, h6';
 function plainText(element: HTMLElement): string {
   const clone = element.cloneNode(true) as HTMLElement;
   for (const node of clone.querySelectorAll(
-    '.katex, [data-mermaid-source], button, nav, img, .code-toolbar, [aria-hidden="true"]',
+    '.katex, [data-mermaid-source], button, nav, img, .code-frame__header, [aria-hidden="true"]',
   )) {
     node.remove();
   }

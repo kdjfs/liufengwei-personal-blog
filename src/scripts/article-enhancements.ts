@@ -1,3 +1,5 @@
+import { enhanceCodeBlocks } from '@/lib/article-code';
+
 let cleanupArticleEnhancements: (() => void) | undefined;
 
 const enhanceArticlePage = async () => {
@@ -123,49 +125,10 @@ const enhanceArticlePage = async () => {
     link.addEventListener('click', () => mobileToc?.close(), { signal });
   });
 
-  // Shiki 保持负责高亮；工具栏只补充语言、文件名和复制能力。
-  document.querySelectorAll<HTMLElement>('.prose pre').forEach((pre) => {
-    if (pre.parentElement?.classList.contains('code-block')) return;
-    const code = pre.querySelector<HTMLElement>('code');
-    const language =
-      pre.dataset.language ?? code?.className.match(/language-([\w-]+)/)?.[1] ?? 'text';
-    const filename = pre.dataset.filename ?? code?.dataset.filename;
-    const wrapper = document.createElement('div');
-    wrapper.className = 'code-block';
-    const toolbar = document.createElement('div');
-    toolbar.className = 'code-toolbar';
-    const identity = document.createElement('div');
-    identity.className = 'code-identity';
-    if (filename) {
-      const fileLabel = document.createElement('strong');
-      fileLabel.textContent = filename;
-      identity.append(fileLabel);
-    }
-    const languageLabel = document.createElement('span');
-    languageLabel.textContent = language;
-    identity.append(languageLabel);
-    const button = document.createElement('button');
-    button.className = 'copy-code';
-    button.type = 'button';
-    button.textContent = 'Copy';
-    button.setAttribute('aria-label', '复制代码');
-    button.addEventListener(
-      'click',
-      async () => {
-        try {
-          await navigator.clipboard.writeText(code?.textContent ?? '');
-          button.textContent = 'Copied';
-          window.setTimeout(() => (button.textContent = 'Copy'), 1500);
-        } catch {
-          button.textContent = 'Failed';
-          window.setTimeout(() => (button.textContent = 'Copy'), 1500);
-        }
-      },
-      { signal },
-    );
-    pre.before(wrapper);
-    toolbar.append(identity, button);
-    wrapper.append(toolbar, pre);
+  // Shiki keeps build-time token rendering; this enhancer only adds stable reader controls.
+  enhanceCodeBlocks({
+    signal,
+    registerCleanup: (cleanup) => cleanupCallbacks.push(cleanup),
   });
 
   const lightboxImages = [...document.querySelectorAll<HTMLImageElement>('.prose img:not(a img)')];
