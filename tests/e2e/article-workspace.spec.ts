@@ -34,6 +34,15 @@ test('annotation count is synchronized across desktop and mobile reading tools',
   await expect(page.locator('.annotation-drawer-trigger')).toBeHidden();
 });
 
+test('article footer keeps compact navigation and at most three related posts', async ({
+  page,
+}) => {
+  await expect(page.locator('.article-nav')).toBeVisible();
+  const related = page.locator('.related-posts .post-card');
+  expect(await related.count()).toBeGreaterThanOrEqual(2);
+  expect(await related.count()).toBeLessThanOrEqual(3);
+});
+
 test('reading rail switches to compact mobile tools without page overflow', async ({ page }) => {
   const desktop = (page.viewportSize()?.width ?? 0) > 1024;
   if (desktop) {
@@ -56,4 +65,35 @@ test('reading rail switches to compact mobile tools without page overflow', asyn
   });
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
   expect(dimensions.titleSize).toBeLessThanOrEqual(46);
+});
+
+test('article workspace stays readable at every release viewport', async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'chromium-desktop',
+    'desktop project owns the viewport matrix',
+  );
+
+  for (const width of [1920, 1440, 1280, 1024, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: width <= 390 ? 844 : 900 });
+    await page.reload();
+    await expect(page.locator('.article-hero h1')).toBeVisible();
+
+    const state = await page.evaluate(() => {
+      const title = document.querySelector<HTMLElement>('.article-hero h1');
+      const rail = document.querySelector<HTMLElement>('.reading-rail');
+      const mobileTools = document.querySelector<HTMLElement>('.mobile-toc-bar');
+      return {
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        titleSize: title ? Number.parseFloat(getComputedStyle(title).fontSize) : 0,
+        railVisible: rail ? getComputedStyle(rail).display !== 'none' : false,
+        mobileToolsVisible: mobileTools ? getComputedStyle(mobileTools).display !== 'none' : false,
+      };
+    });
+
+    expect(state.overflow, `${width}px page overflow`).toBeLessThanOrEqual(0);
+    expect(state.titleSize, `${width}px title size`).toBeGreaterThanOrEqual(width <= 390 ? 30 : 32);
+    expect(state.titleSize, `${width}px title size`).toBeLessThanOrEqual(46);
+    expect(state.railVisible, `${width}px desktop rail`).toBe(width > 1024);
+    expect(state.mobileToolsVisible, `${width}px mobile tools`).toBe(width <= 1024);
+  }
 });
