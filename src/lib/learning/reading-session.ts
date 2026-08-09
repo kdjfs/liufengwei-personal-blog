@@ -71,6 +71,8 @@ export async function startReadingSession(
   let listenActive = false;
   let ticksSincePersist = 0;
   let stopped = false;
+  let completionPromise: Promise<void> | undefined;
+  let persistQueue = Promise.resolve();
   const controller = new AbortController();
   const { signal } = controller;
 
@@ -78,7 +80,11 @@ export async function startReadingSession(
     onUpdate(record);
     notify(record);
   };
-  const persist = async () => database.put('articleProgress', record);
+  const persist = (snapshot = record) => {
+    const write = persistQueue.then(() => database.put('articleProgress', snapshot));
+    persistQueue = write.catch(() => undefined);
+    return write;
+  };
   const handleActivity = () => {
     lastActivityAt = Date.now();
   };
@@ -91,9 +97,13 @@ export async function startReadingSession(
   const handleAnnotationChange = (event: Event) => {
     const detail = (event as CustomEvent<{ articleSlug?: string; count?: number }>).detail;
     if (detail?.articleSlug !== identity.articleSlug || typeof detail.count !== 'number') return;
-    record = { ...record, annotationCount: Math.max(0, Math.round(detail.count)) };
-    emit();
-    void persist();
+    const annotationCount = Math.max(0, Math.round(detail.count));
+    void (async () => {
+      await completionPromise?.catch(() => undefined);
+      record = { ...record, annotationCount };
+      emit();
+      await persist();
+    })();
   };
 
   for (const type of ['scroll', 'wheel', 'touchmove', 'pointerdown', 'keydown'] as const) {
@@ -103,7 +113,7 @@ export async function startReadingSession(
   window.addEventListener('lfw:annotations:changed', handleAnnotationChange, { signal });
 
   const tick = () => {
-    if (stopped) return;
+    if (stopped || completionPromise) return;
     const now = Date.now();
     record = applyLearningTick(record, {
       seconds: TRACKER_TICK_SECONDS,
@@ -158,16 +168,26 @@ export async function startReadingSession(
         behavior: 'smooth',
       });
     },
-    markCompleted: async () => {
-      record = markArticleCompleted(record);
-      emit();
-      await persist();
+    markCompleted: () => {
+      if (record.completedAt) return Promise.resolve();
+      if (completionPromise) return completionPromise;
+
+      const completedRecord = markArticleCompleted(record);
+      const operation = persist(completedRecord).then(() => {
+        record = completedRecord;
+        emit();
+      });
+      completionPromise = operation.finally(() => {
+        completionPromise = undefined;
+      });
+      return completionPromise;
     },
     stop: async () => {
       if (stopped) return;
       stopped = true;
       window.clearInterval(interval);
       controller.abort();
+      await completionPromise?.catch(() => undefined);
       await persist();
     },
   };

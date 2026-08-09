@@ -18,6 +18,49 @@ async function selectFirstParagraph(page: Page): Promise<string> {
   });
 }
 
+async function holdArticleProgressWrites(page: Page): Promise<() => Promise<void>> {
+  await page.evaluate(async () => {
+    const state = window as Window & { releaseLearningWrite?: boolean };
+    state.releaseLearningWrite = false;
+
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('lfw-learning-db');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction('articleProgress', 'readwrite');
+      const store = transaction.objectStore('articleProgress');
+      let established = false;
+
+      transaction.onerror = () => reject(transaction.error);
+      const keepAlive = () => {
+        const request = store.get('__phase-0-write-lock__');
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          if (!established) {
+            established = true;
+            resolve();
+          }
+          if (state.releaseLearningWrite) {
+            database.close();
+            return;
+          }
+          keepAlive();
+        };
+      };
+      keepAlive();
+    });
+  });
+
+  return async () => {
+    await page.evaluate(() => {
+      (window as Window & { releaseLearningWrite?: boolean }).releaseLearningWrite = true;
+    });
+  };
+}
+
 test('home navigation, search, and theme controls remain interactive', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: '刘凤伟的数字花园' })).toBeVisible();
@@ -100,7 +143,10 @@ test('annotations and completed reading persist into the learning dashboard', as
 
   const markRead = page.getByRole('button', { name: '标记已读' });
   await expect(markRead).toBeEnabled();
+  const releaseProgressWrites = await holdArticleProgressWrites(page);
   await markRead.click();
+  await expect(page.getByRole('button', { name: '正在保存完成状态' })).toBeDisabled();
+  await releaseProgressWrites();
   await expect(page.getByRole('button', { name: '已读完' })).toBeDisabled();
 
   await page.goto('/learning/');

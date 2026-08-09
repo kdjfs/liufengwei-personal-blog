@@ -14,6 +14,8 @@ export default function ArticleLearningBar({ articleSlug, title, category }: Pro
   const [record, setRecord] = useState<ArticleProgress>();
   const [error, setError] = useState('');
   const [focusMode, setFocusMode] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [completionError, setCompletionError] = useState('');
   const sessionRef = useRef<ReadingSession | undefined>(undefined);
 
   useEffect(() => {
@@ -54,6 +56,20 @@ export default function ArticleLearningBar({ articleSlug, title, category }: Pro
     return <div className="learning-bar is-loading" role="status" aria-label="正在读取学习记录" />;
 
   const canResume = record.lastProgress > 5 && record.lastProgress < 95;
+  const handleMarkCompleted = async () => {
+    const session = sessionRef.current;
+    if (!session || isCompleting || record.completedAt) return;
+    setIsCompleting(true);
+    setCompletionError('');
+    try {
+      await session.markCompleted();
+    } catch {
+      setCompletionError('完成状态保存失败，请重试。');
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   return (
     <div className="article-learning-wrap">
       {canResume && (
@@ -87,13 +103,19 @@ export default function ArticleLearningBar({ articleSlug, title, category }: Pro
         </button>
         <button
           type="button"
-          disabled={Boolean(record.completedAt)}
-          onClick={() => void sessionRef.current?.markCompleted()}
+          aria-label={isCompleting ? '正在保存完成状态' : undefined}
+          disabled={isCompleting || Boolean(record.completedAt)}
+          onClick={() => void handleMarkCompleted()}
         >
-          {record.completedAt ? '已读完' : '标记已读'}
+          {record.completedAt ? '已读完' : isCompleting ? '保存中…' : '标记已读'}
         </button>
         <a href="/learning">学习记录</a>
       </section>
+      {completionError && (
+        <p className="learning-inline-error" role="alert">
+          {completionError}
+        </p>
+      )}
     </div>
   );
 }
