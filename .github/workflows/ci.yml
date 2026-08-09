@@ -72,6 +72,13 @@ jobs:
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Run configured cloud UI browser test
+        env:
+          PUBLIC_CLOUD_API_URL: http://127.0.0.1:8788
+          PUBLIC_AI_API_URL: http://127.0.0.1:8788
+          LFW_E2E_CLOUD: '1'
+        run: pnpm build && pnpm exec playwright test tests/e2e/cloud-ui.spec.ts --project=chromium-desktop
+
       - name: Run release gate
         run: pnpm release:check
 

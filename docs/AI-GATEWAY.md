@@ -52,6 +52,12 @@ Public context, selections, annotations and private learning data are serialized
 read-only XML boundaries. The system prompt defines all of them as untrusted data and forbids
 executing embedded instructions. General request logs contain neither bodies nor conversation text.
 
+The browser switches to this endpoint only when `PUBLIC_AI_API_URL` is an explicit path-free origin.
+That build-time flag must be set only after the Node deployment passes its smoke gate; otherwise the
+proven Vercel `/api/chat` route remains the default. The account client is loaded only after the AI
+panel opens, uses credentialed session requests, and keeps both privacy choices off until an
+authenticated user enables them. Turning persistence off also clears the browser's conversation ID.
+
 ## Validation
 
 CI uses a mocked provider and real MySQL/Redis services. Integration tests are serialized because the

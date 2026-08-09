@@ -84,3 +84,10 @@ automatic retry. `navigator.onLine` only wakes the scheduler; a successful respo
 
 When the API is absent or unhealthy, local writes have already committed and static reading remains
 fully usable. A 401/403/validation response is surfaced as an error and is not blindly retried.
+
+When `PUBLIC_CLOUD_API_URL` is configured as a path-free origin, the learning page dynamically loads
+an account/sync panel. It reports the authenticated GitHub account, pending queue size, last
+successful sync and current sync state, and offers explicit sign-in, sign-out and sync-now actions.
+The panel never clears local records on sign-out and its failure state leaves the local dashboard and
+backup controls available. Without the flag, the panel code is not requested and the local-only copy
+and behavior stay unchanged.

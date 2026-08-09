@@ -1,4 +1,5 @@
 import type { SyncBatchResponse, SyncOperation } from '@lfw/contracts/sync';
+import { normalizeApiOrigin } from './config.ts';
 
 export interface SyncTransport {
   sync: (operations: SyncOperation[]) => Promise<SyncBatchResponse>;
@@ -27,12 +28,10 @@ export class CloudClient implements SyncTransport {
   private readonly timeoutMs: number;
 
   constructor(apiOrigin: string, options: CloudClientOptions = {}) {
-    const origin = new URL(apiOrigin);
-    if (origin.origin !== apiOrigin.replace(/\/$/, '')) {
-      throw new Error('Cloud API URL must be a path-free origin');
-    }
-    this.fetch = options.fetch ?? globalThis.fetch;
-    this.syncUrl = new URL('/api/v1/sync/batch', origin);
+    const normalizedOrigin = normalizeApiOrigin(apiOrigin);
+    if (!normalizedOrigin) throw new Error('Cloud API URL must be a secure path-free origin');
+    this.fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
+    this.syncUrl = new URL('/api/v1/sync/batch', normalizedOrigin);
     this.timeoutMs = options.timeoutMs ?? 8_000;
   }
 

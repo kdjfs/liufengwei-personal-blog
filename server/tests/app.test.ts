@@ -170,6 +170,10 @@ test('CORS is credentialed only for the configured Web origin', async () => {
 
   assert.equal(trusted.headers['access-control-allow-origin'], environment.WEB_ORIGIN);
   assert.equal(trusted.headers['access-control-allow-credentials'], 'true');
+  assert.match(
+    trusted.headers['access-control-expose-headers'] ?? '',
+    /X-LFW-Conversation-Id, X-LFW-Request-Id/i,
+  );
   assert.equal(untrusted.headers['access-control-allow-origin'], undefined);
   await app.close();
 });

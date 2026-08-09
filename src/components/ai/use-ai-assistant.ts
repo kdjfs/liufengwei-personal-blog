@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fitChatRequest, fitSelectionContext } from '@/lib/ai/chat-contract';
 import { retrieveKnowledge } from '@/lib/ai/retrieval';
 import type { ChatMode, KnowledgeItem, SelectionContext } from '@/lib/ai/types';
+import { normalizeApiOrigin } from '@/lib/cloud/config';
 import { AIChatClientError, streamAIResponse } from './chat-client';
 import { loadKnowledge } from './knowledge-client';
 import { isArticlePage, readCurrentPageContext } from './page-context';
@@ -16,6 +17,9 @@ export interface DisplayMessage {
 }
 
 type KnowledgeStatus = 'idle' | 'loading' | 'ready' | 'unavailable';
+type CloudAiState = 'disabled' | 'idle' | 'loading' | 'anonymous' | 'authenticated' | 'error';
+
+const aiApiOrigin = normalizeApiOrigin(import.meta.env.PUBLIC_AI_API_URL);
 
 function createId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
@@ -30,6 +34,8 @@ function friendlyError(error: unknown): string {
     return 'AI 服务需要 pnpm dev:ai 或线上环境';
   }
   if (error.code === 'RATE_LIMITED') return '提问有点频繁，请稍后再试。';
+  if (error.code === 'UNAUTHORIZED') return '请先在学习面板登录，再使用云端 AI 隐私选项。';
+  if (error.code === 'AI_COORDINATION_UNAVAILABLE') return 'AI 全局保护暂时不可用，请稍后重试。';
   if (error.code === 'AI_TIMEOUT') return '这次思考超时了，请重试或切换到快速模式。';
   const message = error.message || 'AI 服务暂时不可用，请稍后重试。';
   return error.requestId ? `${message}\n\n请求 ID：${error.requestId}` : message;
@@ -43,9 +49,14 @@ export function useAIAssistant(initialOpen = false, initialSelection?: Selection
   const [articlePage, setArticlePage] = useState(false);
   const [knowledgeStatus, setKnowledgeStatus] = useState<KnowledgeStatus>('idle');
   const [selection, setSelection] = useState<SelectionContext>();
+  const [cloudAiState, setCloudAiState] = useState<CloudAiState>(aiApiOrigin ? 'idle' : 'disabled');
+  const [persistConversation, setPersistConversationState] = useState(false);
+  const [privateLearningContext, setPrivateLearningContext] = useState(false);
+  const [conversationId, setConversationId] = useState<string>();
   const abortRef = useRef<AbortController | undefined>(undefined);
   const streamingRef = useRef(false);
   const initialSelectionHandledRef = useRef(false);
+  const cloudSessionRequestedRef = useRef(false);
 
   useEffect(() => {
     const syncPage = () => setArticlePage(isArticlePage());
@@ -62,6 +73,26 @@ export function useAIAssistant(initialOpen = false, initialSelection?: Selection
       () => setKnowledgeStatus('unavailable'),
     );
   }, [isOpen, knowledgeStatus]);
+
+  useEffect(() => {
+    if (!isOpen || !aiApiOrigin || cloudSessionRequestedRef.current) return;
+    cloudSessionRequestedRef.current = true;
+    let active = true;
+    setCloudAiState('loading');
+    import('@/lib/cloud/account-client')
+      .then(({ CloudAccountClient }) => new CloudAccountClient(aiApiOrigin).getSession())
+      .then(
+        (session) => {
+          if (active) setCloudAiState(session ? 'authenticated' : 'anonymous');
+        },
+        () => {
+          if (active) setCloudAiState('error');
+        },
+      );
+    return () => {
+      active = false;
+    };
+  }, [isOpen]);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -128,7 +159,7 @@ export function useAIAssistant(initialOpen = false, initialSelection?: Selection
       abortRef.current = controller;
       let received = '';
       try {
-        await streamAIResponse(
+        const result = await streamAIResponse(
           fitChatRequest({
             mode,
             messages: [
@@ -142,6 +173,14 @@ export function useAIAssistant(initialOpen = false, initialSelection?: Selection
             structuredFacts: retrieval?.facts,
             currentPage,
             selection: activeSelection,
+            cloud:
+              cloudAiState === 'authenticated' && (persistConversation || privateLearningContext)
+                ? {
+                    persistConversation,
+                    conversationId: persistConversation ? conversationId : undefined,
+                    privateLearningContext,
+                  }
+                : undefined,
           }),
           (delta) => {
             received += delta;
@@ -155,6 +194,9 @@ export function useAIAssistant(initialOpen = false, initialSelection?: Selection
           },
           controller.signal,
         );
+        if (persistConversation && result.conversationId) {
+          setConversationId(result.conversationId);
+        }
 
         setMessages((current) =>
           current.map((message) =>
@@ -195,7 +237,15 @@ export function useAIAssistant(initialOpen = false, initialSelection?: Selection
         setIsStreaming(false);
       }
     },
-    [messages, mode, selection],
+    [
+      cloudAiState,
+      conversationId,
+      messages,
+      mode,
+      persistConversation,
+      privateLearningContext,
+      selection,
+    ],
   );
 
   useEffect(() => {
@@ -228,6 +278,7 @@ export function useAIAssistant(initialOpen = false, initialSelection?: Selection
     streamingRef.current = false;
     setIsStreaming(false);
     setMessages([]);
+    setConversationId(undefined);
   }, []);
 
   const stopStreaming = useCallback(() => abortRef.current?.abort(), []);
@@ -249,5 +300,13 @@ export function useAIAssistant(initialOpen = false, initialSelection?: Selection
     sendMessage,
     stopStreaming,
     clearMessages,
+    cloudAiState,
+    persistConversation,
+    setPersistConversation(value: boolean) {
+      setPersistConversationState(value);
+      if (!value) setConversationId(undefined);
+    },
+    privateLearningContext,
+    setPrivateLearningContext,
   };
 }

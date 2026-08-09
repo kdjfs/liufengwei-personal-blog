@@ -22,6 +22,10 @@ export class AIChatClientError extends Error {
   }
 }
 
+export interface AIStreamResult {
+  conversationId?: string;
+}
+
 async function readError(response: Response): Promise<ErrorPayload> {
   try {
     return (await response.json()) as ErrorPayload;
@@ -34,15 +38,19 @@ export async function streamAIResponse(
   payload: ChatRequestPayload,
   onDelta: (delta: string) => void,
   signal: AbortSignal,
-): Promise<void> {
+): Promise<AIStreamResult> {
   let response: Response;
   try {
-    response = await fetch(resolveChatEndpoint(window.location.hostname), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal,
-    });
+    response = await fetch(
+      resolveChatEndpoint(window.location.hostname, import.meta.env.PUBLIC_AI_API_URL),
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal,
+      },
+    );
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
     throw new AIChatClientError('ENDPOINT_UNAVAILABLE', 0, '完整 AI 联调请运行 pnpm dev:ai');
@@ -75,4 +83,5 @@ export async function streamAIResponse(
   }
 
   for (const delta of eventDecoder.push(textDecoder.decode())) onDelta(delta);
+  return { conversationId: response.headers.get('x-lfw-conversation-id') ?? undefined };
 }

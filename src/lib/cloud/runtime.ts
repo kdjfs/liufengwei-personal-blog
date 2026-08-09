@@ -1,4 +1,5 @@
 import type { LearningDatabase } from '../learning/db.ts';
+import { normalizeApiOrigin } from './config.ts';
 import type { SyncStatus } from './sync.ts';
 
 let activeSync: Promise<void> | undefined;
@@ -8,14 +9,7 @@ let registeredOnlineListener = false;
 let latestDatabase: LearningDatabase | undefined;
 
 function configuredOrigin(): string | undefined {
-  const value = import.meta.env.PUBLIC_CLOUD_API_URL?.trim();
-  if (!value) return undefined;
-  try {
-    const url = new URL(value);
-    return url.origin === value.replace(/\/$/, '') ? url.origin : undefined;
-  } catch {
-    return undefined;
-  }
+  return normalizeApiOrigin(import.meta.env.PUBLIC_CLOUD_API_URL);
 }
 
 function publish(status: SyncStatus): void {

@@ -102,6 +102,7 @@ export async function buildApp({
 
   await app.register(cors, {
     credentials: true,
+    exposedHeaders: ['X-LFW-Conversation-Id', 'X-LFW-Request-Id'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     origin(origin, callback) {
       callback(null, origin === undefined || origin === config.webOrigin);

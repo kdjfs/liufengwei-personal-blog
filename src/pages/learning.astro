@@ -1,18 +1,37 @@
 ---
 import LearningDashboard from '@/components/learning/LearningDashboard';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { normalizeApiOrigin } from '@/lib/cloud/config';
 import { createEmptyLearningSummary } from '@/lib/learning/stats';
 
 const initialSummary = createEmptyLearningSummary();
+const cloudApiOrigin = normalizeApiOrigin(import.meta.env.PUBLIC_CLOUD_API_URL);
 ---
 
-<BaseLayout title="学习面板" description="仅保存在当前浏览器中的个人阅读、听读与批注学习记录。">
+<BaseLayout
+  title="学习面板"
+  description="本地优先的个人阅读、听读与批注学习记录，可选择登录后跨设备同步。"
+>
   <header class="page-header container-wide learning-page-header">
-    <p class="eyebrow">PERSONAL LEARNING OS · LOCAL ONLY</p>
+    <p class="eyebrow">
+      {
+        cloudApiOrigin
+          ? 'PERSONAL LEARNING OS · OPTIONAL CLOUD'
+          : 'PERSONAL LEARNING OS · LOCAL ONLY'
+      }
+    </p>
     <h1>学习面板</h1>
-    <p>记住读过什么、读到哪里、听了多久，以及留下的每一条理解。</p>
+    <p>
+      记住读过什么、读到哪里、听了多久，以及留下的每一条理解。{
+        cloudApiOrigin ? ' 登录后可选择跨设备同步。' : ''
+      }
+    </p>
   </header>
   <div class="container-wide learning-page-content">
-    <LearningDashboard client:load initialSummary={initialSummary} />
+    <LearningDashboard
+      client:load
+      initialSummary={initialSummary}
+      cloudApiOrigin={cloudApiOrigin}
+    />
   </div>
 </BaseLayout>
