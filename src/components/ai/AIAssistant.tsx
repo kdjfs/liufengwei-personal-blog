@@ -240,6 +240,11 @@ export default function AIAssistant({ initialOpen = false, initialSelection }: A
             onKeyDown={handlePanelKeyDown}
             selection={assistant.selection}
             onClearSelection={assistant.clearSelection}
+            cloudAiState={assistant.cloudAiState}
+            persistConversation={assistant.persistConversation}
+            privateLearningContext={assistant.privateLearningContext}
+            onPersistConversationChange={assistant.setPersistConversation}
+            onPrivateLearningContextChange={assistant.setPrivateLearningContext}
           />
         </>
       )}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { getLearningDatabase } from '@/lib/learning/db';
 import {
   createEmptyLearningSummary,
@@ -17,10 +17,12 @@ function shortDate(value: string): string {
 
 interface Props {
   initialSummary?: LearningSummary;
+  cloudApiOrigin?: string;
 }
 
 export default function LearningDashboard({
   initialSummary = createEmptyLearningSummary(),
+  cloudApiOrigin,
 }: Props) {
   const [summary, setSummary] = useState<LearningSummary>(initialSummary);
   const [error, setError] = useState('');
@@ -38,6 +40,10 @@ export default function LearningDashboard({
     }
   }, []);
   useEffect(() => void load(), [load]);
+  const CloudPanel = useMemo(
+    () => (cloudApiOrigin ? lazy(() => import('../cloud/CloudLearningPanel')) : undefined),
+    [cloudApiOrigin],
+  );
 
   if (error)
     return (
@@ -51,6 +57,17 @@ export default function LearningDashboard({
   );
   return (
     <div className="learning-dashboard">
+      {CloudPanel && cloudApiOrigin && (
+        <Suspense
+          fallback={
+            <section className="learning-cloud-panel" aria-busy="true">
+              <p className="learning-cloud-note">正在加载云端控制…</p>
+            </section>
+          }
+        >
+          <CloudPanel apiOrigin={cloudApiOrigin} />
+        </Suspense>
+      )}
       <section className="learning-metrics" aria-label="学习数据概览">
         {[
           ['今日学习', formatLearningDuration(summary.todaySeconds)],

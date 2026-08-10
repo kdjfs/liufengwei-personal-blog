@@ -9,7 +9,11 @@ test('CI uses pinned runtimes, frozen installs, least privilege, and the release
   assert.match(workflow, /node-version: ['"]?22['"]?/);
   assert.match(workflow, /version: 10\.24\.0/);
   assert.match(workflow, /pnpm install --frozen-lockfile/);
+  assert.match(workflow, /image: mysql:8\.4\.10/);
+  assert.match(workflow, /image: redis:8\.6\.4-alpine/);
   assert.match(workflow, /playwright install --with-deps chromium/);
+  assert.match(workflow, /pnpm fullstack:check/);
+  assert.match(workflow, /pnpm test:integration/);
   assert.match(workflow, /pnpm release:check/);
   assert.match(workflow, /pull_request:\s*\r?\n\s+branches: \[main\]/);
   assert.doesNotMatch(workflow, /pull_request_target|DEEPSEEK_API_KEY|ANTHROPIC_AUTH_TOKEN/);
@@ -51,6 +55,13 @@ test('Playwright E2E blocks service workers and mocks every AI request', async (
   assert.match(specs, /route\('\*\*\/api\/chat'/);
   assert.match(specs, /route\.fulfill/);
   assert.doesNotMatch(specs, /api\.deepseek\.com|DEEPSEEK_API_KEY|ANTHROPIC_AUTH_TOKEN/);
+});
+
+test('Astro maps Redis CLI fences to a bundled Shiki language', async () => {
+  const config = (await import('../../astro.config.mjs')).default;
+  const shikiConfig = config.markdown?.shikiConfig;
+
+  assert.equal(shikiConfig?.langAlias?.redis, 'shell');
 });
 
 test('release manifest pins v1 and patched production dependencies', async () => {

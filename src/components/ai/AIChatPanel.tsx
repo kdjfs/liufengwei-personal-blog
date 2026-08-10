@@ -21,6 +21,11 @@ interface Props {
   onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void;
   selection?: SelectionContext;
   onClearSelection: () => void;
+  cloudAiState: 'disabled' | 'idle' | 'loading' | 'anonymous' | 'authenticated' | 'error';
+  persistConversation: boolean;
+  privateLearningContext: boolean;
+  onPersistConversationChange: (value: boolean) => void;
+  onPrivateLearningContextChange: (value: boolean) => void;
 }
 
 const statusLabels = {
@@ -46,6 +51,11 @@ export const AIChatPanel = forwardRef<HTMLElement, Props>(function AIChatPanel(
     onKeyDown,
     selection,
     onClearSelection,
+    cloudAiState,
+    persistConversation,
+    privateLearningContext,
+    onPersistConversationChange,
+    onPrivateLearningContextChange,
   },
   ref,
 ) {
@@ -114,6 +124,46 @@ export const AIChatPanel = forwardRef<HTMLElement, Props>(function AIChatPanel(
           <span>{statusLabels[knowledgeStatus]}</span>
         </p>
       </div>
+
+      {cloudAiState !== 'disabled' && (
+        <aside className="ai-cloud-controls" aria-label="AI 云端隐私选项">
+          {cloudAiState === 'authenticated' ? (
+            <fieldset disabled={isStreaming}>
+              <legend>云端隐私</legend>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={persistConversation}
+                  onChange={(event) => onPersistConversationChange(event.target.checked)}
+                />
+                <span>
+                  保存本次对话
+                  <small>关闭时不写入云端会话</small>
+                </span>
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={privateLearningContext}
+                  onChange={(event) => onPrivateLearningContextChange(event.target.checked)}
+                />
+                <span>
+                  使用相关学习记录
+                  <small>仅发送与当前问题相关的有限批注和进度</small>
+                </span>
+              </label>
+            </fieldset>
+          ) : cloudAiState === 'anonymous' ? (
+            <p>
+              云端隐私选项默认关闭。<a href="/learning">登录后可选择开启</a>
+            </p>
+          ) : cloudAiState === 'error' ? (
+            <p>云端会话不可用；当前提问不会附带私有学习数据。</p>
+          ) : (
+            <p aria-busy="true">正在确认云端会话…</p>
+          )}
+        </aside>
+      )}
 
       {selection && (
         <aside className="ai-selection-context" aria-label="当前选中文字">

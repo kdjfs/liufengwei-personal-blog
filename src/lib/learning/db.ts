@@ -1,13 +1,27 @@
-import type { Annotation, ArticleProgress, AudioScript, LearningSetting } from './types.ts';
+import type {
+  Annotation,
+  ArticleProgress,
+  AudioScript,
+  CloudArticleProgress,
+  LearningSetting,
+  LocalFavorite,
+  LocalSyncSnapshot,
+  QueuedSyncOperation,
+  SyncMeta,
+} from './types.ts';
 
 export const LEARNING_DB_NAME = 'lfw-learning-db';
-export const LEARNING_DB_VERSION = 1;
+export const LEARNING_DB_VERSION = 2;
 
 export interface LearningStoreMap {
   articleProgress: ArticleProgress;
   annotations: Annotation;
   audioScripts: AudioScript;
   settings: LearningSetting;
+  syncQueue: QueuedSyncOperation;
+  syncMeta: SyncMeta;
+  cloudProgress: CloudArticleProgress;
+  favorites: LocalFavorite;
 }
 
 export type LearningStoreName = keyof LearningStoreMap;
@@ -17,7 +31,15 @@ const STORE_KEYS: Record<LearningStoreName, string> = {
   annotations: 'id',
   audioScripts: 'cacheKey',
   settings: 'key',
+  syncQueue: 'operationId',
+  syncMeta: 'key',
+  cloudProgress: 'articleSlug',
+  favorites: 'articleSlug',
 };
+
+type LocalMutationStoreName = 'articleProgress' | 'annotations' | 'favorites';
+
+const DEVICE_ID_SETTING_KEY = 'cloud-device-id';
 
 function requestResult<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -54,7 +76,11 @@ export class LearningDatabase {
         const database = request.result;
         for (const [storeName, keyPath] of Object.entries(STORE_KEYS)) {
           if (!database.objectStoreNames.contains(storeName)) {
-            database.createObjectStore(storeName, { keyPath });
+            const store = database.createObjectStore(storeName, { keyPath });
+            if (storeName === 'syncQueue') {
+              store.createIndex('deviceEntity', ['entityType', 'entityId', 'deviceId']);
+              store.createIndex('entity', ['entityType', 'entityId']);
+            }
           }
         }
       };
@@ -107,6 +133,111 @@ export class LearningDatabase {
     const store = transaction.objectStore(storeName);
     for (const value of values) store.put(value);
     await transactionDone(transaction);
+  }
+
+  async putAndQueue<K extends LocalMutationStoreName>(
+    storeName: K,
+    value: LearningStoreMap[K],
+    operation: QueuedSyncOperation,
+  ): Promise<void> {
+    const database = await this.open();
+    const transaction = database.transaction([storeName, 'syncQueue'], 'readwrite');
+    const done = transactionDone(transaction);
+    transaction.objectStore(storeName).put(value);
+    const queue = transaction.objectStore('syncQueue');
+    const superseded = await requestResult(
+      queue
+        .index('deviceEntity')
+        .getAllKeys([operation.entityType, operation.entityId, operation.deviceId]),
+    );
+    for (const operationId of superseded) queue.delete(operationId);
+    queue.put(operation);
+    await done;
+  }
+
+  async acknowledgeOperations(operationIds: string[]): Promise<void> {
+    if (operationIds.length === 0) return;
+    const database = await this.open();
+    const transaction = database.transaction('syncQueue', 'readwrite');
+    const store = transaction.objectStore('syncQueue');
+    for (const operationId of operationIds) store.delete(operationId);
+    await transactionDone(transaction);
+  }
+
+  async rescheduleOperations(operations: QueuedSyncOperation[]): Promise<void> {
+    if (operations.length === 0) return;
+    const database = await this.open();
+    const transaction = database.transaction('syncQueue', 'readwrite');
+    const done = transactionDone(transaction);
+    const queue = transaction.objectStore('syncQueue');
+    for (const operation of operations) {
+      const current = await requestResult<QueuedSyncOperation | undefined>(
+        queue.get(operation.operationId),
+      );
+      if (current) queue.put(operation);
+    }
+    await done;
+  }
+
+  async applySyncSnapshot(snapshot: LocalSyncSnapshot, operationIds: string[]): Promise<void> {
+    const database = await this.open();
+    const transaction = database.transaction(
+      ['syncQueue', 'syncMeta', 'cloudProgress', 'annotations', 'favorites'],
+      'readwrite',
+    );
+    const done = transactionDone(transaction);
+    const queue = transaction.objectStore('syncQueue');
+    for (const operationId of operationIds) queue.delete(operationId);
+
+    const cloudProgress = transaction.objectStore('cloudProgress');
+    for (const record of snapshot.progress) cloudProgress.put(record);
+
+    const pendingByEntity = queue.index('entity');
+    const annotationStore = transaction.objectStore('annotations');
+    for (const annotation of snapshot.annotations) {
+      const pending = await requestResult(pendingByEntity.count(['annotation', annotation.id]));
+      if (pending === 0) annotationStore.put(annotation);
+    }
+
+    const favoriteStore = transaction.objectStore('favorites');
+    for (const favorite of snapshot.favorites) {
+      const pending = await requestResult(
+        pendingByEntity.count(['favorite', favorite.articleSlug]),
+      );
+      if (pending === 0) favoriteStore.put(favorite);
+    }
+
+    transaction.objectStore('syncMeta').put({
+      key: 'last-sync',
+      value: snapshot.cursor,
+      updatedAt: snapshot.cursor,
+    } satisfies SyncMeta);
+    await done;
+  }
+
+  async getOrCreateDeviceId(
+    createId: () => string = () => globalThis.crypto.randomUUID(),
+  ): Promise<string> {
+    const database = await this.open();
+    const transaction = database.transaction('settings', 'readwrite');
+    const done = transactionDone(transaction);
+    const store = transaction.objectStore('settings');
+    const existing = await requestResult<LearningSetting | undefined>(
+      store.get(DEVICE_ID_SETTING_KEY),
+    );
+    if (typeof existing?.value === 'string' && existing.value.length > 0) {
+      await done;
+      return existing.value;
+    }
+
+    const deviceId = createId();
+    store.put({
+      key: DEVICE_ID_SETTING_KEY,
+      value: deviceId,
+      updatedAt: new Date().toISOString(),
+    } satisfies LearningSetting);
+    await done;
+    return deviceId;
   }
 
   async delete(storeName: LearningStoreName, key: IDBValidKey): Promise<void> {

@@ -35,6 +35,12 @@
     "test:home": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/home/*.test.ts",
     "test:seo": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/seo/*.test.ts",
     "test:release-config": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/release/*.test.ts",
+    "test:api": "pnpm --filter @lfw/server test",
+    "test:integration": "pnpm --filter @lfw/server test:integration",
+    "typecheck:api": "pnpm --filter @lfw/contracts typecheck && pnpm --filter @lfw/server typecheck",
+    "fullstack:check": "pnpm typecheck:api && pnpm test:api",
+    "infra:up": "docker compose up -d --wait",
+    "infra:down": "docker compose down",
     "test": "pnpm test:content && pnpm test:ai && pnpm test:learning && pnpm test:article && pnpm test:home && pnpm test:seo && pnpm test:release-config",
     "ai:probe": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-probe.mjs",
     "ai:probe:prod": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-probe.mjs --production",
@@ -51,6 +57,7 @@
     "new:post": "pnpm content:new"
   },
   "dependencies": {
+    "@lfw/contracts": "workspace:*",
     "@astrojs/markdown-remark": "7.2.2",
     "@astrojs/mdx": "7.0.5",
     "@astrojs/react": "6.0.2",
@@ -96,6 +103,7 @@
   },
   "pnpm": {
     "overrides": {
+      "@esbuild-kit/core-utils>esbuild": "0.25.12",
       "dompurify@<=3.4.12": "3.4.13",
       "nanoid@<3.3.17": "3.3.17"
     },
