@@ -6,6 +6,8 @@
 
 LFW Space 是刘凤伟的个人技术博客、AI 数字花园与本地优先学习系统。内容以 Markdown / MDX 为唯一事实来源，经 Astro 静态生成并由 Pagefind 建立全文索引；需要交互的 AI、检索、阅读记忆和语音能力以局部 Island 或延迟加载模块加入。
 
+**Project status：Maintenance Mode。** v2.0 以后只新增文章、修复 Bug、升级依赖和维护线上服务；不再扩张新的内容系统、社交系统、AI Provider 或数据基础设施。
+
 ## Screenshots
 
 | Desktop                                                  | Mobile                                                 |
@@ -157,9 +159,9 @@ Vercel 使用 `pnpm install --frozen-lockfile`、`pnpm build` 和 `dist` 输出�
 
 推荐发布流程：release branch → Pull Request → GitHub Actions green → merge main → wait for Vercel production → browser/AI smoke → annotated tag → GitHub Release。逐项清单见 [docs/RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md)。
 
-## Roadmap
+## Maintenance Mode
 
-v1.0 保持无账号、无评论、无独立 Node/MySQL/Redis 服务。后续优先方向是 Article Theme Unification、混合向量召回（保留现有 Retrieval contract）以及可选的跨设备学习同步。演进边界见 [docs/ROADMAP.md](docs/ROADMAP.md)。
+v2.0 已完成内容发现、文章阅读、系列学习、Learning OS、LFW AI 与跨设备学习基础设施。后续工作限定为新增文章、Bug 修复、依赖升级和线上维护；不会为了扩大项目体量引入 Vector DB、评论、点赞、复杂社交、更多 AI Provider 或新的后台系统。
 
 ## License and assets
 
