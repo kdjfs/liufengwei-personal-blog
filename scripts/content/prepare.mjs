@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import matter from 'gray-matter';
+import { parseChapterOrder } from './chapter-order.mjs';
 import { analyzeMarkdown, BLOG_DIRECTORY, scanFiles, slugify } from './core.mjs';
 
 const KEYWORD_TAGS = [
@@ -98,6 +99,10 @@ export function prepareMarkdownDocument(
           ),
         ].slice(0, 8)
       : inferTags(title, body, category);
+  const inferredSeriesOrder =
+    parsed.data.series && parsed.data.seriesOrder === undefined
+      ? parseChapterOrder(title)
+      : undefined;
   const data = {
     ...parsed.data,
     title,
@@ -107,6 +112,7 @@ export function prepareMarkdownDocument(
     ...(parsed.data.updatedDate ? { updatedDate: stableDate(parsed.data.updatedDate) } : {}),
     category,
     tags,
+    ...(inferredSeriesOrder === undefined ? {} : { seriesOrder: inferredSeriesOrder }),
     cover: parsed.data.cover || 'auto',
     draft: parsed.data.draft ?? false,
     featured: parsed.data.featured ?? false,

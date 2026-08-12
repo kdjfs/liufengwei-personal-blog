@@ -178,8 +178,10 @@ export function findContentIssues(entries, { contentDirectory = BLOG_DIRECTORY }
     ) {
       report('error', entry, '重复 H1：正文 H1 与 frontmatter title 相同');
     }
-    if (data.series && !Number.isInteger(data.seriesOrder)) {
-      report('error', entry, '设置 series 时必须提供正整数 seriesOrder');
+    if (data.series && data.seriesOrder === undefined) {
+      report('error', entry, `Missing seriesOrder for series: ${data.series}`);
+    } else if (data.series && (!Number.isInteger(data.seriesOrder) || data.seriesOrder <= 0)) {
+      report('error', entry, 'seriesOrder must be a positive integer');
     }
     if (!data.series && data.seriesOrder !== undefined) {
       report('error', entry, 'seriesOrder 不能脱离 series 单独存在');
@@ -187,7 +189,7 @@ export function findContentIssues(entries, { contentDirectory = BLOG_DIRECTORY }
     if (data.series && Number.isInteger(data.seriesOrder)) {
       const key = `${data.series.toLowerCase()}::${data.seriesOrder}`;
       if (seriesOrders.has(key))
-        report('error', entry, `Series 顺序重复：${data.series} #${data.seriesOrder}`);
+        report('error', entry, `Duplicate seriesOrder: ${data.seriesOrder} (${data.series})`);
       else seriesOrders.set(key, entry.file);
     }
 

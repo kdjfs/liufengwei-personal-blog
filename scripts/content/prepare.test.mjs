@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
 import matter from 'gray-matter';
+import { parseChapterOrder } from './chapter-order.mjs';
 import { prepareMarkdownDocument } from './prepare.mjs';
 
 const contentDirectory = path.resolve('src/content/blog');
@@ -83,4 +84,36 @@ test('prepare is idempotent after generated values are written', () => {
 
   assert.equal(second.output, first.output);
   assert.equal(second.changed, false);
+});
+
+test('parseChapterOrder supports safe Chinese and Arabic chapter markers', () => {
+  const cases = [
+    ['第一章 MySQL', 1],
+    ['第十一章：最终复习', 11],
+    ['第二十章 缓存', 20],
+    ['第二十一篇 补充', 21],
+    ['第九十九节 总结', 99],
+    ['第1章 MySQL', 1],
+    ['第10章 Redis', 10],
+  ];
+  for (const [title, expected] of cases) assert.equal(parseChapterOrder(title), expected);
+  assert.equal(parseChapterOrder('MySQL 第一性原理'), undefined);
+  assert.equal(parseChapterOrder('第一章和第二章对比'), undefined);
+  assert.equal(parseChapterOrder('第一百章 超出范围'), undefined);
+});
+
+test('prepare infers seriesOrder only when series is already explicit', () => {
+  const file = path.join(contentDirectory, '后端', '第七章.md');
+  const withSeries = prepareMarkdownDocument(
+    `---\ntitle: 第七章 Redis 缓存\nseries: MySQL 与 Redis 前端速成\n---\n正文内容足够用于测试。\n`,
+    { file, contentDirectory, today: '2026-08-02' },
+  );
+  const withoutSeries = prepareMarkdownDocument(
+    `---\ntitle: 第一章 Node.js\n---\n正文内容足够用于测试。\n`,
+    { file, contentDirectory, today: '2026-08-02' },
+  );
+
+  assert.equal(matter(withSeries.output).data.seriesOrder, 7);
+  assert.equal(matter(withoutSeries.output).data.series, undefined);
+  assert.equal(matter(withoutSeries.output).data.seriesOrder, undefined);
 });

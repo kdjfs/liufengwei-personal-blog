@@ -54,6 +54,39 @@ test('findContentIssues reports duplicate slugs and invalid series order', () =>
   assert.ok(issues.some((issue) => issue.message.includes('seriesOrder')));
 });
 
+test('findContentIssues rejects duplicate and partial series orders without requiring continuity', () => {
+  const entry = (file, title, seriesOrder) => ({
+    file,
+    body: '正文',
+    data: {
+      slug: file.replace('.md', ''),
+      title,
+      description: '这是一段长度足够的系列文章摘要。',
+      publishDate: '2026-08-02',
+      category: '后端',
+      tags: ['MySQL'],
+      cover: 'auto',
+      draft: false,
+      series: 'Series A',
+      ...(seriesOrder === undefined ? {} : { seriesOrder }),
+    },
+    analysis: { title: undefined, images: [], links: [] },
+  });
+  const issues = findContentIssues(
+    [
+      entry('one.md', 'One', 10),
+      entry('two.md', 'Two', 20),
+      entry('duplicate.md', 'Duplicate', 20),
+      entry('missing.md', 'Missing'),
+    ],
+    { contentDirectory: process.cwd() },
+  );
+
+  assert.ok(issues.some((issue) => issue.message.includes('Duplicate seriesOrder: 20')));
+  assert.ok(issues.some((issue) => issue.message.includes('Missing seriesOrder')));
+  assert.ok(!issues.some((issue) => issue.message.includes('连续')));
+});
+
 test('findContentIssues rejects TODO markers in published articles', () => {
   const entries = [
     {
