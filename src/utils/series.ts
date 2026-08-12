@@ -2,10 +2,12 @@ import type { BlogEntry } from './posts';
 
 export function sortSeriesPosts(posts: BlogEntry[]): BlogEntry[] {
   return [...posts].sort((a, b) => {
-    if (!Number.isInteger(a.data.seriesOrder) || !Number.isInteger(b.data.seriesOrder)) {
+    const firstOrder = a.data.seriesOrder;
+    const secondOrder = b.data.seriesOrder;
+    if (!Number.isInteger(firstOrder) || !Number.isInteger(secondOrder)) {
       throw new Error('Series posts require an explicit seriesOrder');
     }
-    return a.data.seriesOrder! - b.data.seriesOrder!;
+    return Number(firstOrder) - Number(secondOrder);
   });
 }
 

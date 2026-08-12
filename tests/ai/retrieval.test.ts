@@ -79,6 +79,12 @@ const backendDocuments = Array.from({ length: 11 }, (_, index) => ({
   excerpt: `第 ${index + 1} 章的摘要。`,
 }));
 
+function backendDocument(index: number) {
+  const document = backendDocuments[index];
+  assert.ok(document);
+  return document;
+}
+
 const retrievalIndex: KnowledgeIndex = {
   version: 2,
   fingerprint: 'fixture',
@@ -139,25 +145,25 @@ test('retrieveKnowledge answers category counts and complete lists from taxonomy
 test('series metadata lists follow seriesOrder even when publish dates and input order disagree', () => {
   const documents = [
     {
-      ...backendDocuments[2]!,
+      ...backendDocument(2),
       series: 'MySQL 与 Redis 前端速成',
       seriesOrder: 3,
       publishDate: '2026-08-04',
     },
     {
-      ...backendDocuments[0]!,
+      ...backendDocument(0),
       series: 'MySQL 与 Redis 前端速成',
       seriesOrder: 1,
       publishDate: '2026-08-03',
     },
     {
-      ...backendDocuments[3]!,
+      ...backendDocument(3),
       series: 'MySQL 与 Redis 前端速成',
       seriesOrder: 4,
       publishDate: '2026-08-01',
     },
     {
-      ...backendDocuments[1]!,
+      ...backendDocument(1),
       series: 'MySQL 与 Redis 前端速成',
       seriesOrder: 2,
       publishDate: '2026-08-05',

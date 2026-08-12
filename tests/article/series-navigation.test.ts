@@ -30,7 +30,9 @@ test('series articles use the learning path for previous and next navigation', (
     post('one', 1, '2026-01-03'),
     post('two', 2, '2026-01-02'),
   ];
-  const navigation = getPostNavigation(posts[2]!, posts);
+  const current = posts[2];
+  assert.ok(current);
+  const navigation = getPostNavigation(current, posts);
   assert.equal(navigation.previous?.id, 'one');
   assert.equal(navigation.next?.id, 'three');
   assert.equal(navigation.seriesPosition, 2);
