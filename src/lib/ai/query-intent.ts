@@ -24,16 +24,38 @@ function matchTaxonomy(query: string, values: KnowledgeTaxonomy[]): string | und
     .sort((a, b) => b.length - a.length)[0];
 }
 
+function matchSeries(query: string, values: KnowledgeTaxonomy[]): string | undefined {
+  const normalized = query.toLocaleLowerCase();
+  const candidates = values
+    .map((item) => item.name)
+    .map((name) => ({
+      name,
+      tokens: name
+        .toLocaleLowerCase()
+        .replace(/(?:前端|后端)?(?:系列|教程|学习|速成)/gu, ' ')
+        .split(/[\s·/、与和+_-]+/u)
+        .filter((token) => token.length >= 2),
+    }))
+    .filter(
+      ({ name, tokens }) =>
+        normalized.includes(name.toLocaleLowerCase()) ||
+        (tokens.length >= 2 && tokens.every((token) => normalized.includes(token))),
+    )
+    .sort((a, b) => b.tokens.length - a.tokens.length || b.name.length - a.name.length);
+  return candidates.length === 1 ? candidates[0]?.name : undefined;
+}
+
 export function classifyQuery(
   query: string,
   index: KnowledgeIndex,
   currentUrl: string,
 ): { intent: QueryIntent; entities: QueryEntities } {
   const normalized = query.toLocaleLowerCase();
+  const series = matchSeries(query, index.taxonomies.series);
   const entities: QueryEntities = {
     category: matchTaxonomy(query, index.taxonomies.categories),
-    tag: matchTaxonomy(query, index.taxonomies.tags),
-    series: matchTaxonomy(query, index.taxonomies.series),
+    tag: series ? undefined : matchTaxonomy(query, index.taxonomies.tags),
+    series,
   };
   const chapter =
     query.match(/第\s*([一二三四五六七八九十百\d]+)\s*章|chapter\s*(\d+)/iu)?.[1] ??

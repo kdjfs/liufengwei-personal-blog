@@ -119,7 +119,17 @@ function matchingDocuments(index: KnowledgeIndex, entities: QueryEntities): Know
       : entities.series
         ? index.taxonomies.series.find((item) => item.name === entities.series)?.articleIds
         : undefined;
-  return ids ? index.documents.filter((document) => ids.includes(document.id)) : [];
+  return ids
+    ? ids
+        .map((id) => index.documents.find((document) => document.id === id))
+        .filter((document): document is KnowledgeDocument => Boolean(document))
+        .sort((a, b) =>
+          entities.series
+            ? (a.seriesOrder ?? Number.MAX_SAFE_INTEGER) -
+              (b.seriesOrder ?? Number.MAX_SAFE_INTEGER)
+            : 0,
+        )
+    : [];
 }
 function formatFacts(label: string, documents: KnowledgeDocument[]): string {
   return [

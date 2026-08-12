@@ -136,6 +136,56 @@ test('retrieveKnowledge answers category counts and complete lists from taxonomy
   assert.match(list.fastAnswer ?? '', /第11章/);
 });
 
+test('series metadata lists follow seriesOrder even when publish dates and input order disagree', () => {
+  const documents = [
+    {
+      ...backendDocuments[2]!,
+      series: 'MySQL 与 Redis 前端速成',
+      seriesOrder: 3,
+      publishDate: '2026-08-04',
+    },
+    {
+      ...backendDocuments[0]!,
+      series: 'MySQL 与 Redis 前端速成',
+      seriesOrder: 1,
+      publishDate: '2026-08-03',
+    },
+    {
+      ...backendDocuments[3]!,
+      series: 'MySQL 与 Redis 前端速成',
+      seriesOrder: 4,
+      publishDate: '2026-08-01',
+    },
+    {
+      ...backendDocuments[1]!,
+      series: 'MySQL 与 Redis 前端速成',
+      seriesOrder: 2,
+      publishDate: '2026-08-05',
+    },
+  ];
+  const index: KnowledgeIndex = {
+    ...retrievalIndex,
+    stats: { ...retrievalIndex.stats, articles: 4, series: 1 },
+    documents,
+    taxonomies: {
+      ...retrievalIndex.taxonomies,
+      series: [
+        { name: 'MySQL 与 Redis 前端速成', count: 4, articleIds: documents.map((item) => item.id) },
+      ],
+    },
+  };
+
+  const result = retrieveKnowledge('请按顺序列出 MySQL 与 Redis 系列全部文章', index, '/');
+  assert.equal(result.intent, 'metadata_list');
+  assert.equal(result.entities.series, 'MySQL 与 Redis 前端速成');
+  assert.equal(result.entities.tag, undefined);
+  assert.deepEqual(
+    result.documents.map((item) => item.seriesOrder),
+    [1, 2, 3, 4],
+  );
+  assert.equal(result.chunks.length, 0);
+});
+
 test('retrieveKnowledge finds heading chunks for Chinese and English technical queries', () => {
   const chinese = retrieveKnowledge('大 Key 会带来什么问题？', retrievalIndex, '/');
   assert.equal(chinese.chunks[0]?.heading, '大 Key');

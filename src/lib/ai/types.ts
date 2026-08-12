@@ -10,6 +10,7 @@ export interface KnowledgeDocument {
   category: string;
   tags: string[];
   series?: string;
+  seriesOrder?: number;
   publishDate?: string;
   updatedDate?: string;
   readingTime?: string;

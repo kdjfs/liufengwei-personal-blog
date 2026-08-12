@@ -20,6 +20,7 @@ interface KnowledgePost {
     category: string;
     tags: readonly string[];
     series?: string;
+    seriesOrder?: number;
     publishDate?: Date;
     updatedDate?: Date;
     draft?: boolean;
@@ -238,7 +239,21 @@ function taxonomy(
     for (const name of key === 'tags' ? document.tags : [document[key] ?? ''])
       if (name) map.set(name, [...(map.get(name) ?? []), document.id]);
   return [...map]
-    .map(([name, articleIds]) => ({ name, articleIds, count: articleIds.length }))
+    .map(([name, articleIds]) => ({
+      name,
+      articleIds:
+        key === 'series'
+          ? [...articleIds].sort((leftId, rightId) => {
+              const left = documents.find((item) => item.id === leftId);
+              const right = documents.find((item) => item.id === rightId);
+              return (
+                (left?.seriesOrder ?? Number.MAX_SAFE_INTEGER) -
+                (right?.seriesOrder ?? Number.MAX_SAFE_INTEGER)
+              );
+            })
+          : articleIds,
+      count: articleIds.length,
+    }))
     .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
 }
 export function createKnowledgeItems({
@@ -259,6 +274,7 @@ export function createKnowledgeItems({
       category: post.data.category,
       tags: [...post.data.tags],
       series: post.data.series,
+      seriesOrder: post.data.seriesOrder,
       publishDate: dateValue(post.data.publishDate),
       updatedDate: dateValue(post.data.updatedDate),
       excerpt: stripMarkdownForKnowledge(post.body ?? '', 360),
