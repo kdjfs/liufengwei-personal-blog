@@ -110,7 +110,9 @@ export function useAIAssistant(initialOpen = false, initialSelection?: Selection
         const retrievalQuestion = activeSelection
           ? `${question} ${activeSelection.text} ${activeSelection.headingText ?? ''}`
           : question;
-        retrieval = retrieveKnowledge(retrievalQuestion, await loadKnowledge(), currentPage.url);
+        retrieval = retrieveKnowledge(retrievalQuestion, await loadKnowledge(), currentPage.url, {
+          intentQuery: activeSelection ? question : undefined,
+        });
         setKnowledgeStatus('ready');
       } catch {
         setKnowledgeStatus('unavailable');

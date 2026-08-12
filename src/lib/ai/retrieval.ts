@@ -16,6 +16,9 @@ export interface RetrievalResult {
   confidence: 'high' | 'medium' | 'low';
   fastAnswer?: string;
 }
+export interface RetrievalOptions {
+  intentQuery?: string;
+}
 const STOP_TERMS = new Set([
   '一下',
   '这个',
@@ -144,8 +147,9 @@ export function retrieveKnowledge(
   query: string,
   index: KnowledgeIndex,
   currentUrl: string,
+  options: RetrievalOptions = {},
 ): RetrievalResult {
-  const { intent, entities } = classifyQuery(query, index, currentUrl);
+  const { intent, entities } = classifyQuery(options.intentQuery ?? query, index, currentUrl);
   const queryTerms = buildTerms(query);
   const entityDocuments = matchingDocuments(index, entities);
   if (intent === 'metadata_count' || intent === 'metadata_list') {

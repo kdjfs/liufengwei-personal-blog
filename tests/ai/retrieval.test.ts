@@ -186,6 +186,18 @@ test('series metadata lists follow seriesOrder even when publish dates and input
   assert.equal(result.chunks.length, 0);
 });
 
+test('selection context can enrich semantic ranking without hijacking query intent', () => {
+  const result = retrieveKnowledge(
+    '请解释我选中的这段内容 所有 MySQL Redis 章节都使用中文注释',
+    retrievalIndex,
+    '/blog/backend-3',
+    { intentQuery: '请解释我选中的这段内容' },
+  );
+
+  assert.equal(result.intent, 'content_search');
+  assert.equal(result.fastAnswer, undefined);
+});
+
 test('retrieveKnowledge finds heading chunks for Chinese and English technical queries', () => {
   const chinese = retrieveKnowledge('大 Key 会带来什么问题？', retrievalIndex, '/');
   assert.equal(chinese.chunks[0]?.heading, '大 Key');
