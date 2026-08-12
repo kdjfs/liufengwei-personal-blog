@@ -164,7 +164,7 @@ export default function AIAssistant({ initialOpen = false, initialSelection }: A
 
     const focusable = [
       ...(panelRef.current?.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), a[href], textarea:not(:disabled)',
+        'button:not(:disabled), a[href], textarea:not(:disabled), input:not(:disabled), summary, [tabindex]:not([tabindex="-1"])',
       ) ?? []),
     ];
     if (focusable.length === 0) return;
@@ -221,7 +221,7 @@ export default function AIAssistant({ initialOpen = false, initialSelection }: A
           <button
             type="button"
             className="ai-scrim"
-            aria-label="关闭 AI 助手"
+            aria-label="关闭 AI 助手背景"
             onClick={() => assistant.setIsOpen(false)}
           />
           <AIChatPanel
