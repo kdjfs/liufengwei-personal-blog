@@ -16,6 +16,7 @@ import {
   getRelatedPosts,
 } from '@/utils/posts';
 import { getBlogCover } from '@/utils/blog-cover';
+import { getPostNavigation } from '@/utils/series';
 import '@/styles/article.css';
 import '@/styles/markdown.css';
 import '@/styles/article-code.css';
@@ -29,15 +30,8 @@ export async function getStaticPaths() {
 const { post, posts } = Astro.props;
 const { Content, headings } = await render(post);
 const stats = getReadingStats(post.body ?? '');
-const index = posts.findIndex((item) => item.id === post.id);
-const previous = posts[index + 1];
-const next = posts[index - 1];
+const { previous, next, seriesPosts, seriesPosition, seriesTotal } = getPostNavigation(post, posts);
 const related = getRelatedPosts(post, posts);
-const seriesPosts = post.data.series
-  ? posts
-      .filter((item) => item.data.series === post.data.series)
-      .sort((a, b) => (a.data.seriesOrder ?? 0) - (b.data.seriesOrder ?? 0))
-  : [];
 const cover = getBlogCover(post.data.slug, post.data.cover);
 ---
 
@@ -80,6 +74,16 @@ const cover = getBlogCover(post.data.slug, post.data.cover);
         {post.data.title}
       </h1>
       <p class="article-lead">{post.data.description}</p>
+      {
+        post.data.series && seriesPosition && (
+          <p class="article-series-progress">
+            <a href={`/series/${encodeURIComponent(post.data.series)}`}>{post.data.series}</a>
+            <span>
+              {seriesPosition} / {seriesTotal}
+            </span>
+          </p>
+        )
+      }
       <div class="article-meta">
         <time datetime={post.data.publishDate.toISOString()}
           >{formatDate(post.data.publishDate)}</time

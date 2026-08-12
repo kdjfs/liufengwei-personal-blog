@@ -26,9 +26,9 @@ const { series } = Astro.props;
     <nav class="taxonomy-subnav" aria-label="系列导航"><a href="/series">← 全部系列</a></nav>
     <ol>
       {
-        series.posts.map((post, index) => (
+        series.posts.map((post) => (
           <li>
-            <span>{String(index + 1).padStart(2, '0')}</span>
+            <span>{String(post.data.seriesOrder).padStart(2, '0')}</span>
             <div>
               <p>
                 {post.data.category} · {formatDate(post.data.publishDate)}

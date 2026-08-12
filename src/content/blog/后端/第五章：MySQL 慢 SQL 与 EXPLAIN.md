@@ -4,6 +4,8 @@ slug: di-wu-zhang-mysql-man-sql-yu-explain
 description: 万福鉴酒的订单列表刚上线时 100 毫秒打开，后来订单越来越多，接口突然需要 5 秒。
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 5
 tags:
   - JavaScript
   - Node.js

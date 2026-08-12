@@ -4,6 +4,8 @@ slug: di-qi-zhang-redis-huan-cun-liu-cheng-yu-mysql-shu-ju-yi-zhi-xing
 description: 用户已经把昵称从“刘凤伟”改成“前端高手”，MySQL 里是新名字，但 Redis 里还是旧名字。页面到底会显示什么？
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 7
 tags:
   - JavaScript
   - Node.js

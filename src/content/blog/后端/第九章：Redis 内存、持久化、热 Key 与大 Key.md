@@ -4,6 +4,8 @@ slug: di-jiu-zhang-redis-nei-cun-chi-jiu-hua-re-key-yu-da-key
 description: 这一章把 Redis 想象成一家速度极快但房间有限的酒店：
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 9
 tags:
   - JavaScript
   - Node.js

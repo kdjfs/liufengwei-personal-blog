@@ -4,6 +4,8 @@ slug: di-san-zhang-mysql-shi-wu-mvcc-yu-suo
 description: 以后我给你的 所有 MySQL、Redis、Node.js 代码示例都会配中文注释。这一章不堆概念，我们通过一个故事理解：
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 3
 tags:
   - JavaScript
   - Node.js

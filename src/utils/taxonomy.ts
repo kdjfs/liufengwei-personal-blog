@@ -1,4 +1,5 @@
 import type { BlogEntry } from './posts';
+import { sortSeriesPosts } from './series';
 
 export interface CategorySummary {
   name: string;
@@ -60,12 +61,7 @@ export function getSeriesSummaries(posts: BlogEntry[]): SeriesSummary[] {
     .map(([name, seriesPosts]) => ({
       name,
       count: seriesPosts.length,
-      posts: seriesPosts.sort(
-        (a, b) =>
-          (a.data.seriesOrder ?? Number.MAX_SAFE_INTEGER) -
-            (b.data.seriesOrder ?? Number.MAX_SAFE_INTEGER) ||
-          a.data.publishDate.getTime() - b.data.publishDate.getTime(),
-      ),
+      posts: sortSeriesPosts(seriesPosts),
     }))
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
 }

@@ -4,6 +4,8 @@ slug: di-shi-zhang-redis-fen-bu-shi-suo-mi-deng-yu-xian-liu
 description: 这一章是 Redis 最后一章核心内容，也是最容易被面试官追问的一章。
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 10
 tags:
   - JavaScript
   - Node.js

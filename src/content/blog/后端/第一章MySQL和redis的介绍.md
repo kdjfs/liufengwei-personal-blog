@@ -4,6 +4,8 @@ slug: di-yi-zhang-mysql-he-redis-de-jie-shao
 description: 可以。你的目标不是一天成为后端工程师或 DBA，而是达到下面这个标准：
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 1
 tags:
   - JavaScript
   - Node.js

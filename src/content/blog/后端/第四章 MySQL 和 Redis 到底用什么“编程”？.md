@@ -4,6 +4,8 @@ slug: di-si-zhang-mysql-he-redis-dao-di-yong-shen-me-bian-cheng
 description: 它不是 JavaScript，也不是 Java。
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 4
 tags:
   - React
   - Vue

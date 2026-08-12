@@ -4,6 +4,8 @@ slug: di-shi-yi-zhang-mysql-redis-zui-zhong-mian-shi-zong-fu-xi
 description: 你明天就去面前端实习，面试官顺着 Node.js、MySQL、Redis 和你的项目开始拷打。
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 11
 tags:
   - JavaScript
   - Node.js

@@ -4,6 +4,8 @@ slug: di-liu-zhang-mysql-redis-zong-gang
 description: 可以。我们把整个课程固定成 11 章，不再无限扩展。
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 6
 tags:
   - React
   - Vue

@@ -4,6 +4,8 @@ slug: di-er-zhang-mysql-suo-yin-gei-shu-ju-ku-zhuang-shang-dao-hang-xi-tong
 description: 为什么 B+ 树快？什么是回表？联合索引为什么要遵守最左前缀？
 publishDate: '2026-08-02'
 category: 后端
+series: MySQL 与 Redis 前端速成
+seriesOrder: 2
 tags:
   - JavaScript
   - MySQL
