@@ -27,6 +27,7 @@ runPnpm(['typecheck']);
 runPnpm(['lint']);
 runPnpm(['format:check']);
 runPnpm(['ai:function:check']);
+runPnpm(['secret:scan']);
 runPnpm(['audit', '--prod']);
 runPnpm(['build']);
 assertClean('build');

@@ -60,6 +60,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Scan tracked files for secrets
+        run: pnpm secret:scan
+
       - name: Run full-stack checks
         run: pnpm fullstack:check
 
@@ -69,6 +72,12 @@ jobs:
           LFW_TEST_REDIS_URL: redis://127.0.0.1:6380/0
         run: pnpm test:integration
 
+      - name: Run Docker migration and health smoke
+        env:
+          LFW_TEST_DATABASE_URL: mysql://lfw:lfw_test_only@127.0.0.1:3307/lfw_test
+          LFW_TEST_REDIS_URL: redis://127.0.0.1:6380/0
+        run: pnpm docker:smoke
+
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
 
@@ -77,7 +86,7 @@ jobs:
           PUBLIC_CLOUD_API_URL: http://127.0.0.1:8788
           PUBLIC_AI_API_URL: http://127.0.0.1:8788
           LFW_E2E_CLOUD: '1'
-        run: pnpm build && pnpm exec playwright test tests/e2e/cloud-ui.spec.ts --project=chromium-desktop
+        run: pnpm build && pnpm exec playwright test tests/e2e/cloud-ui.spec.ts
 
       - name: Run release gate
         run: pnpm release:check
