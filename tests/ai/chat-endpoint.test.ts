@@ -20,3 +20,14 @@ test('resolveChatEndpoint switches to Node AI only through an explicit path-free
   assert.equal(resolveChatEndpoint('www.example.test', 'https://api.example.test/v1'), '/api/chat');
   assert.equal(resolveChatEndpoint('www.example.test', 'http://api.example.test'), '/api/chat');
 });
+
+test('resolveChatEndpoint makes explicit local mode win over stale cloud configuration', () => {
+  assert.equal(
+    resolveChatEndpoint('localhost', 'http://127.0.0.1:8788', 'local'),
+    'http://127.0.0.1:8787/api/chat',
+  );
+  assert.equal(
+    resolveChatEndpoint('127.0.0.1', 'http://127.0.0.1:8788', 'cloud'),
+    'http://127.0.0.1:8788/api/v1/ai/chat',
+  );
+});

@@ -1,17 +1,34 @@
-import { existsSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { resolve } from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { validateApiKeyValue } from '../api/_chat-core.ts';
 import { handleChat } from '../api/_chat-handler.ts';
+import {
+  getApiKeyStatus,
+  LOCAL_AI_HOST,
+  LOCAL_AI_PORT,
+  loadLocalDevEnvironment,
+} from './local-ai-environment.mjs';
 
-const HOST = '127.0.0.1';
-const PORT = 8787;
-const LOCAL_ORIGINS = new Set(['http://localhost:4321', 'http://127.0.0.1:4321']);
+const HOST = LOCAL_AI_HOST;
+const PORT = LOCAL_AI_PORT;
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
 export function isAllowedLocalOrigin(origin: string | undefined): origin is string {
-  return origin !== undefined && LOCAL_ORIGINS.has(origin);
+  if (!origin) return false;
+  try {
+    const url = new URL(origin);
+    return (
+      url.protocol === 'http:' &&
+      LOOPBACK_HOSTS.has(url.hostname) &&
+      url.origin === origin &&
+      !url.username &&
+      !url.password
+    );
+  } catch {
+    return false;
+  }
 }
 
 function safeMessage(error: unknown): string {
@@ -22,18 +39,17 @@ function safeMessage(error: unknown): string {
 }
 
 function loadLocalEnvironment(): NodeJS.ProcessEnv {
-  const envFile = resolve('.env.local');
-  if (!existsSync(envFile)) throw new Error('[LFW AI] 未找到 .env.local');
-  process.loadEnvFile(envFile);
+  const local = loadLocalDevEnvironment();
+  if (!local.exists) throw new Error('[LFW AI] 未找到 .env.local。');
 
-  const key = validateApiKeyValue(process.env.DEEPSEEK_API_KEY);
-  if (key.status === 'missing' || key.status === 'placeholder') {
-    throw new Error('[LFW AI] DEEPSEEK_API_KEY 未配置');
+  const keyStatus = getApiKeyStatus(local.environment.DEEPSEEK_API_KEY);
+  if (keyStatus === 'missing' || keyStatus === 'placeholder') {
+    throw new Error('[LFW AI] DEEPSEEK_API_KEY 未配置。');
   }
-  if (key.status === 'invalid') {
+  if (keyStatus === 'invalid') {
     throw new Error('[LFW AI] API Key 包含非法字符，请重新复制 DeepSeek API Key。');
   }
-  return process.env;
+  return local.environment;
 }
 
 function writeJson(response: ServerResponse, status: number, body: unknown): void {
@@ -62,7 +78,7 @@ function appendRequestHeaders(request: IncomingMessage, headers: Headers): void 
       headers.set(name, value);
     }
   }
-  headers.set('x-real-ip', request.socket.remoteAddress ?? '127.0.0.1');
+  headers.set('x-real-ip', request.socket.remoteAddress ?? HOST);
 }
 
 async function relayResponse(
@@ -75,6 +91,7 @@ async function relayResponse(
     headers[name] = value;
   });
   headers['access-control-allow-origin'] = origin;
+  headers['access-control-allow-credentials'] = 'true';
   headers.vary = headers.vary ? `${headers.vary}, Origin` : 'Origin';
   response.writeHead(upstream.status, headers);
 
@@ -88,6 +105,18 @@ async function relayResponse(
 
 export function createLocalAiServer(environment: NodeJS.ProcessEnv = process.env) {
   return createServer(async (request, response) => {
+    const url = new URL(request.url ?? '/', `http://${HOST}:${PORT}`);
+    if (request.method === 'GET' && url.pathname === '/health') {
+      const keyStatus = validateApiKeyValue(environment.DEEPSEEK_API_KEY).status;
+      writeJson(response, 200, {
+        service: 'lfw-ai-local',
+        ok: true,
+        configured: keyStatus === 'valid',
+        model: 'deepseek-v4-pro',
+      });
+      return;
+    }
+
     const origin = request.headers.origin;
     if (!isAllowedLocalOrigin(origin)) {
       writeJson(response, 403, { error: { code: 'ORIGIN_NOT_ALLOWED' } });
@@ -97,6 +126,7 @@ export function createLocalAiServer(environment: NodeJS.ProcessEnv = process.env
     if (request.method === 'OPTIONS') {
       response.writeHead(204, {
         'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '600',
@@ -106,7 +136,6 @@ export function createLocalAiServer(environment: NodeJS.ProcessEnv = process.env
       return;
     }
 
-    const url = new URL(request.url ?? '/', `http://${HOST}:${PORT}`);
     if (url.pathname !== '/api/chat') {
       writeJson(response, 404, { error: { code: 'NOT_FOUND' } });
       return;
@@ -159,7 +188,7 @@ export function startLocalAiServer() {
   });
   server.listen(PORT, HOST, () => {
     console.log(`[LFW AI] Local Gateway 已启动：http://${HOST}:${PORT}/api/chat`);
-    console.log('[LFW AI] DeepSeek 配置：configured · deepseek-v4-pro');
+    console.log('[LFW AI] DeepSeek：configured · deepseek-v4-pro');
   });
   for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     process.once(signal, () => server.close(() => process.exit(0)));

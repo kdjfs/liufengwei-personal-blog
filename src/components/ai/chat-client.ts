@@ -42,7 +42,11 @@ export async function streamAIResponse(
   let response: Response;
   try {
     response = await fetch(
-      resolveChatEndpoint(window.location.hostname, import.meta.env.PUBLIC_AI_API_URL),
+      resolveChatEndpoint(
+        window.location.hostname,
+        import.meta.env.PUBLIC_AI_API_URL,
+        import.meta.env.DEV && import.meta.env.PUBLIC_LFW_AI_MODE === 'local' ? 'local' : 'auto',
+      ),
       {
         method: 'POST',
         credentials: 'include',

@@ -9,9 +9,9 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "predev": "pnpm content:prepare",
     "dev": "node scripts/dev.mjs",
     "dev:ai": "node scripts/dev-ai.mjs",
+    "dev:fullstack": "node scripts/dev-fullstack.mjs",
     "start": "astro dev",
     "prebuild": "pnpm content:prepare && pnpm ai:function:build",
     "build": "astro build && pagefind --site dist",
@@ -47,6 +47,7 @@
     "test": "pnpm test:content && pnpm test:ai && pnpm test:learning && pnpm test:article && pnpm test:home && pnpm test:seo && pnpm test:release-config && pnpm test:security",
     "ai:probe": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-probe.mjs",
     "ai:probe:prod": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-probe.mjs --production",
+    "ai:doctor": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-doctor.mjs",
     "ai:inspect": "node --disable-warning=ExperimentalWarning --experimental-strip-types scripts/ai-inspect.ts",
     "ai:function:build": "node scripts/build-ai-function.mjs",
     "ai:function:check": "node scripts/build-ai-function.mjs --check",
