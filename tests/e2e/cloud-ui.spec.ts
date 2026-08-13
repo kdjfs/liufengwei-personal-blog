@@ -52,6 +52,8 @@ test('configured cloud UI is deferred, accessible, and sends explicit AI privacy
   await page.goto('/blog/3-yue-20-san-wei-jia/');
   await page.getByRole('button', { name: '打开 LFW AI 助手' }).click();
   await expect(page.getByRole('dialog', { name: 'LFW AI' })).toBeVisible();
+  await page.getByRole('button', { name: 'AI 设置' }).click();
+  await expect(page.getByLabel('AI 设置选项')).toBeVisible();
   await expect(page.getByRole('group', { name: '云端隐私' })).toBeVisible();
   await page.getByLabel('保存本次对话').check();
   await page.getByLabel('使用相关学习记录').check();

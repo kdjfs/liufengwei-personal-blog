@@ -138,6 +138,7 @@ export const AIChatPanel = forwardRef<HTMLElement, Props>(function AIChatPanel(p
             <h3>云端隐私选项</h3>
             {cloudAiState === 'authenticated' ? (
               <fieldset disabled={isStreaming}>
+                <legend className="sr-only">云端隐私</legend>
                 <label>
                   <input
                     type="checkbox"
