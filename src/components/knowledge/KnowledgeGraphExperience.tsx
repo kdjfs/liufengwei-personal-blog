@@ -5,6 +5,7 @@ import {
   type KnowledgeLearningOverlay,
   summarizeLearningOverlay,
 } from '@/lib/knowledge/learning-overlay';
+import { isKnowledgeGraphPayload } from '@/lib/knowledge/payload';
 import {
   filterKnowledgeGraph,
   type KnowledgeFilter,
@@ -15,12 +16,6 @@ import KnowledgeGraphCanvas from './KnowledgeGraphCanvas';
 import KnowledgeGraphDetail from './KnowledgeGraphDetail';
 import KnowledgeGraphList from './KnowledgeGraphList';
 import KnowledgeGraphToolbar from './KnowledgeGraphToolbar';
-
-function isKnowledgeGraph(value: unknown): value is KnowledgeGraph {
-  if (!value || typeof value !== 'object') return false;
-  const graph = value as Partial<KnowledgeGraph>;
-  return graph.version === 1 && Array.isArray(graph.nodes) && Array.isArray(graph.edges);
-}
 
 export default function KnowledgeGraphExperience() {
   const [graph, setGraph] = useState<KnowledgeGraph>();
@@ -39,7 +34,7 @@ export default function KnowledgeGraphExperience() {
       .then(async (response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload: unknown = await response.json();
-        if (!isKnowledgeGraph(payload)) throw new Error('invalid graph payload');
+        if (!isKnowledgeGraphPayload(payload)) throw new Error('invalid graph payload');
         setGraph(payload);
       })
       .catch((reason: unknown) => {

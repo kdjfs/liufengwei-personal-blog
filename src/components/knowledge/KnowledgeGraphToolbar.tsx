@@ -56,6 +56,7 @@ export default function KnowledgeGraphToolbar({
           <input
             type="search"
             value={query}
+            maxLength={120}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="搜索文章、系列、分类或标签"
           />
