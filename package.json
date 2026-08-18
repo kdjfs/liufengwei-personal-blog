@@ -71,7 +71,7 @@
     "@tailwindcss/vite": "4.3.3",
     "astro": "7.1.6",
     "github-slugger": "2.0.0",
-    "katex": "0.18.1",
+    "katex": "0.18.4",
     "mermaid": "11.16.1",
     "pagefind": "1.5.2",
     "react": "19.2.8",
