@@ -1,4 +1,5 @@
 import type { KnowledgeGraph, KnowledgeNodeType } from '@/lib/knowledge/graph';
+import type { summarizeLearningOverlay } from '@/lib/knowledge/learning-overlay';
 import type { KnowledgeFilter } from '@/lib/knowledge/view';
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
   neighborhoodOnly: boolean;
   visibleCount: number;
   matchedCount: number;
+  learningSummary: ReturnType<typeof summarizeLearningOverlay>;
+  learningAvailable: boolean;
   onQueryChange: (query: string) => void;
   onFilterChange: (filter: KnowledgeFilter) => void;
   onNeighborhoodChange: () => void;
@@ -38,6 +41,8 @@ export default function KnowledgeGraphToolbar({
   neighborhoodOnly,
   visibleCount,
   matchedCount,
+  learningSummary,
+  learningAvailable,
   onQueryChange,
   onFilterChange,
   onNeighborhoodChange,
@@ -91,6 +96,8 @@ export default function KnowledgeGraphToolbar({
           ['文章节点', stats.articleCount],
           ['知识主题', stats.categoryCount + stats.tagCount],
           ['系列', stats.seriesCount],
+          ['已完成', learningSummary.completedCount],
+          ['学习中', learningSummary.readingCount],
           ['关联关系', stats.edgeCount],
         ].map(([label, value]) => (
           <article key={label}>
@@ -99,6 +106,11 @@ export default function KnowledgeGraphToolbar({
           </article>
         ))}
       </section>
+      <p className="knowledge-local-note" role="status">
+        {learningAvailable
+          ? '学习状态与批注数量仅从本机 IndexedDB 读取，不会上传或发送给 AI。'
+          : '本机学习数据暂时不可用；公开知识关系仍可正常浏览。'}
+      </p>
 
       <ul className="knowledge-legend" aria-label="节点图例">
         {LEGEND.map((item) => (

@@ -35,3 +35,51 @@ test('knowledge graph supports search, filters, node details, and responsive lay
   expect(hasHorizontalOverflow).toBe(false);
   expect(consoleErrors).toEqual([]);
 });
+
+test('knowledge graph overlays private learning progress from IndexedDB', async ({ page }) => {
+  await page.goto('/learning');
+  await expect(page.locator('.learning-dashboard')).toBeVisible();
+  await page.evaluate(async () => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('lfw-learning-db', 2);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction('articleProgress', 'readwrite');
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.objectStore('articleProgress').put({
+        articleSlug: 'di-liu-zhang-mysql-redis-zong-gang',
+        title: '第六章MySQL + Redis 总纲',
+        category: '后端',
+        readSeconds: 900,
+        listenSeconds: 120,
+        maxProgress: 100,
+        lastProgress: 100,
+        lastScrollY: 1200,
+        firstReadAt: '2026-08-18T10:00:00.000Z',
+        lastReadAt: '2026-08-18T11:00:00.000Z',
+        completedAt: '2026-08-18T11:00:00.000Z',
+        annotationCount: 5,
+        daily: {},
+      });
+    });
+    database.close();
+  });
+
+  await page.goto('/knowledge');
+  const completedMetric = page.locator('.knowledge-stats article').filter({ hasText: '已完成' });
+  await expect(completedMetric.locator('strong')).toHaveText('1');
+  await expect(
+    page.locator('.knowledge-node[data-learning-status="completed"][data-annotated="true"]'),
+  ).toHaveCount(1);
+
+  await page.getByRole('searchbox', { name: '搜索知识' }).fill('第六章MySQL');
+  await page
+    .getByRole('button', { name: /^第六章MySQL \+ Redis 总纲/ })
+    .click();
+  const detail = page.locator('.knowledge-detail');
+  await expect(detail.getByText('已完成', { exact: true })).toBeVisible();
+  await expect(detail.getByText('5', { exact: true })).toBeVisible();
+});

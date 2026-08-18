@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import type { KnowledgeEdge } from '@/lib/knowledge/graph';
+import type { KnowledgeLearningOverlay } from '@/lib/knowledge/learning-overlay';
 import type { PositionedKnowledgeNode } from '@/lib/knowledge/view';
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
   matchedNodeIds: string[];
   relatedNodeIds: string[];
   queryActive: boolean;
+  learningOverlay: KnowledgeLearningOverlay;
   onSelect: (nodeId: string) => void;
 }
 
@@ -24,6 +26,7 @@ export default function KnowledgeGraphCanvas({
   matchedNodeIds,
   relatedNodeIds,
   queryActive,
+  learningOverlay,
   onSelect,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -110,6 +113,7 @@ export default function KnowledgeGraphCanvas({
           <g className="knowledge-nodes">
             {nodes.map((node) => {
               const selected = node.id === selectedId;
+              const learning = node.slug ? learningOverlay[node.slug] : undefined;
               const highlighted = selected || related.has(node.id) || matched.has(node.id);
               const dimmed = queryActive
                 ? !matched.has(node.id)
@@ -123,6 +127,8 @@ export default function KnowledgeGraphCanvas({
                   data-selected={selected || undefined}
                   data-highlighted={highlighted || undefined}
                   data-dimmed={dimmed || undefined}
+                  data-learning-status={learning?.status}
+                  data-annotated={Boolean(learning?.annotationCount) || undefined}
                   transform={`translate(${node.x} ${node.y})`}
                   onClick={() => onSelect(node.id)}
                   onMouseEnter={() => setHoveredId(node.id)}

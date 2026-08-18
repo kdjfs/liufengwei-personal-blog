@@ -1,8 +1,10 @@
 import type { KnowledgeNode, KnowledgeNodeType } from '@/lib/knowledge/graph';
+import type { KnowledgeLearningOverlay } from '@/lib/knowledge/learning-overlay';
 
 interface Props {
   nodes: KnowledgeNode[];
   selectedId?: string;
+  learningOverlay: KnowledgeLearningOverlay;
   onSelect: (nodeId: string) => void;
 }
 
@@ -13,7 +15,12 @@ const GROUPS: Array<{ type: KnowledgeNodeType; label: string }> = [
   { type: 'tag', label: '标签' },
 ];
 
-export default function KnowledgeGraphList({ nodes, selectedId, onSelect }: Props) {
+export default function KnowledgeGraphList({
+  nodes,
+  selectedId,
+  learningOverlay,
+  onSelect,
+}: Props) {
   return (
     <section className="knowledge-list" aria-labelledby="knowledge-list-title">
       <div className="knowledge-section-head">
@@ -38,7 +45,16 @@ export default function KnowledgeGraphList({ nodes, selectedId, onSelect }: Prop
                   <li key={node.id} data-selected={node.id === selectedId || undefined}>
                     <button type="button" onClick={() => onSelect(node.id)}>
                       <span>{node.label}</span>
-                      {node.type === 'article' && <small>{node.category}</small>}
+                      {node.type === 'article' && (
+                        <small>
+                          {node.category}
+                          {node.slug && learningOverlay[node.slug]?.status === 'completed'
+                            ? ' · 已完成'
+                            : node.slug && learningOverlay[node.slug]?.status === 'reading'
+                              ? ' · 学习中'
+                              : ''}
+                        </small>
+                      )}
                     </button>
                     <a href={node.href} aria-label={`打开${node.label}`}>
                       →

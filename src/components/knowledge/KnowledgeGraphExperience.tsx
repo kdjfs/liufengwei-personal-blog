@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { KnowledgeGraph } from '@/lib/knowledge/graph';
 import {
+  buildLearningOverlay,
+  type KnowledgeLearningOverlay,
+  summarizeLearningOverlay,
+} from '@/lib/knowledge/learning-overlay';
+import {
   filterKnowledgeGraph,
   type KnowledgeFilter,
   layoutKnowledgeNodes,
@@ -25,6 +30,8 @@ export default function KnowledgeGraphExperience() {
   const [selectedId, setSelectedId] = useState<string>();
   const [neighborhoodOnly, setNeighborhoodOnly] = useState(false);
   const [resetKey, setResetKey] = useState(0);
+  const [learningOverlay, setLearningOverlay] = useState<KnowledgeLearningOverlay>({});
+  const [learningAvailable, setLearningAvailable] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -42,6 +49,26 @@ export default function KnowledgeGraphExperience() {
       });
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    if (!graph) return;
+    let active = true;
+    const articleSlugs = graph.nodes
+      .filter((node) => node.type === 'article')
+      .map((node) => node.slug)
+      .filter((slug): slug is string => Boolean(slug));
+    void import('@/lib/learning/db')
+      .then(({ getLearningDatabase }) => getLearningDatabase().getAll('articleProgress'))
+      .then((records) => {
+        if (active) setLearningOverlay(buildLearningOverlay(articleSlugs, records));
+      })
+      .catch(() => {
+        if (active) setLearningAvailable(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [graph]);
 
   const layout = useMemo(() => (graph ? layoutKnowledgeNodes(graph.nodes) : []), [graph]);
   const view = useMemo(
@@ -70,6 +97,10 @@ export default function KnowledgeGraphExperience() {
     }
     return graph.nodes.filter((node) => ids.has(node.id));
   }, [graph, selectedId]);
+  const learningSummary = useMemo(
+    () => summarizeLearningOverlay(learningOverlay),
+    [learningOverlay],
+  );
 
   const reset = () => {
     setQuery('');
@@ -110,6 +141,8 @@ export default function KnowledgeGraphExperience() {
         neighborhoodOnly={neighborhoodOnly}
         visibleCount={view.visibleNodes.length}
         matchedCount={view.matchedNodeIds.length}
+        learningSummary={learningSummary}
+        learningAvailable={learningAvailable}
         onQueryChange={setQuery}
         onFilterChange={(value) => {
           setFilter(value);
@@ -128,14 +161,21 @@ export default function KnowledgeGraphExperience() {
           matchedNodeIds={view.matchedNodeIds}
           relatedNodeIds={view.relatedNodeIds}
           queryActive={Boolean(query.trim())}
+          learningOverlay={learningOverlay}
           onSelect={setSelectedId}
         />
-        <KnowledgeGraphDetail node={selectedNode} relatedNodes={relatedNodes} />
+        <KnowledgeGraphDetail
+          node={selectedNode}
+          relatedNodes={relatedNodes}
+          learningState={selectedNode?.slug ? learningOverlay[selectedNode.slug] : undefined}
+          learningAvailable={learningAvailable}
+        />
       </div>
 
       <KnowledgeGraphList
         nodes={view.visibleNodes}
         selectedId={selectedId}
+        learningOverlay={learningOverlay}
         onSelect={setSelectedId}
       />
     </div>

@@ -1,8 +1,11 @@
 import type { KnowledgeNode } from '@/lib/knowledge/graph';
+import type { KnowledgeLearningState } from '@/lib/knowledge/learning-overlay';
 
 interface Props {
   node?: KnowledgeNode;
   relatedNodes: KnowledgeNode[];
+  learningState?: KnowledgeLearningState;
+  learningAvailable: boolean;
 }
 
 const TYPE_LABELS: Record<KnowledgeNode['type'], string> = {
@@ -12,7 +15,18 @@ const TYPE_LABELS: Record<KnowledgeNode['type'], string> = {
   series: '系列',
 };
 
-export default function KnowledgeGraphDetail({ node, relatedNodes }: Props) {
+const STATUS_LABELS: Record<KnowledgeLearningState['status'], string> = {
+  'not-started': '未开始',
+  reading: '学习中',
+  completed: '已完成',
+};
+
+export default function KnowledgeGraphDetail({
+  node,
+  relatedNodes,
+  learningState,
+  learningAvailable,
+}: Props) {
   if (!node) {
     return (
       <aside className="knowledge-detail" aria-live="polite">
@@ -52,6 +66,22 @@ export default function KnowledgeGraphDetail({ node, relatedNodes }: Props) {
               {node.series} · {node.seriesOrder}
             </dd>
           </div>
+        )}
+        {node.type === 'article' && learningAvailable && learningState && (
+          <>
+            <div>
+              <dt>学习状态</dt>
+              <dd>{STATUS_LABELS[learningState.status]}</dd>
+            </div>
+            <div>
+              <dt>最高进度</dt>
+              <dd>{Math.round(learningState.maxProgress)}%</dd>
+            </div>
+            <div>
+              <dt>本地批注</dt>
+              <dd>{learningState.annotationCount}</dd>
+            </div>
+          </>
         )}
       </dl>
       {node.tags && (
