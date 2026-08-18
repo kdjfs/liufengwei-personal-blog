@@ -27,6 +27,11 @@ interface CodeEnhancerOptions {
   registerCleanup: (cleanup: () => void) => void;
 }
 
+interface CopyTextOptions {
+  writeText?: (text: string) => Promise<void>;
+  fallbackCopy?: (text: string) => boolean;
+}
+
 export function formatCodeLanguage(language?: string): string {
   const normalized = language?.trim().toLowerCase();
   if (!normalized) return 'TEXT';
@@ -53,20 +58,42 @@ function makeAction(label: string, icon: IconName): HTMLButtonElement {
   return button;
 }
 
-async function copyText(text: string): Promise<boolean> {
+function copyTextWithLegacyCommand(text: string): boolean {
+  if (typeof document === 'undefined') return false;
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.readOnly = true;
+  textarea.className = 'code-frame__clipboard-fallback';
+  document.body.append(textarea);
+  textarea.select();
   try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.readOnly = true;
-    textarea.className = 'code-frame__clipboard-fallback';
-    document.body.append(textarea);
-    textarea.select();
-    const copied = document.execCommand('copy');
+    return (
+      document as unknown as { execCommand: (command: 'copy') => boolean }
+    ).execCommand('copy');
+  } finally {
     textarea.remove();
-    return copied;
+  }
+}
+
+export async function copyText(text: string, options?: CopyTextOptions): Promise<boolean> {
+  const writeText =
+    options?.writeText ??
+    (typeof navigator !== 'undefined' && navigator.clipboard?.writeText
+      ? navigator.clipboard.writeText.bind(navigator.clipboard)
+      : undefined);
+  if (writeText) {
+    try {
+      await writeText(text);
+      return true;
+    } catch {
+      // Clipboard permission can be denied even in supported browsers; keep the legacy fallback.
+    }
+  }
+
+  try {
+    return (options?.fallbackCopy ?? copyTextWithLegacyCommand)(text);
+  } catch {
+    return false;
   }
 }
 
