@@ -53,7 +53,7 @@ export function classifyQuery(
   const normalized = query.toLocaleLowerCase();
   const series = matchSeries(query, index.taxonomies.series);
   const entities: QueryEntities = {
-    category: matchTaxonomy(query, index.taxonomies.categories),
+    category: series ? undefined : matchTaxonomy(query, index.taxonomies.categories),
     tag: series ? undefined : matchTaxonomy(query, index.taxonomies.tags),
     series,
   };

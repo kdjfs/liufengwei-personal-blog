@@ -175,16 +175,19 @@ test('series metadata lists follow seriesOrder even when publish dates and input
     documents,
     taxonomies: {
       ...retrievalIndex.taxonomies,
+      categories: [{ name: '前端', count: 4, articleIds: documents.map((item) => item.id) }],
       series: [
         { name: 'MySQL 与 Redis 前端速成', count: 4, articleIds: documents.map((item) => item.id) },
       ],
     },
   };
 
-  const result = retrieveKnowledge('请按顺序列出 MySQL 与 Redis 系列全部文章', index, '/');
+  const result = retrieveKnowledge('请按顺序列出 MySQL 与 Redis 前端速成系列全部文章', index, '/');
   assert.equal(result.intent, 'metadata_list');
   assert.equal(result.entities.series, 'MySQL 与 Redis 前端速成');
+  assert.equal(result.entities.category, undefined);
   assert.equal(result.entities.tag, undefined);
+  assert.match(result.facts ?? '', /MySQL 与 Redis 前端速成系列/);
   assert.deepEqual(
     result.documents.map((item) => item.seriesOrder),
     [1, 2, 3, 4],
