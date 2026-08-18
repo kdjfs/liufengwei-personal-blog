@@ -75,7 +75,7 @@ test('release manifest pins v1 and patched production dependencies', async () =>
   assert.equal(manifest.version, '1.0.0');
   assert.equal(manifest.dependencies?.mermaid, '11.16.1');
   assert.equal(manifest.pnpm?.overrides?.['dompurify@<=3.4.12'], '3.4.13');
-  assert.equal(manifest.pnpm?.overrides?.['nanoid@<3.3.17'], '3.3.17');
+  assert.equal(manifest.pnpm?.overrides?.['nanoid@<3.3.18'], '3.3.18');
   assert.match(releaseCheck, /\['audit', '--prod'\]/);
   assert.match(releaseCheck, /process\.env\.npm_execpath/);
   assert.doesNotMatch(releaseCheck, /pnpm\.cmd/);
