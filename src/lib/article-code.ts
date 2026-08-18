@@ -67,9 +67,9 @@ function copyTextWithLegacyCommand(text: string): boolean {
   document.body.append(textarea);
   textarea.select();
   try {
-    return (
-      document as unknown as { execCommand: (command: 'copy') => boolean }
-    ).execCommand('copy');
+    return (document as unknown as { execCommand: (command: 'copy') => boolean }).execCommand(
+      'copy',
+    );
   } finally {
     textarea.remove();
   }
