@@ -6,7 +6,7 @@
 
 LFW Space 是刘凤伟的个人技术博客、AI 数字花园与本地优先学习系统。内容以 Markdown / MDX 为唯一事实来源，经 Astro 静态生成并由 Pagefind 建立全文索引；需要交互的 AI、检索、阅读记忆和语音能力以局部 Island 或延迟加载模块加入。
 
-**Project status：Maintenance Mode。** v2.0 以后只新增文章、修复 Bug、升级依赖和维护线上服务；不再扩张新的内容系统、社交系统、AI Provider 或数据基础设施。
+**Project status：Maintenance Mode。** 仓库已包含静态站、Learning OS，以及可选的 Node / MySQL / Redis / OAuth / 跨设备同步实现。当前生产默认仍是 Vercel 静态站与 `/api/chat`；仓库存在不等于可选后端已在生产启用。后续只新增文章、修复 Bug、升级依赖和维护已实现能力，不再扩张新的内容系统、社交系统、AI Provider 或数据基础设施。
 
 ## Screenshots
 
@@ -30,7 +30,7 @@ LFW Space 是刘凤伟的个人技术博客、AI 数字花园与本地优先学�
 - AI Retrieval 2.0：Metadata Query、Heading Chunk Retrieval、中英混合词法检索与可追溯站内来源，不依赖向量数据库。
 - Personal Learning OS：IndexedDB 阅读/听读时长、进度、已读状态、锚定批注、JSON 导入导出与本地语音播放。
 - Production SEO：canonical、Open Graph、Twitter Card、1200×630 分享图、WebSite / Person / BlogPosting / BreadcrumbList JSON-LD、RSS、robots 与 sitemap。
-- Quality gates：Node 22、pnpm 10.24、95 项逻辑测试、Playwright 关键流程与响应式矩阵、SEO/Bundle 检查和 GitHub Actions。
+- Quality gates：Node 22、pnpm 10.24、逻辑与集成测试、Playwright 关键流程与响应式矩阵、SEO/Bundle/Secret 检查和 GitHub Actions。
 
 ## Architecture
 
@@ -57,6 +57,7 @@ flowchart TD
 - Tailwind CSS 4、CSS Variables、Astro Assets / Sharp
 - Markdown / MDX、Zod、Shiki、GFM、KaTeX、Mermaid
 - Pagefind、Vercel Functions、DeepSeek Anthropic-compatible API、SSE
+- 可选全栈：Fastify、MySQL、Drizzle ORM、Redis、Better Auth、Docker
 - IndexedDB、Web Speech API
 - Node.js 22、pnpm 10.24、Node Test Runner、Playwright、Biome、Prettier
 
@@ -64,7 +65,7 @@ flowchart TD
 
 浏览器只发送共享契约允许的消息、模式、文章上下文和可选划线片段。`src/lib/ai/chat-contract.ts` 使用 Unicode code point 计数和截断，客户端与服务端共享相同限制；`pnpm ai:function:check` 保证生成的 Vercel Function 与源码没有漂移。
 
-`/api/chat` 在服务端校验来源、Content-Type、64 KiB 请求体、字段长度、速率与并发，读取服务器环境变量后调用固定的 DeepSeek HTTPS 端点。Key、Base URL、模型和 System Prompt 都不能由浏览器覆盖。CI 的 AI E2E 使用 mocked SSE，真实模型只在发布前人工验证。
+当前生产默认的 `/api/chat` 在服务端校验来源、Content-Type、64 KiB 请求体、字段长度、速率与并发，读取服务器环境变量后调用固定的 DeepSeek HTTPS 端点。Key、Base URL、模型和 System Prompt 都不能由浏览器覆盖。仓库另有可选的 Node `/api/v1/ai/chat`，用于 Redis 分布式控制、登录后私有上下文与会话持久化；只有显式配置并完成部署 smoke 后才应切换。CI 的 AI E2E 使用 mocked SSE，真实模型只在发布前人工验证。
 
 Retrieval 2.0 将确定性的分类/标签/系列计数作为结构化事实，将文章按 heading 切块用于技术问题召回。更多说明与本地检查命令见 [docs/AI-RETRIEVAL.md](docs/AI-RETRIEVAL.md)。
 
@@ -103,16 +104,21 @@ pnpm content:new -- --title "文章标题" --category "前端" --tags "Astro,Typ
 
 ## SEO
 
-`SEOHead.astro` 统一生成绝对 canonical、Open Graph、Twitter Card 和真实 1200×630 JPEG。站点页输出 WebSite + Person；文章页追加 BlogPosting 和“首页 → 分类 → 文章”BreadcrumbList。404 明确 `noindex, nofollow`，构建检查会验证 118 个页面、分享图尺寸、RSS、robots 与 sitemap 中不存在 localhost 或 404。
+`SEOHead.astro` 统一生成绝对 canonical、Open Graph、Twitter Card 和真实 1200×630 JPEG。站点页输出 WebSite + Person；文章页追加 BlogPosting 和“首页 → 分类 → 文章”BreadcrumbList。404 明确 `noindex, nofollow`，构建检查会验证全部生成页面、分享图尺寸、RSS、robots 与 sitemap 中不存在 localhost 或 404。
 
 ## Development
 
-要求 Node.js 22.12+ 与 pnpm 10.24：
+要求 Node.js 22.12+ 与 pnpm 10.24。常用启动模式如下：
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm dev
+pnpm dev           # Astro + Content Watch；Key 有效时自动启动/复用本地 AI Gateway
+pnpm dev:ai        # 严格本地 AI 模式；缺 Key 或 Gateway 不可用时失败
+pnpm dev:fullstack # MySQL + Redis + migration + Fastify :8788 + Astro（需要 Docker）
+pnpm ai:doctor     # 安全检查本地配置；加 --probe 执行最小真实 AI 探测
 ```
+
+`pnpm dev` 在没有 `DEEPSEEK_API_KEY` 时仍会启动 Web，不会让日常写作被 AI 配置阻塞。本地 AI Gateway 使用 `127.0.0.1:8787/api/chat`，并允许 Astro 自动换端口后的 loopback Origin；`ai:doctor` 只输出配置状态，不打印 Secret。
 
 生产预览：
 
@@ -121,14 +127,14 @@ pnpm build
 pnpm preview
 ```
 
-AI 本地联调：
+首次配置 AI 本地联调：
 
 ```bash
 Copy-Item .env.example .env.local
 pnpm dev:ai
 ```
 
-`pnpm dev:ai` 同时启动 Astro 与复用生产 Handler 的本地 AI Gateway；不会维护第二套上游请求实现。
+`pnpm dev:ai` 同时启动 Astro 与复用生产 Handler 的本地 AI Gateway；不会维护第二套上游请求实现。`pnpm dev:fullstack` 是独立的可选云能力联调入口，不代表当前生产默认已经切换到 Node。
 
 ## Environment variables
 
@@ -144,18 +150,22 @@ pnpm dev:ai
 ## Quality commands
 
 ```bash
-pnpm quality             # content + 95 tests + typecheck + lint + format + AI bundle drift
-pnpm build               # 118 static pages + Pagefind index
+pnpm quality             # content + tests + typecheck + lint + format + AI bundle drift
+pnpm build               # static pages + Pagefind index
 pnpm seo:check           # metadata / JSON-LD / social images / RSS / sitemap / robots
-pnpm analyze             # route-level initial JS/CSS budget
-pnpm test:e2e            # mocked AI flows + 7 viewports × 9 routes
+pnpm bundle:report       # route-level initial JS/CSS budget
+pnpm test:e2e            # mocked AI flows + responsive route audit
+pnpm fullstack:check     # optional Node/API unit and configuration gates
+pnpm test:integration    # real MySQL/Redis integration gate when services are available
+pnpm docker:smoke        # optional container build/start/readiness smoke
+pnpm secret:scan         # tracked-file secret scan
 pnpm release:check       # complete sequential release gate
 pnpm screenshots:capture # regenerate compressed README screenshots from dist
 ```
 
 ## Deployment and release
 
-Vercel 使用 `pnpm install --frozen-lockfile`、`pnpm build` 和 `dist` 输出。站点仍为静态部署；只有 `/api/chat` 与 `/api/ai-health` 是 Serverless Functions。`vercel.json` 设置 HSTS、CSP、MIME sniffing、frame、referrer、permissions、COOP 与不可变构建资源缓存头。
+当前生产默认由 Vercel 使用 `pnpm install --frozen-lockfile`、`pnpm build` 和 `dist` 输出。公开站点仍为静态部署；只有 `/api/chat` 与 `/api/ai-health` 是默认 Serverless Functions。可选 Fastify 服务及其 MySQL/Redis 依赖已在仓库实现并由 CI 验证，但生产启用状态必须由部署证据单独确认。`vercel.json` 设置 HSTS、CSP、MIME sniffing、frame、referrer、permissions、COOP 与不可变构建资源缓存头。
 
 推荐发布流程：release branch → Pull Request → GitHub Actions green → merge main → wait for Vercel production → browser/AI smoke → annotated tag → GitHub Release。逐项清单见 [docs/RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md)。
 

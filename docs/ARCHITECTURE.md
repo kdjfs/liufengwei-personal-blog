@@ -1,20 +1,18 @@
-# LFW Space v1.0 Architecture
+# LFW Space Architecture and Deployment Boundary
 
-> 本文是当前已上线/已实现架构的事实基线。v2.0 的目标架构、迁移边界与阶段门禁见
-> [FULLSTACK-ARCHITECTURE.md](./FULLSTACK-ARCHITECTURE.md)。在对应阶段完成并通过测试前，
-> 本文中的“无独立 Node/MySQL/Redis/Auth”仍是生产现状，不能提前改写成已上线能力。
+> 本文描述当前生产默认路径。仓库另有已实现、经过门禁验证但需显式部署的 Node / MySQL / Redis / Auth / Sync 路径，见 [FULLSTACK-ARCHITECTURE.md](./FULLSTACK-ARCHITECTURE.md)。仓库能力不能被直接表述为生产已启用。
 
-本文描述 v1.0.0 的真实代码边界。核心原则是“静态内容默认零运行时服务，交互能力局部增强，私密学习数据本地优先，模型密钥只存在服务端”。
+核心原则是“静态内容默认零运行时服务，交互能力局部增强，私密学习数据本地优先，模型密钥只存在服务端”。
 
 ## 1. System boundary
 
-LFW Space 由三个运行环境组成：
+当前生产默认由三个运行环境组成：
 
 1. **Build time**：Astro Content Collections 读取 Markdown / MDX，完成 schema、slug、Markdown AST、图片、页面、Pagefind 与 AI knowledge 产物。
 2. **Browser runtime**：静态 HTML/CSS 为基础；React Islands 和原生模块只负责搜索、AI、学习、目录、选区、听读等交互。
 3. **Serverless runtime**：Vercel `/api/chat` 和 `/api/ai-health`。前者作为 DeepSeek 流式代理，后者只报告配置状态，不泄露 Secret。
 
-没有独立 Node 服务、数据库、Redis、账号、评论或批注同步。
+公开阅读不依赖独立 Node 服务、数据库、Redis 或账号。可选 Fastify 服务、数据库、Redis、账号和学习同步代码已存在于仓库，但生产启用需要单独的部署证据。
 
 ## 2. Build-time architecture
 
@@ -181,13 +179,13 @@ GitHub Actions 使用 Node 22、pnpm 10.24、frozen lockfile 和 Playwright Chro
 
 Vercel 部署 `dist` 并运行根目录 Functions。`vercel.json` 配置 HSTS、CSP、`nosniff`、frame deny、referrer policy、permissions policy、COOP 和 `/_astro` immutable cache。CSP 保留 Astro 当前内联初始化所需的 `unsafe-inline`，并在实际页面回归中验证 AI、Pagefind 与 Islands。
 
-## 11. Future Node / MySQL / Redis boundary
+## 11. Optional Node / MySQL / Redis boundary
 
-只有出现跨设备账号、同步学习数据、多人评论、严格全局配额或管理后台时，才引入持久后端：
+仓库已经为跨设备账号、同步学习数据、严格全局 AI 配额与可选会话持久化实现持久后端：
 
 - Node API：认证、同步协议、权限、后台任务。
-- MySQL/PostgreSQL：用户、文章业务状态、批注同步与审计记录；Markdown 仍保留在 Git，避免把写作源迁进数据库。
+- MySQL：用户、文章业务状态、批注同步与审计记录；Markdown 仍保留在 Git，避免把写作源迁进数据库。
 - Redis：全局限流、短期缓存、队列协调，不作为真实业务数据唯一来源。
-- Retrieval：向量索引作为可再生派生产物，Metadata Query 继续走确定性数据库/构建事实。
+- Retrieval：继续使用可再生的静态词法索引，Metadata Query 走确定性构建事实；当前不引入向量数据库。
 
-该演进应保持静态阅读路径可用，让后端故障不会使公开文章不可访问。
+该可选路径保持静态阅读可用，让后端故障不会使公开文章不可访问。当前生产是否启用 Node 路径，必须通过实际部署与 smoke 结果确认。

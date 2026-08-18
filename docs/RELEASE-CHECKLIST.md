@@ -12,14 +12,17 @@ Run from a clean release branch. Check the production-only items after main depl
 - [ ] `pnpm lint`
 - [ ] `pnpm format:check`
 - [ ] `pnpm ai:function:check`
+- [ ] `pnpm fullstack:check`
+- [ ] `pnpm test:integration` passes against real MySQL/Redis when the release includes cloud changes
 - [ ] `pnpm build` leaves `git diff` unchanged
-- [ ] `pnpm analyze` passes route budgets
+- [ ] `pnpm bundle:report` passes route budgets
 - [ ] `pnpm seo:check` validates metadata, JSON-LD, 1200×630 images, RSS, sitemap and robots
 - [ ] `pnpm test:e2e` passes mocked Selection Ask, Learning and 7 viewport × 9 route audit
+- [ ] `pnpm docker:smoke` passes when the release includes the optional Node deployment
 - [ ] Lighthouse targets in `docs/PERFORMANCE.md` pass
 - [ ] Broken images, horizontal overflow, console errors, uncaught errors and asset 404s are zero
 - [ ] `pnpm audit` has no unresolved high/critical production vulnerability
-- [ ] Secret scan finds no committed key/token; `.env.example` keeps only `replace_me`
+- [ ] `pnpm secret:scan` finds no committed key/token; `.env.example` keeps only placeholders
 
 `pnpm release:check` runs the sequential automated subset above.
 
@@ -46,6 +49,6 @@ Run from a clean release branch. Check the production-only items after main depl
 ## Publish
 
 - [ ] Working tree is clean and main CI remains green
-- [ ] Create annotated `v1.0.0` tag only after production and real AI pass
-- [ ] Push tag and create “LFW Space v1.0.0 — AI Native Digital Garden” GitHub Release
+- [ ] Create annotated `v<version>` tag only after production and real AI pass
+- [ ] Push tag and create “LFW Space v<version> — AI Native Digital Garden” GitHub Release
 - [ ] Release notes match `CHANGELOG.md`; final production URL and main SHA are recorded

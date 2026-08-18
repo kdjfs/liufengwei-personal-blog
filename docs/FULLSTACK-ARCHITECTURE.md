@@ -1,10 +1,10 @@
 # LFW Space v2.0 Full-Stack AI Learning Cloud
 
-> Status: Active architecture baseline
+> Status: Repository implementation complete and CI-verified as an optional deployment path; production enablement is not asserted
 >
 > Date: 2026-08-10
 >
-> Implementation: Phase 0 complete; Phase 1 API, data, auth, sync, Redis controls, Node AI gateway, and deferred Web integration implemented
+> Implementation: API, data, auth, sync, Redis controls, Node AI gateway, and deferred Web integration are implemented
 
 ## 1. Objective
 
@@ -21,23 +21,20 @@ OAuth、跨设备学习同步与持久化 AI 能力。静态公开知识与动�
 
 ### Repository facts
 
-- 单一 root importer，pnpm lockfile v9；尚无 `pnpm-workspace.yaml`。
+- Astro Web 保持在仓库根目录；`pnpm-workspace.yaml` 管理 root、`server/` 与 `packages/contracts/`。
 - Astro 7.1.6 static output、React 19.2.8、Node `>=22.12.0`、pnpm 10.24.0。
-- Web 构建生成 118 个页面、Pagefind、RSS、sitemap、OG 与静态 AI knowledge index。
-- 浏览器学习数据位于 `lfw-learning-db` v1 的 `articleProgress`、`annotations`、
-  `audioScripts`、`settings` stores。
-- AI 浏览器 contract 位于 `src/lib/ai/chat-contract.ts`；生产由 Vercel
-  `/api/chat` 代理 DeepSeek SSE，限流与并发目前仅进程内有效。
-- CI 只有一个 Ubuntu release-gate job；Web release gate、98 个 unit/config tests 与
-  22 个 Playwright cases 已通过，2 个 viewport-owner cases 条件跳过。
-- 文章初始 JS + CSS 为 39.2 KiB gzip，预算为 45 KiB。
+- Web 构建生成静态页面、Pagefind、RSS、sitemap、OG 与静态 AI knowledge index；检查不依赖固定页面数量。
+- 浏览器保留 IndexedDB 本地能力，并实现 versioned migration、offline mutation queue 与可选云同步。
+- Vercel `/api/chat` 是当前生产默认；Fastify `/api/v1/ai/chat`、MySQL 持久化与 Redis 分布式控制是可选部署路径。
+- CI 的单一 Ubuntu `release-gate` 顺序覆盖 Web/API 质量、MySQL/Redis 集成、Docker 与浏览器检查；外部 OAuth 和 AI Provider 使用 mock。
+- 文章初始 JS + CSS 预算为 45 KiB gzip，由 `pnpm bundle:report` 验证。
 
 ### Documentation conflict
 
 早期 `docs/V2-SPEC.md` 将 Node、MySQL、Redis、认证列为 non-goals；旧 Roadmap 又将它们
 拆为 V3–V6。两者已被本文件取代，但保留为历史记录，不冒充已实现能力。
 
-## 3. Current architecture
+## 3. Current production-default architecture
 
 ```mermaid
 flowchart TB
@@ -51,10 +48,9 @@ flowchart TB
   Vercel --> DeepSeek["DeepSeek V4 Pro"]
 ```
 
-当前的数据真相边界：公开内容属于 Git；私有学习只在当前浏览器；AI 会话不持久化；
-Vercel Function 的 rate limit 与 active stream counter 不能跨实例共享。
+当前生产默认的数据真相边界：公开内容属于 Git；未启用云端配置时私有学习只在当前浏览器；AI 会话不持久化；Vercel Function 的 rate limit 与 active stream counter 不能跨实例共享。
 
-## 4. Target architecture
+## 4. Implemented optional full-stack architecture
 
 ```mermaid
 flowchart TB
@@ -98,7 +94,7 @@ The existing Astro root stays in place to avoid a large rename diff.
 │  └─ package.json
 ├─ packages/
 │  └─ contracts/               # Zod schemas and browser/server types
-├─ docker-compose.yml          # local MySQL + Redis only
+├─ compose.yaml                # local MySQL + Redis only
 └─ pnpm-workspace.yaml
 ```
 
@@ -326,14 +322,12 @@ Each slice ends in tests, review and an atomic commit.
 - E2E: anonymous/local behavior; mocked login; Device A/B sync; offline replay without duplicates;
   logout isolation; AI private context off/on; Redis 429.
 
-CI becomes separate Web Quality, API Quality, Full-stack Integration and E2E jobs. The existing
-`pnpm release:check` remains mandatory and is extended rather than replaced. GitHub OAuth and DeepSeek
-are always mocked in CI.
+CI 的单一 `release-gate` job 顺序执行 Web Quality、API Quality、Full-stack Integration、Docker 与 E2E 门禁。`pnpm release:check` 仍是 Web 发布的完整串行检查；GitHub OAuth 和 DeepSeek 在 CI 中始终使用 mock。
 
 ## 16. Deployment truth
 
 - Web remains Vercel static deployment.
-- API becomes a multi-stage, non-root Docker image with healthcheck and graceful shutdown.
+- API 已提供 multi-stage、non-root Docker image、healthcheck 和 graceful shutdown；这描述交付物，不声明生产已部署。
 - Local `docker compose` runs official MySQL and Redis images with healthchecks; the API may run via
   pnpm on the host.
 - Production migration is an explicit command/job, never destructive schema creation at API startup.
@@ -341,7 +335,7 @@ are always mocked in CI.
   ready but is not described as a live backend.
 - No merge to `main`, production default change or v2 tag is performed automatically.
 
-## 17. Delivery sequence
+## 17. Completed delivery sequence
 
 1. Workspace + contracts boundary + Fastify config/app factory/live/ready tests.
 2. MySQL pool, Drizzle schema, reviewed migrations and repository integration tests.

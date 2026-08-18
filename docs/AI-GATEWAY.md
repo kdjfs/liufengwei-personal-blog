@@ -1,6 +1,16 @@
 # Node AI Gateway
 
-> Status: Phase 1 strangler path implemented; the production browser default remains `/api/chat`.
+> Status: implemented and CI-verified as an optional strangler path; the production browser default remains `/api/chat`.
+
+## Route truth
+
+| Context                           | Endpoint                         | Status                                                                                                       |
+| --------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Local AI development              | `http://127.0.0.1:8787/api/chat` | Reuses the Vercel handler; `pnpm dev` starts it when a valid key is present, while `pnpm dev:ai` requires it |
+| Current Vercel production default | `/api/chat`                      | Deployed serverless route used when no explicit AI origin is configured                                      |
+| Optional Node cloud route         | `/api/v1/ai/chat`                | Implemented and tested; production enablement is not asserted by repository state                            |
+
+The local gateway accepts exact HTTP loopback origins (`localhost`, `127.0.0.1`, or `[::1]`) so Astro may move to a free port without weakening production origin checks. `pnpm ai:doctor` reports safe configuration metadata only; `--probe` adds a minimal live request without printing the key.
 
 ## Endpoint
 
