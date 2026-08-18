@@ -11,3 +11,4 @@ dist/
 public/pagefind/
 playwright-report/
 test-results/
+*.log
