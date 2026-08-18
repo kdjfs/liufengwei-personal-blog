@@ -2,7 +2,7 @@
 
 > AI Native Personal Digital Garden & Learning OS
 
-[Production](https://liufengwei-personal-blog.vercel.app/) · [Architecture](docs/ARCHITECTURE.md) · [Performance](docs/PERFORMANCE.md) · [Release checklist](docs/RELEASE-CHECKLIST.md)
+[Production](https://liufengwei-personal-blog.vercel.app/) · [Architecture](docs/ARCHITECTURE.md) · [Performance](docs/PERFORMANCE.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](CONTRIBUTING.md)
 
 LFW Space 是刘凤伟的个人技术博客、AI 数字花园与本地优先学习系统。内容以 Markdown / MDX 为唯一事实来源，经 Astro 静态生成并由 Pagefind 建立全文索引；需要交互的 AI、检索、阅读记忆和语音能力以局部 Island 或延迟加载模块加入。
 
@@ -119,6 +119,8 @@ pnpm ai:doctor     # 安全检查本地配置；加 --probe 执行最小真实 A
 ```
 
 `pnpm dev` 在没有 `DEEPSEEK_API_KEY` 时仍会启动 Web，不会让日常写作被 AI 配置阻塞。本地 AI Gateway 使用 `127.0.0.1:8787/api/chat`，并允许 Astro 自动换端口后的 loopback Origin；`ai:doctor` 只输出配置状态，不打印 Secret。
+
+开发模式的已知日志与排查结论见 [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)。
 
 生产预览：
 
