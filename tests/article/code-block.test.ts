@@ -6,7 +6,9 @@ test('code copy uses the modern Clipboard API without invoking the fallback', as
   const calls: string[] = [];
 
   const copied = await copyText('const answer = 42;', {
-    writeText: async (text) => calls.push(`clipboard:${text}`),
+    writeText: async (text) => {
+      calls.push(`clipboard:${text}`);
+    },
     fallbackCopy: () => {
       calls.push('fallback');
       return true;
