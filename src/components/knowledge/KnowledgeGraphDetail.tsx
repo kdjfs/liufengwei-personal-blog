@@ -29,7 +29,7 @@ export default function KnowledgeGraphDetail({
 }: Props) {
   if (!node) {
     return (
-      <aside className="knowledge-detail" aria-live="polite">
+      <aside id="knowledge-node-detail" className="knowledge-detail" aria-live="polite">
         <span className="knowledge-detail-handle" aria-hidden="true" />
         <p className="eyebrow">SELECTED NODE</p>
         <h2>选择一个知识节点</h2>
@@ -39,7 +39,7 @@ export default function KnowledgeGraphDetail({
   }
 
   return (
-    <aside className="knowledge-detail" aria-live="polite">
+    <aside id="knowledge-node-detail" className="knowledge-detail" aria-live="polite">
       <span className="knowledge-detail-handle" aria-hidden="true" />
       <p className="eyebrow">{TYPE_LABELS[node.type]} NODE</p>
       <h2>{node.label}</h2>

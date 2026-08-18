@@ -76,10 +76,50 @@ test('knowledge graph overlays private learning progress from IndexedDB', async 
   ).toHaveCount(1);
 
   await page.getByRole('searchbox', { name: '搜索知识' }).fill('第六章MySQL');
-  await page
-    .getByRole('button', { name: /^第六章MySQL \+ Redis 总纲/ })
-    .click();
+  await page.getByRole('button', { name: /^第六章MySQL \+ Redis 总纲/ }).click();
   const detail = page.locator('.knowledge-detail');
   await expect(detail.getByText('已完成', { exact: true })).toBeVisible();
   await expect(detail.getByText('5', { exact: true })).toBeVisible();
+});
+
+test('knowledge graph keeps an equivalent keyboard exploration path', async ({ page }) => {
+  await page.goto('/knowledge');
+  const seriesGroup = page.locator('.knowledge-list details').filter({
+    has: page.getByText('系列', { exact: true }),
+  });
+  const seriesNode = seriesGroup.getByRole('button').first();
+
+  await seriesNode.focus();
+  await page.keyboard.press('Enter');
+
+  await expect(seriesNode).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#knowledge-node-detail')).toContainText('系列 NODE');
+  await expect(
+    page.locator('#knowledge-node-detail').getByRole('link', { name: /查看系列/ }),
+  ).toHaveAttribute('href', /^\/series\//);
+});
+
+test('knowledge graph preserves public navigation when graph data fails', async ({ page }) => {
+  await page.route('**/knowledge-graph.json', (route) =>
+    route.fulfill({ status: 503, contentType: 'application/json', body: '{}' }),
+  );
+
+  await page.goto('/knowledge');
+
+  const error = page.getByRole('alert');
+  await expect(error.getByRole('heading', { name: '知识图谱暂时无法加载' })).toBeVisible();
+  await expect(error.getByRole('link', { name: /浏览全部文章/ })).toHaveAttribute('href', '/blog');
+  await expect(page.getByRole('navigation', { name: '主导航' })).toBeVisible();
+});
+
+test('knowledge graph disables decorative motion when the user requests it', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/knowledge');
+
+  const node = page.locator('.knowledge-node').first();
+  await expect(node).toBeAttached();
+  const transitionSeconds = await node.evaluate((element) =>
+    Number.parseFloat(getComputedStyle(element).transitionDuration),
+  );
+  expect(transitionSeconds).toBeLessThanOrEqual(0.00001);
 });

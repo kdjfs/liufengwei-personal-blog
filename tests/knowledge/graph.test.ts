@@ -80,6 +80,10 @@ test('knowledge graph preserves article metadata and navigable taxonomy hrefs', 
     graph.nodes.find((node) => node.id === 'category:%E5%90%8E%E7%AB%AF')?.href,
     '/categories/%E5%90%8E%E7%AB%AF',
   );
+  assert.equal(
+    graph.nodes.find((node) => node.type === 'series')?.href,
+    '/series/MySQL%20%E4%B8%8E%20Redis%20%E5%89%8D%E7%AB%AF%E9%80%9F%E6%88%90',
+  );
   assert.equal(graph.stats.articleCount, 1);
   assert.equal(graph.stats.edgeCount, 4);
 });

@@ -43,7 +43,12 @@ export default function KnowledgeGraphList({
               <ul>
                 {groupNodes.map((node) => (
                   <li key={node.id} data-selected={node.id === selectedId || undefined}>
-                    <button type="button" onClick={() => onSelect(node.id)}>
+                    <button
+                      type="button"
+                      aria-controls="knowledge-node-detail"
+                      aria-pressed={node.id === selectedId}
+                      onClick={() => onSelect(node.id)}
+                    >
                       <span>{node.label}</span>
                       {node.type === 'article' && (
                         <small>

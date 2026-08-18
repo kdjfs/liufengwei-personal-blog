@@ -70,7 +70,7 @@ function taxonomyId(type: Exclude<KnowledgeNodeType, 'article'>, label: string):
 }
 
 function taxonomyHref(type: Exclude<KnowledgeNodeType, 'article'>, label: string): string {
-  const route = type === 'category' ? 'categories' : `${type}s`;
+  const route = type === 'category' ? 'categories' : type === 'series' ? 'series' : 'tags';
   return `/${route}/${encodeURIComponent(label)}`;
 }
 
