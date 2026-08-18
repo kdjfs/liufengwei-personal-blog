@@ -1,0 +1,24 @@
+---
+import KnowledgeGraphExperience from '@/components/knowledge/KnowledgeGraphExperience';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import '@/components/knowledge/knowledge.css';
+---
+
+<BaseLayout
+  title="知识图谱"
+  description="从公开文章 metadata 构建的本地优先知识地图，连接文章、分类、标签、系列与个人学习进度。"
+>
+  <header class="knowledge-hero container-wide">
+    <p class="eyebrow">KNOWLEDGE GRAPH · DIGITAL GARDEN</p>
+    <div>
+      <h1>知识正在<br />连接成网络</h1>
+      <p>
+        从文章出发，沿着分类、标签与系列探索 LFW Space。公开关系来自
+        Markdown，个人学习状态只留在这台设备。
+      </p>
+    </div>
+  </header>
+  <div class="knowledge-page container-wide">
+    <KnowledgeGraphExperience client:load />
+  </div>
+</BaseLayout>

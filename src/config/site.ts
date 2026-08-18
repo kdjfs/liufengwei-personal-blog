@@ -9,6 +9,7 @@ export const siteConfig = {
   nav: [
     { label: '首页', href: '/' },
     { label: '文章', href: '/blog' },
+    { label: '知识', href: '/knowledge' },
     { label: '学习', href: '/learning' },
     { label: '项目', href: '/projects' },
     { label: '时间线', href: '/timeline' },
