@@ -29,6 +29,7 @@ flowchart LR
   Pages --> Dist["dist: HTML / CSS / JS / RSS / sitemap / robots"]
   Dist --> Pagefind["Pagefind static index"]
   Collections --> Knowledge["ai-knowledge.json: metadata + heading chunks"]
+  Collections --> Graph["knowledge-graph.json: article + taxonomy edges"]
 ```
 
 ### Content Collections and stable slug
@@ -59,8 +60,10 @@ flowchart TD
   Enhancements --> Mermaid["dynamic Mermaid import when needed"]
   Article --> LearningBar["React learning bar"]
   Learning["/learning"] --> Dashboard["React dashboard, client:visible"]
+  KnowledgePage["/knowledge"] --> GraphIsland["React + SVG graph, client:load"]
   LearningBar --> DB["IndexedDB"]
   Dashboard --> DB
+  GraphIsland --> DB
   AI --> Retrieval["static AI knowledge fetch"]
 ```
 
@@ -71,6 +74,7 @@ flowchart TD
 - `ArticleLearningBar.tsx`：文章页读取与更新当前文章的本地学习状态。
 - `LearningDashboard.tsx`：学习页在可见时 hydration；服务端先输出稳定骨架以避免布局偏移。
 - `ContinueLearning.tsx`：首页下方可见时 hydration。
+- `KnowledgeGraphExperience.tsx`：只在知识页 hydration；加载静态图谱后再动态读取本机学习状态。
 
 文章正文、文章卡片、分类、标签、项目和关于页面不依赖 React 才能阅读。
 
@@ -78,7 +82,13 @@ flowchart TD
 
 `BaseLayout.astro` 只保留全局 reveal。`ArticleEnhancements.astro` 和 `article-enhancements.ts` 仅在文章路由执行阅读进度、目录、代码复制、图片灯箱、Mermaid、选择工具与语音控制。这样首页、项目、关于和分类页不会下载文章专属逻辑或 KaTeX 样式。
 
-## 4. AI request flow
+## 4. Knowledge Graph
+
+知识图谱从公开 Frontmatter 构建 `article`、`category`、`tag` 和 `series` 节点，并用稳定 ID 连接分类、标签与系列关系。`/knowledge-graph.json` 是可再生静态产物；`/knowledge` 提供 React + SVG 交互与等价的键盘列表，不依赖 Node、MySQL、Redis 或 AI。
+
+浏览器在公开图谱加载后，只读 IndexedDB `articleProgress`，叠加 `not-started`、`reading`、`completed`、最高进度和批注数量。学习数据不进入静态 JSON、Analytics 或 AI。完整模型、故障降级与取舍见 [KNOWLEDGE-GRAPH.md](./KNOWLEDGE-GRAPH.md)。
+
+## 5. AI request flow
 
 ```mermaid
 sequenceDiagram
@@ -116,7 +126,7 @@ Handler 只接受 JSON POST：
 
 实例内限流不等于全局配额；流量增长后应由 Vercel Firewall 或外部共享限流承担全局策略。
 
-## 5. Retrieval 2.0
+## 6. Retrieval 2.0
 
 AI knowledge 由公开 Content Collections 构建，分为：
 
@@ -127,7 +137,7 @@ AI knowledge 由公开 Content Collections 构建，分为：
 
 v1.0 不使用向量数据库，因为 52 篇公开文章可在构建期生成小型静态知识集，确定性元数据与词法召回更简单、可检查、无额外隐私/运维成本。未来可在保持 request/context contract 不变的前提下加入 embedding + lexical hybrid rerank。
 
-## 6. Learning data flow
+## 7. Learning data flow
 
 ```mermaid
 sequenceDiagram
@@ -155,31 +165,32 @@ IndexedDB 保存文章记录、批注、听读稿缓存与偏好。阅读计时�
 
 `speechSynthesis` 分段播放原文或 AI 听读稿，语音列表、速率和进度在客户端管理。该 API 不产生可靠的音频 Blob，因此 v1.0 不承诺 MP3、后台持续播放或跨设备一致 Voice。
 
-## 7. Search and query behavior
+## 8. Search and query behavior
 
 Pagefind 在 `astro build` 后扫描 `dist`，只索引带 `data-pagefind-body` 的公开页面。搜索无需服务端和数据库，静态索引由 CDN 缓存。AI Retrieval 与 Pagefind 使用不同产物：前者面向结构化 AI 上下文，后者面向用户全文导航，两者都来源于同一公开内容集合。
 
-## 8. SEO and discoverability
+## 9. SEO and discoverability
 
 `SEOHead.astro` 从单一站点配置生成绝对 canonical、社交元信息、RSS link 和 JSON-LD。Astro Assets 在构建期从真实封面裁剪 1200×630 JPEG。站点页包含 WebSite / Person；文章页包含 BlogPosting / BreadcrumbList；404 使用 `noindex, nofollow`。Astro sitemap 排除 404，RSS、robots 和 sitemap 均指向生产 origin。
 
-## 9. Performance model
+## 10. Performance model
 
 性能预算按路由初始依赖而非所有动态 chunk 计算：
 
 - Home：初始 JS + CSS gzip ≤ 35 KiB。
 - Article：初始 JS + CSS gzip ≤ 45 KiB。
 - Learning：初始 JS + CSS gzip ≤ 35 KiB。
+- Knowledge：初始 JS + CSS gzip ≤ 55 KiB，且图谱 chunk 不得进入 Home、Article 或 Learning。
 
 Mermaid/Cytoscape、KaTeX 和完整 AI 面板具有价值但不应成为所有页面的首屏成本。大型 Mermaid chunk 的构建 warning 被保留用于可见性；它通过动态 import 与普通路由隔离，不能简单通过删除功能或调高 warning 假装解决。
 
-## 10. Deployment and security
+## 11. Deployment and security
 
 GitHub Actions 使用 Node 22、pnpm 10.24、frozen lockfile 和 Playwright Chromium，顺序执行内容、测试、类型、lint、格式、AI bundle、build、bundle、SEO 与 E2E。CI 不读取真实 AI Secret。
 
 Vercel 部署 `dist` 并运行根目录 Functions。`vercel.json` 配置 HSTS、CSP、`nosniff`、frame deny、referrer policy、permissions policy、COOP 和 `/_astro` immutable cache。CSP 保留 Astro 当前内联初始化所需的 `unsafe-inline`，并在实际页面回归中验证 AI、Pagefind 与 Islands。
 
-## 11. Optional Node / MySQL / Redis boundary
+## 12. Optional Node / MySQL / Redis boundary
 
 仓库已经为跨设备账号、同步学习数据、严格全局 AI 配额与可选会话持久化实现持久后端：
 

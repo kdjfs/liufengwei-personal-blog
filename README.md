@@ -2,11 +2,11 @@
 
 > AI Native Personal Digital Garden & Learning OS
 
-[Production](https://liufengwei-personal-blog.vercel.app/) · [Architecture](docs/ARCHITECTURE.md) · [Performance](docs/PERFORMANCE.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](CONTRIBUTING.md)
+[Production](https://liufengwei-personal-blog.vercel.app/) · [Architecture](docs/ARCHITECTURE.md) · [Knowledge Graph](docs/KNOWLEDGE-GRAPH.md) · [Performance](docs/PERFORMANCE.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Contributing](CONTRIBUTING.md)
 
 LFW Space 是刘凤伟的个人技术博客、AI 数字花园与本地优先学习系统。内容以 Markdown / MDX 为唯一事实来源，经 Astro 静态生成并由 Pagefind 建立全文索引；需要交互的 AI、检索、阅读记忆和语音能力以局部 Island 或延迟加载模块加入。
 
-**Project status：Maintenance Mode。** 仓库已包含静态站、Learning OS，以及可选的 Node / MySQL / Redis / OAuth / 跨设备同步实现。当前生产默认仍是 Vercel 静态站与 `/api/chat`；仓库存在不等于可选后端已在生产启用。后续只新增文章、修复 Bug、升级依赖和维护已实现能力，不再扩张新的内容系统、社交系统、AI Provider 或数据基础设施。
+**Project status：Maintenance Mode。** 仓库已包含静态站、Knowledge Graph、Learning OS，以及可选的 Node / MySQL / Redis / OAuth / 跨设备同步实现。当前生产默认仍是 Vercel 静态站与 `/api/chat`；仓库存在不等于可选后端已在生产启用。后续只新增文章、修复 Bug、升级依赖和维护已实现能力，不再扩张新的内容系统、社交系统、AI Provider 或数据基础设施。
 
 ## Screenshots
 
@@ -28,6 +28,7 @@ LFW Space 是刘凤伟的个人技术博客、AI 数字花园与本地优先学�
 - Pagefind：生产构建后生成无后端全文搜索，搜索 UI 首次交互时加载。
 - LFW AI：DeepSeek V4 Pro、SSE Streaming、快速/深度思考、当前文章上下文与划线问 AI。
 - AI Retrieval 2.0：Metadata Query、Heading Chunk Retrieval、中英混合词法检索与可追溯站内来源，不依赖向量数据库。
+- Knowledge Graph：构建期从文章 metadata 生成静态知识关系，并在浏览器叠加仅保存在 IndexedDB 的个人学习状态。详见 [架构说明](docs/KNOWLEDGE-GRAPH.md)。
 - Personal Learning OS：IndexedDB 阅读/听读时长、进度、已读状态、锚定批注、JSON 导入导出与本地语音播放。
 - Production SEO：canonical、Open Graph、Twitter Card、1200×630 分享图、WebSite / Person / BlogPosting / BreadcrumbList JSON-LD、RSS、robots 与 sitemap。
 - Quality gates：Node 22、pnpm 10.24、逻辑与集成测试、Playwright 关键流程与响应式矩阵、SEO/Bundle/Secret 检查和 GitHub Actions。
@@ -41,15 +42,17 @@ flowchart TD
   Build --> HTML["Static HTML + responsive assets"]
   Build --> Search["Pagefind index"]
   Build --> Knowledge["AI knowledge metadata + chunks"]
+  Build --> Graph["Static knowledge graph"]
   HTML --> Browser["Browser"]
   Search --> Browser
+  Graph --> Browser
   Knowledge --> AI["LFW AI island"]
   Browser --> Memory["IndexedDB learning memory"]
   AI --> Function["Vercel /api/chat"]
   Function --> DeepSeek["DeepSeek V4 Pro SSE"]
 ```
 
-静态内容不为 AI 或学习功能支付全站 hydration 成本。通用脚本只处理导航、主题和 reveal；文章目录、代码工具、图片灯箱、Mermaid、划线与听读只进入文章页。完整边界和数据流见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+静态内容不为 AI、图谱或学习功能支付全站 hydration 成本。通用脚本只处理导航、主题和 reveal；文章目录、代码工具、图片灯箱、Mermaid、划线与听读只进入文章页，图谱 island 只进入 `/knowledge`。完整边界和数据流见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ## Tech stack
 
@@ -100,7 +103,7 @@ pnpm content:new -- --title "文章标题" --category "前端" --tags "Astro,Typ
 - 首页、搜索和 AI 的非关键代码延迟到可见或首次交互。
 - KaTeX、Mermaid、目录、代码工具和选区能力只进入文章路径。
 - Astro 响应式图片声明尺寸，首屏图片按需 eager，其余 lazy。
-- Bundle 报告分别限制首页、文章和学习页初始 JS/CSS；大型 Mermaid/Cytoscape chunk 保持动态加载。
+- Bundle 报告分别限制首页、文章、学习和知识页初始 JS/CSS；图谱代码保持路由隔离，大型 Mermaid chunk 保持动态加载。
 
 ## SEO
 
@@ -173,7 +176,7 @@ pnpm screenshots:capture # regenerate compressed README screenshots from dist
 
 ## Maintenance Mode
 
-v2.0 已完成内容发现、文章阅读、系列学习、Learning OS、LFW AI 与跨设备学习基础设施。后续工作限定为新增文章、Bug 修复、依赖升级和线上维护；不会为了扩大项目体量引入 Vector DB、评论、点赞、复杂社交、更多 AI Provider 或新的后台系统。
+当前版本已完成内容发现、文章阅读、知识图谱、系列学习、Learning OS、LFW AI 与跨设备学习基础设施。后续工作限定为新增文章、Bug 修复、依赖升级和线上维护；不会为了扩大项目体量引入 Vector DB、评论、点赞、复杂社交、更多 AI Provider 或新的后台系统。
 
 ## License and assets
 
