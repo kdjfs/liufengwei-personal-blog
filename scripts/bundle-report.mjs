@@ -6,6 +6,7 @@ const pages = {
   home: { file: 'dist/index.html', budget: 35 * 1024 },
   article: { file: 'dist/blog/3-yue-20-san-wei-jia/index.html', budget: 45 * 1024 },
   learning: { file: 'dist/learning/index.html', budget: 35 * 1024 },
+  knowledge: { file: 'dist/knowledge/index.html', budget: 55 * 1024 },
 };
 
 function formatBytes(bytes) {
@@ -17,16 +18,33 @@ async function assetSize(reference) {
   return { raw: content.byteLength, gzip: gzipSync(content).byteLength };
 }
 
+function collectAssetReferences(html, attributes) {
+  const pattern = new RegExp(`(?:${attributes.join('|')})="(/_astro/[^"]+\\.(?:js|css))"`, 'g');
+  return [...html.matchAll(pattern)].map((match) => match[1]);
+}
+
+function initialAssetReferences(html, pageName) {
+  const direct = collectAssetReferences(html, ['src', 'href']);
+  if (pageName !== 'knowledge') return [...new Set(direct)];
+  const graphEntry = collectAssetReferences(html, ['component-url']).filter((reference) =>
+    reference.includes('/KnowledgeGraph'),
+  );
+  return [...new Set([...direct, ...graphEntry])];
+}
+
 let failed = false;
+const referencesByPage = new Map();
+const routeReferencesByPage = new Map();
 console.log('LFW Space initial bundle report (raw / gzip)');
 
 for (const [name, page] of Object.entries(pages)) {
   const html = await readFile(page.file, 'utf8');
-  const references = [
-    ...new Set(
-      [...html.matchAll(/(?:src|href)="(\/_astro\/[^"]+\.(?:js|css))"/g)].map((match) => match[1]),
-    ),
-  ];
+  const references = initialAssetReferences(html, name);
+  referencesByPage.set(name, references);
+  routeReferencesByPage.set(
+    name,
+    collectAssetReferences(html, ['src', 'href', 'component-url', 'renderer-url']),
+  );
   const totals = {
     js: { raw: 0, gzip: 0 },
     css: { raw: 0, gzip: 0 },
@@ -44,6 +62,27 @@ for (const [name, page] of Object.entries(pages)) {
     `${name.padEnd(8)} JS ${formatBytes(totals.js.raw)} / ${formatBytes(totals.js.gzip)} · CSS ${formatBytes(totals.css.raw)} / ${formatBytes(totals.css.gzip)} · total gzip ${formatBytes(initialGzip)} / ${formatBytes(page.budget)} ${status}`,
   );
 }
+
+const graphAssetPattern = /\/(?:KnowledgeGraph[^/]*|knowledge\.[^/]*)\.(?:js|css)$/;
+const graphLeaks = [...routeReferencesByPage.entries()]
+  .filter(([name]) => name !== 'knowledge')
+  .flatMap(([name, references]) =>
+    references
+      .filter((reference) => graphAssetPattern.test(reference))
+      .map((reference) => ({
+        name,
+        reference,
+      })),
+  );
+const knowledgeReferences = routeReferencesByPage.get('knowledge') ?? [];
+const hasKnowledgeEntry = knowledgeReferences.some((reference) =>
+  graphAssetPattern.test(reference),
+);
+if (!hasKnowledgeEntry || graphLeaks.length > 0) failed = true;
+console.log(
+  `graph isolation ${hasKnowledgeEntry && graphLeaks.length === 0 ? 'PASS' : 'FAIL'} · knowledge entry ${hasKnowledgeEntry ? 'found' : 'missing'} · leaks ${graphLeaks.length}`,
+);
+for (const leak of graphLeaks) console.log(`- ${leak.name}: ${leak.reference}`);
 
 const assets = (await readdir('dist/_astro'))
   .filter((name) => name.endsWith('.js'))
