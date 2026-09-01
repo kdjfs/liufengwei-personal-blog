@@ -63,16 +63,16 @@
   },
   "dependencies": {
     "@lfw/contracts": "workspace:*",
-    "@astrojs/markdown-remark": "7.2.2",
-    "@astrojs/mdx": "7.0.5",
-    "@astrojs/react": "6.0.2",
+    "@astrojs/markdown-remark": "7.2.4",
+    "@astrojs/mdx": "7.0.8",
+    "@astrojs/react": "6.0.4",
     "@astrojs/rss": "4.0.19",
     "@astrojs/sitemap": "3.7.3",
     "@tailwindcss/vite": "4.3.3",
-    "astro": "7.1.6",
+    "astro": "7.2.9",
     "github-slugger": "2.0.0",
-    "katex": "0.18.1",
-    "mermaid": "11.16.1",
+    "katex": "0.18.4",
+    "mermaid": "11.17.2",
     "pagefind": "1.5.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -84,7 +84,7 @@
     "remark-gfm": "4.0.1",
     "remark-math": "6.0.0",
     "tailwindcss": "4.3.3",
-    "zod": "4.4.3"
+    "zod": "4.5.2"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
