@@ -265,6 +265,36 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 28px;
+  border: 1px solid transparent;
+  border-radius: var(--lfw-radius-pill, 999px);
+  transition:
+    min-height var(--motion-normal) var(--ease-out),
+    max-width var(--motion-normal) var(--ease-out),
+    margin var(--motion-normal) var(--ease-out),
+    padding var(--motion-normal) var(--ease-out),
+    background var(--motion-normal) var(--ease-out),
+    border-color var(--motion-normal) var(--ease-out),
+    box-shadow var(--motion-normal) var(--ease-out);
+}
+
+/* 滚动后导航收成浮动胶囊：减少占位，同时保持可达性。 */
+.site-header.is-compact .nav-wrap {
+  max-width: 900px;
+  min-height: var(--lfw-header-compact, 54px);
+  margin: 10px auto 0;
+  padding-inline: 10px 8px;
+  border-color: var(--line);
+  background: var(--lfw-glass-strong, var(--bg-elevated));
+  box-shadow: var(--lfw-shadow-card, var(--shadow));
+  backdrop-filter: blur(20px) saturate(150%);
+}
+
+/* 胶囊态下让整条 header 透出，只保留胶囊本身，避免两层背景叠加。 */
+.site-header.is-compact.scrolled:not(.site-header--cover) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .brand,
@@ -294,38 +324,35 @@ a {
 .desktop-nav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 2px;
   margin-left: auto;
 }
 
 .nav-link {
   position: relative;
-  padding: 25px 0 22px;
+  padding: 8px 13px;
+  border-radius: var(--lfw-radius-pill, 999px);
   color: var(--text-soft);
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 650;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out);
 }
 
-.nav-link::after {
-  position: absolute;
-  right: 0;
-  bottom: 16px;
-  left: 0;
-  height: 2px;
-  transform: scaleX(0);
-  border-radius: 99px;
-  background: var(--violet);
-  content: '';
-  transition: transform 180ms ease;
-}
-
-.nav-link:hover,
-.nav-link.active {
+.nav-link:hover {
+  background: color-mix(in srgb, var(--violet) 7%, transparent);
   color: var(--text);
 }
 
-.nav-link.active::after {
-  transform: scaleX(1);
+.nav-link.active {
+  background: color-mix(in srgb, var(--violet) 12%, transparent);
+  color: var(--violet);
+}
+
+.site-header.is-compact .nav-link {
+  padding: 6px 12px;
+  font-size: 0.82rem;
 }
 
 .nav-actions {
@@ -374,6 +401,13 @@ a {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   font-weight: 800;
+}
+
+/* 移动端把图标位留给搜索、主题和菜单，GitHub 在侧栏与页脚仍可进入。 */
+@media (max-width: 767px) {
+  .github-link {
+    display: none;
+  }
 }
 
 .menu-button,
@@ -1088,6 +1122,27 @@ a {
   font-weight: 700;
 }
 
+/* 日期 / 字数 / 时长：在任何列表页都保持分隔与不换行，避免粘成一串。 */
+.post-meta-details,
+.post-meta-details > span,
+.post-meta-details time {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.post-meta-details {
+  min-width: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.post-meta-details > * + *::before {
+  margin-inline: 7px;
+  color: var(--line-strong);
+  content: '·';
+}
+
 .post-card h3 {
   margin: 16px 0 10px;
   font-size: clamp(1.18rem, 2vw, 1.55rem);
@@ -1143,18 +1198,32 @@ a {
 .post-read-more {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   margin-top: 20px;
+  padding: 6px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--lfw-radius-pill, 999px);
   color: var(--text-soft);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  transition: color var(--motion-fast) var(--ease-out);
+  font-size: 0.75rem;
+  font-weight: 680;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out);
+}
+
+.post-read-more span {
+  transition: transform var(--motion-fast) var(--ease-out);
 }
 
 .post-read-more:hover {
+  border-color: color-mix(in srgb, var(--violet) 42%, var(--line));
+  background: color-mix(in srgb, var(--violet) 7%, transparent);
   color: var(--violet);
+}
+
+.post-read-more:hover span {
+  transform: translateX(3px);
 }
 
 .post-card.editorial {
@@ -2251,6 +2320,19 @@ a {
 
 .experience-list p {
   color: var(--text-soft);
+}
+
+.experience-summary {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--lfw-radius-pill, 999px);
+  background: color-mix(in srgb, var(--violet) 5%, transparent);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.01em;
 }
 
 .focus-grid {

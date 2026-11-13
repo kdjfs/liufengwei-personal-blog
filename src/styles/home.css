@@ -439,13 +439,13 @@
   flex-wrap: nowrap;
   gap: 10px;
   margin-top: auto;
-  padding: 8px 66px 0 0;
+  padding: 8px 104px 0 0;
   overflow: hidden;
 }
 
 .reverse .tag-row {
   padding-right: 0;
-  padding-left: 66px;
+  padding-left: 104px;
 }
 
 .tag-row a {
@@ -461,13 +461,20 @@
   position: absolute;
   right: -1px;
   bottom: -1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   margin: 0;
-  padding: 7px 14px 8px 18px;
+  padding: 7px 13px 8px 15px;
+  border: 0;
   border-radius: 18px 0 16px 0;
   background: var(--lfw-more-gradient);
   color: #fff;
-  font-size: 0.65rem;
-  text-transform: lowercase;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-transform: none;
   transition:
     transform 180ms ease,
     filter 180ms ease;

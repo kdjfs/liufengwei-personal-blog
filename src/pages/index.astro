@@ -35,7 +35,7 @@ const pageCount = Math.max(1, Math.ceil(posts.length / 12));
 ---
 
 <BaseLayout>
-  <Hero />
+  <Hero stats={profileStats} />
 
   <div class="home-shell">
     <ProfileRail stats={profileStats} currentPath={Astro.url.pathname} />

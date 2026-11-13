@@ -1,10 +1,26 @@
 ---
 import { Image } from 'astro:assets';
 import homeCover from '@/assets/blog-covers/15.png';
+import { profile } from '@/config/profile';
 import { siteConfig } from '@/config/site';
+
+interface Props {
+  stats?: { articles: number; categories: number; tags: number; series: number };
+}
+
+const { stats } = Astro.props;
+const subtitleSuffix = siteConfig.subtitle.replace(profile.name, '').trim();
+const statItems = stats
+  ? [
+      { label: '文章', value: stats.articles },
+      { label: '分类', value: stats.categories },
+      { label: '标签', value: stats.tags },
+      { label: '系列', value: stats.series },
+    ]
+  : [];
 ---
 
-<section class="home-cover" aria-labelledby="home-cover-title">
+<section class="home-cover" aria-labelledby="home-cover-title" data-cover>
   <Image
     class="home-cover-image"
     src={homeCover}
@@ -17,12 +33,49 @@ import { siteConfig } from '@/config/site';
     format="webp"
   />
   <div class="home-cover-shade" aria-hidden="true"></div>
-  <div class="home-cover-content">
-    <p class="home-cover-brand">{siteConfig.name}</p>
-    <h1 id="home-cover-title">{siteConfig.subtitle}</h1>
-    <p class="home-cover-quote">= 把学习写成可以反复抵达的路径 =</p>
-    <p class="home-cover-topics">FRONTEND · AI AGENT · LEARNING</p>
+  <div class="home-cover-aurora" aria-hidden="true">
+    <span></span><span></span><span></span>
   </div>
+
+  <div class="home-cover-content">
+    <p class="home-cover-brand">
+      <span>{profile.englishName}</span>
+      <i aria-hidden="true"></i>
+      <span>LFW SPACE</span>
+    </p>
+    <h1 id="home-cover-title">
+      <span class="home-cover-name">{profile.name}</span>
+      {subtitleSuffix && <span class="home-cover-alias">{subtitleSuffix}</span>}
+    </h1>
+    <p class="home-cover-quote">把学习写成可以反复抵达的路径</p>
+    <p class="home-cover-role">{profile.role}</p>
+
+    <div class="home-cover-actions">
+      <a class="cover-button cover-button--primary" href="/blog">
+        开始阅读
+        <span aria-hidden="true">→</span>
+      </a>
+      <a class="cover-button cover-button--ghost" href="/about">关于我</a>
+    </div>
+
+    {
+      statItems.length > 0 && (
+        <dl class="home-cover-stats">
+          {statItems.map((item) => (
+            <div>
+              <dd>{item.value}</dd>
+              <dt>{item.label}</dt>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+  </div>
+
+  <a class="home-cover-scroll" href="#home-articles-title" aria-label="向下滚动到文章列表">
+    <span aria-hidden="true"></span>
+  </a>
+
   <svg class="home-cover-wave" viewBox="0 0 180 34" preserveAspectRatio="none" aria-hidden="true">
     <defs>
       <path
@@ -42,3 +95,39 @@ import { siteConfig } from '@/config/site';
       y="4"></use>
   </svg>
 </section>
+
+<script>
+  const setupCover = () => {
+    const cover = document.querySelector<HTMLElement>('[data-cover]');
+    const image = cover?.querySelector<HTMLElement>('.home-cover-image');
+    if (!cover || !image) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const wide = window.matchMedia('(min-width: 768px)');
+    let frame = 0;
+
+    const apply = () => {
+      frame = 0;
+      if (reduced.matches || !wide.matches) {
+        image.style.transform = '';
+        cover.style.setProperty('--cover-shift', '0');
+        return;
+      }
+      const offset = Math.min(window.scrollY, cover.offsetHeight);
+      image.style.transform = `translate3d(0, ${offset * 0.16}px, 0) scale(1.06)`;
+      cover.style.setProperty('--cover-shift', String(offset));
+    };
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(apply);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    wide.addEventListener('change', apply);
+    reduced.addEventListener('change', apply);
+    apply();
+  };
+
+  document.addEventListener('astro:page-load', setupCover);
+</script>

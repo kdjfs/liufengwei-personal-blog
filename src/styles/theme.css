@@ -1,84 +1,144 @@
+/* ==========================================================================
+   LFW Space — Design tokens
+   一套集中管理颜色、排版、阴影与动效的令牌层。
+   页面级样式只消费变量，避免到处散落魔法色值。
+   ========================================================================== */
+
 :root {
-  --lfw-bg: #fbfafc;
-  --lfw-surface: #fffdfd;
+  /* —— 基础色板：暖纸底 + 胭脂主色 + 鸢尾辅色 —— */
+  --lfw-bg: #f8f6f7;
+  --lfw-surface: #fffefd;
   --lfw-card: #ffffff;
-  --lfw-text: #26222d;
-  --lfw-muted: #6f6874;
-  --lfw-primary: #bd365f;
-  --lfw-primary-strong: #a92f57;
-  --lfw-secondary: #8f82ff;
-  --lfw-blue: #55add8;
-  --lfw-mint: #72cdbb;
-  --lfw-border: rgba(88, 70, 99, 0.12);
-  --lfw-border-strong: rgba(88, 70, 99, 0.2);
+  --lfw-text: #1b1720;
+  --lfw-muted: #696273;
+  --lfw-soft: #8b8495;
+  --lfw-primary: #b02a56;
+  --lfw-primary-strong: #94204a;
+  --lfw-secondary: #6a55ec;
+  --lfw-blue: #1f86bd;
+  --lfw-mint: #2b9a84;
+  --lfw-amber: #c07a1e;
+
+  /* —— 边界与背景 —— */
+  --lfw-border: rgba(70, 52, 84, 0.11);
+  --lfw-border-strong: rgba(70, 52, 84, 0.2);
+  --lfw-glass: rgba(255, 254, 253, 0.72);
+  --lfw-glass-strong: rgba(255, 254, 253, 0.9);
   --lfw-header-bg: linear-gradient(
     112deg,
-    rgba(221, 249, 243, 0.9),
-    rgba(240, 232, 255, 0.9) 52%,
-    rgba(255, 232, 241, 0.9)
+    rgba(226, 248, 243, 0.86),
+    rgba(243, 236, 255, 0.88) 52%,
+    rgba(255, 234, 242, 0.86)
   );
-  --lfw-active-gradient: linear-gradient(118deg, #f47d9b 0%, #ef8a83 48%, #9a88f4 100%);
-  --lfw-more-gradient: linear-gradient(110deg, #ed6e9b, #f39a80);
+
+  /* —— 渐变与高光 —— */
+  --lfw-active-gradient: linear-gradient(118deg, #e4698c 0%, #e07a72 46%, #7f6ff0 100%);
+  --lfw-more-gradient: linear-gradient(110deg, #d95c8b, #e08a70);
+  --lfw-aurora:
+    radial-gradient(
+      circle at 18% 22%,
+      color-mix(in srgb, var(--lfw-mint) 30%, transparent),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 78% 18%,
+      color-mix(in srgb, var(--lfw-secondary) 26%, transparent),
+      transparent 46%
+    ),
+    radial-gradient(
+      circle at 52% 92%,
+      color-mix(in srgb, var(--lfw-primary) 22%, transparent),
+      transparent 52%
+    );
+  --lfw-spotlight: color-mix(in srgb, var(--lfw-primary) 10%, transparent);
+
+  /* —— 阴影层级 —— */
   --lfw-shadow-card: 0 8px 28px rgba(83, 61, 91, 0.09);
   --lfw-shadow-hover: 0 16px 38px rgba(83, 61, 91, 0.16);
+  --lfw-shadow-float: 0 22px 60px rgba(70, 48, 79, 0.18);
+  --lfw-ring: 0 0 0 1px color-mix(in srgb, var(--lfw-primary) 22%, transparent);
+
+  /* —— 排版 —— */
+  --lfw-font-display:
+    'HarmonyOS Sans SC', 'MiSans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --lfw-tracking-tight: -0.035em;
+  --lfw-tracking-wide: 0.14em;
+
+  /* —— 尺寸 —— */
   --lfw-radius: 16px;
+  --lfw-radius-lg: 24px;
+  --lfw-radius-pill: 999px;
   --lfw-header-height: 68px;
+  --lfw-header-compact: 54px;
   --lfw-sidebar-width: 296px;
   --lfw-content-max: 1420px;
 
+  /* —— 动效 —— */
+  --lfw-ease-out: cubic-bezier(0.22, 0.68, 0.24, 1);
+  --lfw-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
   --bg: var(--lfw-bg);
-  --bg-elevated: rgba(255, 253, 253, 0.84);
+  --bg-elevated: var(--lfw-glass);
   --surface: var(--lfw-surface);
-  --surface-soft: #f5f0f5;
+  --surface-soft: #f4eff3;
   --text: var(--lfw-text);
   --text-soft: var(--lfw-muted);
-  --text-faint: #6f6874;
+  --text-faint: var(--lfw-soft);
   --line: var(--lfw-border);
   --line-strong: var(--lfw-border-strong);
   --violet: var(--lfw-primary);
   --violet-bright: var(--lfw-secondary);
   --cyan: var(--lfw-blue);
   --blue: var(--lfw-secondary);
-  --glow: rgba(233, 104, 140, 0.12);
+  --glow: rgba(214, 90, 130, 0.12);
   --shadow: var(--lfw-shadow-hover);
 }
 
 .dark {
-  --lfw-bg: #15141c;
-  --lfw-surface: #1a1922;
-  --lfw-card: #1c1b25;
-  --lfw-text: #f4edf2;
-  --lfw-muted: #b5aeb9;
-  --lfw-primary: #f18bad;
-  --lfw-primary-strong: #ff9abb;
-  --lfw-secondary: #a99cff;
-  --lfw-blue: #73c8ee;
-  --lfw-mint: #78d7c1;
-  --lfw-border: rgba(244, 225, 239, 0.1);
-  --lfw-border-strong: rgba(244, 225, 239, 0.18);
+  --lfw-bg: #100e15;
+  --lfw-surface: #181620;
+  --lfw-card: #1c1a26;
+  --lfw-text: #f5eef3;
+  --lfw-muted: #b3abbb;
+  --lfw-soft: #8b8394;
+  --lfw-primary: #f58fb0;
+  --lfw-primary-strong: #ffa6c1;
+  --lfw-secondary: #a99bff;
+  --lfw-blue: #6fc4ea;
+  --lfw-mint: #6fd2bb;
+  --lfw-amber: #e0ab63;
+
+  --lfw-border: rgba(245, 226, 240, 0.1);
+  --lfw-border-strong: rgba(245, 226, 240, 0.19);
+  --lfw-glass: rgba(22, 20, 30, 0.74);
+  --lfw-glass-strong: rgba(22, 20, 30, 0.9);
   --lfw-header-bg: linear-gradient(
     112deg,
-    rgba(23, 43, 45, 0.94),
-    rgba(35, 29, 52, 0.94) 52%,
-    rgba(50, 27, 41, 0.94)
+    rgba(21, 41, 42, 0.92),
+    rgba(32, 27, 48, 0.92) 52%,
+    rgba(47, 25, 38, 0.92)
   );
   --lfw-active-gradient: linear-gradient(118deg, #d8668d, #ce716f 48%, #7666d6 100%);
-  --lfw-shadow-card: 0 9px 28px rgba(0, 0, 0, 0.23);
-  --lfw-shadow-hover: 0 18px 44px rgba(0, 0, 0, 0.38);
+  --lfw-more-gradient: linear-gradient(110deg, #d8668d, #d4807a);
+  --lfw-spotlight: color-mix(in srgb, var(--lfw-primary) 16%, transparent);
+  --lfw-shadow-card: 0 9px 28px rgba(0, 0, 0, 0.24);
+  --lfw-shadow-hover: 0 18px 44px rgba(0, 0, 0, 0.4);
+  --lfw-shadow-float: 0 26px 68px rgba(0, 0, 0, 0.5);
 
   --bg: var(--lfw-bg);
-  --bg-elevated: rgba(26, 25, 34, 0.86);
+  --bg-elevated: var(--lfw-glass);
   --surface: var(--lfw-surface);
-  --surface-soft: #24222e;
+  --surface-soft: #24212e;
   --text: var(--lfw-text);
   --text-soft: var(--lfw-muted);
-  --text-faint: #8f8794;
+  --text-faint: var(--lfw-soft);
   --line: var(--lfw-border);
   --line-strong: var(--lfw-border-strong);
   --violet: var(--lfw-primary);
   --violet-bright: var(--lfw-secondary);
   --cyan: var(--lfw-blue);
   --blue: var(--lfw-secondary);
-  --glow: rgba(241, 139, 173, 0.13);
+  --glow: rgba(245, 143, 176, 0.14);
   --shadow: var(--lfw-shadow-hover);
 }

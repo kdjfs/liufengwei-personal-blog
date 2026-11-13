@@ -1,0 +1,86 @@
+/* ==========================================================================
+   LFW Space — Motion layer
+   统一页面转场、主题切换、滚动进度等跨页面动效。
+   所有装饰性动效都尊重 prefers-reduced-motion。
+   ========================================================================== */
+
+/* —— 站内路由切换：更短、更克制的交叉淡入 —— */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: lfw-page-out 140ms var(--lfw-ease-out) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: lfw-page-in 260ms var(--lfw-ease-out) both;
+  }
+}
+
+@keyframes lfw-page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes lfw-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* —— 主题切换：从按钮位置圆形扩散 —— */
+html.is-theme-switching::view-transition-old(root) {
+  animation: none;
+}
+
+html.is-theme-switching::view-transition-new(root) {
+  animation: lfw-theme-reveal 520ms var(--lfw-ease-out) both;
+  mix-blend-mode: normal;
+}
+
+@keyframes lfw-theme-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-x, 50%) var(--theme-y, 0%));
+  }
+
+  to {
+    clip-path: circle(var(--theme-radius, 120vmax) at var(--theme-x, 50%) var(--theme-y, 0%));
+  }
+}
+
+/* —— 滚动进度条：加一层柔光，减少细线在深色下的廉价感 —— */
+.reading-progress {
+  box-shadow: 0 0 14px color-mix(in srgb, var(--violet) 55%, transparent);
+}
+
+/* —— 全局焦点与选中态 —— */
+::selection {
+  color: #fff;
+  background: color-mix(in srgb, var(--lfw-primary) 86%, #000 8%);
+}
+
+/* —— 触屏设备不保留 hover 残留态 —— */
+@media (hover: none) {
+  .post-card:hover,
+  .project-card:hover,
+  .featured-category-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}

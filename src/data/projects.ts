@@ -69,7 +69,7 @@ export const projects: Project[] = [
     eyebrow: 'AI CONSULTATION / UNIAPP',
     description: '围绕生猪健康管理、AI 问诊和医药信息呈现构建的多端应用。',
     techStack: ['Vue 3', 'UniApp', 'ECharts', 'Vite', 'Axios', 'Ant Design'],
-    github: 'https://github.com/linyshdhhcb/PigHealthSmartMedicineicine',
+    github: 'https://github.com/linyshdhhcb/PigHealthSmartMedicine',
     status: '已完成',
     cover: 'grid',
     featured: false,

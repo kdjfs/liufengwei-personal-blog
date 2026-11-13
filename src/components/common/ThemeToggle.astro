@@ -20,6 +20,7 @@
     const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
     if (!button) return;
     const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const apply = (mode: ThemeMode) => {
       const dark = mode === 'dark' || (mode === 'system' && media.matches);
@@ -33,12 +34,41 @@
     const saved = localStorage.getItem('lfw-theme');
     let mode: ThemeMode = saved === 'dark' || saved === 'light' ? saved : 'system';
     apply(mode);
+
     button.addEventListener('click', () => {
-      mode = order[(order.indexOf(mode) + 1) % order.length];
-      localStorage.setItem('lfw-theme', mode);
-      apply(mode);
+      const next = order[(order.indexOf(mode) + 1) % order.length];
+      localStorage.setItem('lfw-theme', next);
+
+      // 支持 View Transitions 时，从按钮位置圆形扩散到新主题。
+      const root = document.documentElement;
+      if (!document.startViewTransition || reduced.matches) {
+        mode = next;
+        apply(mode);
+        return;
+      }
+
+      const rect = button.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const radius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y),
+      );
+      root.style.setProperty('--theme-x', `${x}px`);
+      root.style.setProperty('--theme-y', `${y}px`);
+      root.style.setProperty('--theme-radius', `${radius}px`);
+      root.classList.add('is-theme-switching');
+
+      const transition = document.startViewTransition(() => {
+        mode = next;
+        apply(mode);
+      });
+      transition.finished.finally(() => root.classList.remove('is-theme-switching'));
     });
-    media.addEventListener('change', () => mode === 'system' && apply(mode));
+
+    media.addEventListener('change', () => {
+      if (mode === 'system') apply(mode);
+    });
   };
 
   document.addEventListener('astro:page-load', setupTheme);

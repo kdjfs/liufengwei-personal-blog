@@ -98,7 +98,11 @@ const isActive = (href: string) =>
     const menu = document.querySelector<HTMLElement>('[data-mobile-nav]');
     if (!header || !button || !menu) return;
 
-    const updateHeader = () => header.classList.toggle('scrolled', window.scrollY > 12);
+    const updateHeader = () => {
+      const y = window.scrollY;
+      header.classList.toggle('scrolled', y > 12);
+      header.classList.toggle('is-compact', y > 64);
+    };
     window.addEventListener('scroll', updateHeader, {
       passive: true,
       signal: controller.signal,

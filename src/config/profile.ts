@@ -22,7 +22,7 @@ export const profile = {
   graduation: 2027,
   educationPeriod: '2023.09 - 2027.06',
   avatar: '/avatar.webp',
-  bio: '前端开发学习者，关注 Vue、React、Node.js 与 AI Agent 应用开发。这里记录项目实践、源码学习、工程思考与持续成长。',
+  bio: '2027 届前端开发，目前在广州智跃深空做 AI 方向的前端开发。关注 Vue、React、Node.js 与 AI Agent 应用，这里记录项目实践、源码学习、工程思考与持续成长。',
   socials: [
     {
       label: 'GitHub',
@@ -51,11 +51,25 @@ export const profile = {
   ] satisfies SocialLink[],
   experiences: [
     {
-      period: '2026.03 - 至今',
+      period: '2026.10 - 至今',
+      organization: '广州智跃深空人工智能科技有限公司',
+      shortOrganization: '智跃深空',
+      role: '前端开发实习生（AI 方向）',
+      summary: 'AI 产品前端开发',
+    },
+    {
+      period: '2026.07 - 2026.09',
+      organization: '北京即剪网络科技有限公司（NemoVideo）',
+      shortOrganization: 'NemoVideo',
+      role: '前端开发实习生',
+      summary: 'AI 视频 · 运营资源位与官网 SEO',
+    },
+    {
+      period: '2026.03 - 2026.07',
       organization: '用友网络科技股份有限公司',
       shortOrganization: '用友网络',
       role: '前端开发实习生（客开部）',
-      summary: '前端开发实习生',
+      summary: '中海燃供仓储移动端',
     },
     {
       period: '2025.11 - 2026.03',
@@ -73,10 +87,10 @@ export const profile = {
     },
   ] satisfies Experience[],
   techFocus: {
-    Frontend: ['Vue 3', 'React', 'TypeScript', 'Astro', 'UniApp'],
-    Engineering: ['Vite', '前端性能', '内容工程', '可访问性'],
-    Backend: ['Node.js', 'REST API'],
-    AI: ['AI Agent 应用', '流式渲染', 'AI 交互体验'],
+    Frontend: ['Vue 2/3', 'React', 'TypeScript', 'Astro', 'UniApp'],
+    Engineering: ['Vite', 'Webpack', '前端性能', '内容工程', '可访问性'],
+    Backend: ['Node.js', 'MySQL', 'Redis'],
+    AI: ['AI Agent 应用', 'Prompt 工程', 'RAG / MCP', '流式渲染'],
     'Visualization / Client': ['ECharts', 'WebGL', 'AMap'],
   },
   awards: ['全国大学生统计建模大赛二等奖', '全国大学生数学建模大赛优胜奖', '软件著作权 3 项'],
