@@ -74,3 +74,25 @@ vercel --prod
 ```
 
 部署完成后访问 `https://<你的域名>/api/ai-health`，返回 `"configured": true` 即表示配置生效。
+
+### `vercel login` 报 ByteString 错误
+
+若本机名含中文（例如 `刘凤伟的电脑`），Vercel CLI 会把 `os.hostname()` 写进 HTTP 头并抛出：
+
+```
+TypeError: Cannot convert argument to a ByteString because the character at index 0 ...
+```
+
+这是 CLI 的本地缺陷，与账号无关。用一个小补丁把主机名替换成 ASCII 后再执行命令：
+
+```js
+// vercel-cli-hostname.cjs
+const os = require('node:os');
+os.hostname = () => 'LFW-PC';
+```
+
+```bash
+node --require ./vercel-cli-hostname.cjs ./node_modules/vercel/dist/index.js login
+```
+
+登录成功后凭据会写入本机配置，后续命令沿用同一方式即可。
