@@ -16,9 +16,32 @@ test('AI health reports only safe production configuration metadata', () => {
     ok: true,
     configured: true,
     model: 'deepseek-v4-pro',
+    fallbackModel: null,
     provider: 'DeepSeek',
     runtime: 'vercel',
   });
+});
+
+test('AI health reports the fallback model when it is valid and distinct', () => {
+  const body = healthPayload({
+    DEEPSEEK_API_KEY: 'unit-test-credential',
+    DEEPSEEK_MODEL: 'deepseek-v4-pro',
+    DEEPSEEK_FALLBACK_MODEL: 'deepseek-flash',
+  });
+  assert.equal(body.fallbackModel, 'deepseek-flash');
+
+  const same = healthPayload({
+    DEEPSEEK_API_KEY: 'unit-test-credential',
+    DEEPSEEK_MODEL: 'deepseek-v4-pro',
+    DEEPSEEK_FALLBACK_MODEL: 'deepseek-v4-pro',
+  });
+  assert.equal(same.fallbackModel, null);
+
+  const invalid = healthPayload({
+    DEEPSEEK_API_KEY: 'unit-test-credential',
+    DEEPSEEK_FALLBACK_MODEL: 'gpt-4o',
+  });
+  assert.equal(invalid.fallbackModel, null);
 });
 
 test('AI health treats missing, placeholder, and invalid keys as unconfigured', () => {

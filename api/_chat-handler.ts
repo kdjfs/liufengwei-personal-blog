@@ -5,9 +5,11 @@ import {
   AIConfigurationError,
   assertConfiguredModel,
   buildDeepSeekRequest,
+  PRIMARY_MODEL,
   parseChatRequest,
   resolveApiKey,
   resolveBaseUrl,
+  resolveFallbackModel,
 } from './_chat-core.ts';
 import { InMemoryRateLimiter } from './_rate-limit.ts';
 import { sendWebResponse, toWebRequest } from './_vercel-node.ts';
@@ -15,6 +17,7 @@ import { sendWebResponse, toWebRequest } from './_vercel-node.ts';
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_ACTIVE_STREAMS = 4;
 const UPSTREAM_TIMEOUT_MS = 55_000;
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 
 const defaultRateLimiter = new InMemoryRateLimiter({
   limit: 12,
@@ -276,14 +279,17 @@ export async function handleChat(
   }
 
   let endpoint: string;
+  let model: string;
+  let fallbackModel: string | undefined;
   try {
-    assertConfiguredModel(environment);
+    model = assertConfiguredModel(environment);
+    fallbackModel = resolveFallbackModel(environment, model);
     endpoint = `${resolveBaseUrl(environment)}/v1/messages`;
   } catch (error) {
     logger.error('[LFW AI]', {
       requestId,
       event: 'configuration_error',
-      model: 'deepseek-v4-pro',
+      model: PRIMARY_MODEL,
       baseHost: 'api.deepseek.com',
       durationMs: now() - startedAt,
       errorName: error instanceof Error ? error.name : 'Error',
@@ -317,20 +323,49 @@ export async function handleChat(
     activeStreams = Math.max(0, activeStreams - 1);
   };
 
-  let upstream: Response;
-  try {
-    upstream = await fetchImpl(endpoint, {
+  let upstream: Response | undefined;
+  let activeModel = model;
+  let lastError: unknown;
+  const sendUpstream = (targetModel: string) =>
+    fetchImpl(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
         'x-api-key': apiKey,
       },
-      body: JSON.stringify(buildDeepSeekRequest(input)),
+      body: JSON.stringify(buildDeepSeekRequest(input, targetModel)),
       signal: controller.signal,
     });
-  } catch (error) {
+
+  // 先试主模型；网络错误或可重试状态码时降级到备用模型，避免整站 AI 直接不可用。
+  const candidates = fallbackModel ? [model, fallbackModel] : [model];
+  for (const [index, candidate] of candidates.entries()) {
+    try {
+      const candidateResponse = await sendUpstream(candidate);
+      activeModel = candidate;
+      upstream = candidateResponse;
+      const hasNext = index < candidates.length - 1;
+      if (hasNext && !candidateResponse.ok && RETRYABLE_STATUS.has(candidateResponse.status)) {
+        try {
+          await candidateResponse.body?.cancel();
+        } catch {
+          // 丢弃失败响应体，继续降级。
+        }
+        upstream = undefined;
+        continue;
+      }
+      break;
+    } catch (error) {
+      lastError = error;
+      // 主动超时或客户端断开时不再浪费一次上游调用。
+      if (timedOut || request.signal.aborted) break;
+    }
+  }
+
+  if (!upstream) {
     release();
+    const error = lastError ?? new Error('Upstream unavailable');
     const message = safeErrorMessage(error);
     const byteStringError = /bytestring/i.test(message);
     const timeoutError = timedOut || (error instanceof DOMException && error.name === 'AbortError');
@@ -342,7 +377,7 @@ export async function handleChat(
     logger.error('[LFW AI]', {
       requestId,
       event: 'upstream_fetch_error',
-      model: 'deepseek-v4-pro',
+      model: activeModel,
       baseHost: 'api.deepseek.com',
       durationMs: now() - startedAt,
       errorName: error instanceof Error ? error.name : 'Error',
@@ -378,7 +413,7 @@ export async function handleChat(
       requestId,
       event: 'upstream_error',
       status: upstream.status,
-      model: 'deepseek-v4-pro',
+      model: activeModel,
       baseHost: 'api.deepseek.com',
       durationMs: now() - startedAt,
       errorName: 'DeepSeekHTTPError',
@@ -404,6 +439,7 @@ export async function handleChat(
       'X-Accel-Buffering': 'no',
       'X-Content-Type-Options': 'nosniff',
       'X-LFW-AI-Request-Id': requestId,
+      'X-LFW-AI-Model': activeModel,
       ...rateHeaders(rate.limit, rate.remaining),
     },
   });

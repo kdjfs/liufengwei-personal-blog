@@ -140,7 +140,7 @@ const chatRequestSchema = z
   });
 
 interface DeepSeekRequest {
-  model: 'deepseek-v4-pro';
+  model: string;
   max_tokens: number;
   temperature: number;
   stream: true;
@@ -232,7 +232,14 @@ export function parseChatRequest(input: unknown): ChatRequestPayload {
   return chatRequestSchema.parse(input);
 }
 
-export function buildDeepSeekRequest(input: ChatRequestPayload): DeepSeekRequest {
+export const PRIMARY_MODEL = 'deepseek-v4-pro';
+export const FALLBACK_MODEL = 'deepseek-flash';
+const ALLOWED_MODELS = new Set<string>([PRIMARY_MODEL, FALLBACK_MODEL]);
+
+export function buildDeepSeekRequest(
+  input: ChatRequestPayload,
+  model = PRIMARY_MODEL,
+): DeepSeekRequest {
   const context = buildBlogContext(input);
   const messages = input.messages.map((message) => ({ ...message }));
   const last = messages.at(-1);
@@ -243,7 +250,7 @@ export function buildDeepSeekRequest(input: ChatRequestPayload): DeepSeekRequest
 
   const deep = input.mode === 'deep';
   return {
-    model: 'deepseek-v4-pro',
+    model,
     max_tokens: deep ? 1600 : 1200,
     temperature: deep ? 0.3 : 0.4,
     stream: true,
@@ -310,8 +317,22 @@ export function resolveBaseUrl(environment: NodeJS.ProcessEnv): string {
   return 'https://api.deepseek.com/anthropic';
 }
 
-export function assertConfiguredModel(environment: NodeJS.ProcessEnv): 'deepseek-v4-pro' {
-  const model = environment.DEEPSEEK_MODEL?.trim() || 'deepseek-v4-pro';
-  if (model !== 'deepseek-v4-pro') throw new Error('Unsupported DeepSeek model');
+export function assertConfiguredModel(environment: NodeJS.ProcessEnv): string {
+  const model = environment.DEEPSEEK_MODEL?.trim() || PRIMARY_MODEL;
+  if (!ALLOWED_MODELS.has(model)) throw new Error('Unsupported DeepSeek model');
   return model;
+}
+
+/**
+ * 主模型不可用（429 / 5xx / 网络错误）时的降级候选。
+ * 显式配置 DEEPSEEK_FALLBACK_MODEL 才会启用，默认关闭以保持行为可预期。
+ */
+export function resolveFallbackModel(
+  environment: NodeJS.ProcessEnv,
+  primary: string,
+): string | undefined {
+  const configured = environment.DEEPSEEK_FALLBACK_MODEL?.trim();
+  if (!configured) return undefined;
+  if (!ALLOWED_MODELS.has(configured)) throw new Error('Unsupported DeepSeek fallback model');
+  return configured === primary ? undefined : configured;
 }

@@ -188,6 +188,54 @@ test('handleChat distinguishes fetch, ByteString, and timeout failures', async (
   assert.equal((await timeout.json()).error.code, 'AI_TIMEOUT');
 });
 
+test('handleChat falls back to the configured backup model on retryable upstream errors', async () => {
+  const models: string[] = [];
+  const fetchImpl: typeof fetch = async (_input, init) => {
+    const body = JSON.parse(String(init?.body)) as { model: string };
+    models.push(body.model);
+    if (body.model === 'deepseek-v4-pro') {
+      return new Response(JSON.stringify({ error: { message: 'overloaded' } }), {
+        status: 503,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+    return new Response(
+      'event: content_block_delta\ndata: {"type":"content_block_delta","delta":{"type":"text_delta","text":"备用"}}\n\n',
+      { headers: { 'content-type': 'text/event-stream' } },
+    );
+  };
+
+  const response = await handleChat(
+    createChatRequest(),
+    createDependencies({
+      environment: {
+        DEEPSEEK_API_KEY: 'unit-test-key',
+        DEEPSEEK_MODEL: 'deepseek-v4-pro',
+        DEEPSEEK_FALLBACK_MODEL: 'deepseek-flash',
+        SITE_URL: 'https://lfw.example',
+        VERCEL: '1',
+      },
+      fetchImpl,
+    }),
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('x-lfw-ai-model'), 'deepseek-flash');
+  assert.deepEqual(models, ['deepseek-v4-pro', 'deepseek-flash']);
+});
+
+test('handleChat reports the primary model when no fallback is configured', async () => {
+  const fetchImpl: typeof fetch = async () =>
+    new Response(
+      'event: content_block_delta\ndata: {"type":"content_block_delta","delta":{"type":"text_delta","text":"主模型"}}\n\n',
+      { headers: { 'content-type': 'text/event-stream' } },
+    );
+
+  const response = await handleChat(createChatRequest(), createDependencies({ fetchImpl }));
+
+  assert.equal(response.headers.get('x-lfw-ai-model'), 'deepseek-v4-pro');
+});
+
 test('handleChat sends a server-owned request and streams provider SSE', async () => {
   let upstreamUrl = '';
   let upstreamBody: Record<string, unknown> | undefined;
